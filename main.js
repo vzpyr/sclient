@@ -2,7 +2,10 @@ const { app, BrowserWindow, ipcMain, session, Tray, Menu } = require('electron')
 const path = require('path');
 const fs = require('fs');
 const { Client, StatusDisplayType } = require('@xhayper/discord-rpc');
-const { exec } = require('youtube-dl-exec');
+const ytdlexec = require('youtube-dl-exec');
+let ytdlBin = ytdlexec.constants.YOUTUBE_DL_PATH;
+if (ytdlBin.includes('app.asar')) ytdlBin = ytdlBin.replace('app.asar', 'app.asar.unpacked');
+const exec = ytdlexec.create(ytdlBin);
 
 const clientId = '1520494903954637072';
 let rpc;
@@ -99,6 +102,8 @@ ipcMain.handle('download_song', async (e, args) => {
         await exec(args.url, {
             extractAudio: true,
             audioFormat: 'best',
+            noProgress: true,
+            noWarnings: true,
             paths: dlDir
         });
     } catch (err) {
@@ -106,10 +111,10 @@ ipcMain.handle('download_song', async (e, args) => {
             throw new Error('This track is DRM protected and cannot be downloaded.');
         } else if (err.stderr) {
             const errorLines = err.stderr.split('\n').filter(line => line.includes('ERROR:'));
-            const cleanError = errorLines.length > 0 ? errorLines.join(' | ') : 'Unknown youtube-dl error.';
+            const cleanError = errorLines.length > 0 ? errorLines.join(' | ') : `Unknown youtube-dl error. (${err.stderr})`;
             throw new Error(cleanError);
         } else {
-            throw new Error('Unknown download error occurred.');
+            throw new Error(`Unknown download error occurred: ${err.message || err.toString()}`);
         }
     }
 });

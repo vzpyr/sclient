@@ -16,6 +16,9 @@
     "directories": {
       "buildResources": "icons"
     },
+    "asarUnpack": [
+      "node_modules/youtube-dl-exec/**"
+    ],
     "linux": {
       "target": [
         "AppImage",
