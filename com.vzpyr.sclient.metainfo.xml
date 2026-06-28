@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.vzpyr.sclient</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>SClient</name>
+  <summary>Customizable cross-platform desktop client for SoundCloud</summary>
+  <description>
+    <p>SClient is a beautiful, highly customizable, and feature-rich desktop client for SoundCloud. It bridges the gap between the web player and native desktop experiences by providing seamless integration with MPRIS, hardware media keys, and Discord Rich Presence.</p>
+    <p>Enjoy true ad-blocking, custom theming, and an untethered listening experience designed exclusively for SoundCloud enthusiasts.</p>
+  </description>
+  <url type="homepage">https://github.com/</url>
+  <developer id="com.vzpyr">
+    <name>vzpyr</name>
+  </developer>
+  <categories>
+    <category>AudioVideo</category>
+    <category>Audio</category>
+    <category>Player</category>
+  </categories>
+  <launchable type="desktop-id">com.vzpyr.sclient.desktop</launchable>
+  <releases>
+    <release version="0.1.0" date="2026-06-28"/>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

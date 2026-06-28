@@ -1,0 +1,79 @@
+{
+  "name": "sclient",
+  "desktopName": "com.vzpyr.sclient.desktop",
+  "version": "0.1.0",
+  "description": "Customizable cross-platform desktop client for SoundCloud",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:linux": "electron-builder --linux",
+    "build:win": "electron-builder --windows"
+  },
+  "build": {
+    "appId": "com.vzpyr.sclient",
+    "productName": "SClient",
+    "electronVersion": "42.3.3",
+    "directories": {
+      "buildResources": "icons"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "flatpak",
+        "rpm"
+      ],
+      "category": "AudioVideo",
+      "syncDesktopName": true,
+      "executableName": "sclient",
+      "desktop": {
+        "entry": {
+          "Name": "SClient"
+        }
+      }
+    },
+    "flatpak": {
+      "runtime": "org.freedesktop.Platform",
+      "runtimeVersion": "25.08",
+      "sdk": "org.freedesktop.Sdk",
+      "finishArgs": [
+        "--share=ipc",
+        "--socket=x11",
+        "--socket=wayland",
+        "--socket=pulseaudio",
+        "--share=network",
+        "--device=dri",
+        "--filesystem=xdg-download",
+        "--filesystem=xdg-run/discord-ipc-0",
+        "--talk-name=org.kde.StatusNotifierWatcher",
+        "--talk-name=org.freedesktop.Notifications",
+        "--own-name=org.mpris.MediaPlayer2.chromium",
+        "--own-name=org.mpris.MediaPlayer2.chromium.*"
+      ],
+      "files": [
+        [
+          "com.vzpyr.sclient.metainfo.xml",
+          "/share/metainfo/com.vzpyr.sclient.metainfo.xml"
+        ]
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  },
+  "author": "vzpyr <vzpyr@example.com>",
+  "homepage": "https://github.com/vzpyr/sclient",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "github:castlabs/electron-releases#v42.3.3+wvcus",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "@xhayper/discord-rpc": "^1.3.4",
+    "youtube-dl-exec": "^3.1.8"
+  }
+}

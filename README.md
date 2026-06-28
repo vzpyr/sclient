@@ -1,0 +1,70 @@
+# SClient
+
+A customizable desktop client for SoundCloud, built with Electron.
+
+<p align="center">
+  <img src="screenshots/screenshot1.png" alt="Home Screen" width="45%">
+  <img src="screenshots/screenshot2.png" alt="Lyrics Showcase" width="45%">
+</p>
+
+## Features
+
+SClient adds several enhancements and quality of life features to the standard web player. All settings can be toggled on the fly.
+
+* **Zero Telemetry**: No tracking or data collection built-in (except when using the public proxy).
+* **DRM Support**: Play DRM-protected tracks using proper Widevine DRM out of the box (Castlabs Electron).
+* **True Shuffle**: Fixes the default shuffle behavior by loading the entire playlist or using an API-based shuffle engine.
+* **Ad Blocker**: Blocks audio and banner advertisements natively.
+* **Track Downloader**: Download tracks directly from the player interface.
+* **Lyrics Integration**: View lyrics for the currently playing song in a sidebar.
+* **Customization**: Inject your own custom CSS and JavaScript or change the global UI accent color.
+* **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
+* **Multi-Account Support**: Create, manage, and switch between multiple isolated profiles.
+* **Region Bypass**: Built-in proxy support to bypass geographic track restrictions. You can use the free public proxy (https://scproxy.vercel.app/) or self-host your own using the included `app.js` file.
+* **Interface Tweaks**: Options to hide window decorations, enable a fluid wide viewport, add a lazy scroll button, hide subscription upsells and hide artist features.
+* **System Tray**: Run the application in the background and control playback from your system tray.
+
+## Installation
+
+You can install SClient by downloading a pre-built binary or by compiling it from source.
+
+### Pre-built Releases
+
+Check the Releases page to download the latest version for your operating system.
+
+Linux:
+* DEB
+* RPM
+* AppImage
+* Flatpak
+
+Windows:
+* Setup Executable
+* Portable Executable
+
+### Build from Source
+
+If you prefer to compile the application yourself, make sure you have Node.js and npm installed on your system.
+
+1. Clone the repository and navigate into the project directory.
+2. Install the required dependencies:
+
+   `npm install`
+
+3. Build the application for your operating system:
+
+   Linux: `npm run build:linux`
+
+   Windows: `npm run build:windows`
+
+The compiled binaries will be located in the `dist` directory.
+
+## Usage
+
+* Press Ctrl + I or use the new gear icon in the header to open the settings menu.
+* Use the settings menu to configure all features or to manage accounts.
+* Access the Lyrics and Download buttons directly from the playback bar.
+
+## License
+
+MIT
