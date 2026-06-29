@@ -69,7 +69,8 @@ ipcMain.handle('get_custom_files', () => {
         true_shuffle: readConfig('true_shuffle.conf', 'false') === 'true',
         true_shuffle_mode: readConfig('true_shuffle_mode.conf', 'native'),
         region_bypass: readConfig('region_bypass.conf', 'false') === 'true',
-        proxy_url: readConfig('proxy_url.conf', '')
+        proxy_url: readConfig('proxy_url.conf', ''),
+        disable_enhanced_header: readConfig('disable_enhanced_header.conf', 'false') === 'true'
     };
 });
 
@@ -91,6 +92,7 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('true_shuffle_mode.conf', args.true_shuffle_mode || args.trueShuffleMode || 'native');
     writeConfig('region_bypass.conf', args.regionBypass ? 'true' : 'false');
     writeConfig('proxy_url.conf', args.proxyUrl || '');
+    writeConfig('disable_enhanced_header.conf', args.disableEnhancedHeader ? 'true' : 'false');
 });
 
 ipcMain.handle('__internal_fetch_sc_css', async (e, args) => {
@@ -283,7 +285,8 @@ function createWindow() {
             true_shuffle: readConfig('true_shuffle.conf', 'false') === 'true',
             true_shuffle_mode: readConfig('true_shuffle_mode.conf', 'native'),
             region_bypass: readConfig('region_bypass.conf', 'false') === 'true',
-            proxy_url: readConfig('proxy_url.conf', '')
+            proxy_url: readConfig('proxy_url.conf', ''),
+            disable_enhanced_header: readConfig('disable_enhanced_header.conf', 'false') === 'true'
         };
 
         // inject config & mock tauri

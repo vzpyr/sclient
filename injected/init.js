@@ -60,6 +60,7 @@ if (oledDarkModeEnabled) {
           --button-secondary-background-color: #000000 !important;
           --button-secondary-selected-background-color: #000000 !important;
           --highlight-color: #000000 !important;
+          --surface-color: #000000 !important;
         }
         
         /* Aggressively override the MUI background variable everywhere */
@@ -171,10 +172,12 @@ safeReorderStyle.textContent = `
         margin: 0 8px !important;
     }
 `;
-if (document.head) {
-    document.head.appendChild(safeReorderStyle);
-} else {
-    document.addEventListener('DOMContentLoaded', () => document.head.appendChild(safeReorderStyle));
+if (typeof disableEnhancedHeaderEnabled !== 'undefined' && !disableEnhancedHeaderEnabled) {
+    if (document.head) {
+        document.head.appendChild(safeReorderStyle);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => document.head.appendChild(safeReorderStyle));
+    }
 }
 
 if (currentCss) {
@@ -322,8 +325,10 @@ const settingsObserver = new MutationObserver(() => {
     injectSClientMenuButton();
     try { if (typeof injectDownloadButton === 'function') injectDownloadButton(); } catch(e) {}
     try { if (typeof injectLyricsButton === 'function') injectLyricsButton(); } catch(e) {}
-    replaceNavTabsWithIcons();
-    injectNavigationButtons();
+    if (typeof disableEnhancedHeaderEnabled !== 'undefined' && !disableEnhancedHeaderEnabled) {
+        replaceNavTabsWithIcons();
+        injectNavigationButtons();
+    }
 });
 
 if (document.readyState === 'loading') {

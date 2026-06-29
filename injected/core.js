@@ -107,6 +107,7 @@ let hideUpsellEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hi
 let hideArtistsEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_artists : false;
 let regionBypassEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.region_bypass : false;
 let proxyUrl = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.proxy_url : '';
+let disableEnhancedHeaderEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.disable_enhanced_header : false;
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
@@ -252,7 +253,7 @@ function applyFluidViewport() {
     style.textContent = `
         .l-container {
           min-width: 720px !important;
-          max-width: 1469px !important;
+          max-width: 1470px !important;
           width: 100% !important;
         }
     `;
