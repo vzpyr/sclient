@@ -248,6 +248,10 @@ function createWindow() {
 
     mainWindow.setMenu(null);
 
+    mainWindow.on('page-title-updated', (e) => {
+        e.preventDefault();
+    });
+
         mainWindow.webContents.on('before-input-event', (event, input) => {
         if (input.key === 'F12' && input.type === 'keyDown') {
             mainWindow.webContents.toggleDevTools();

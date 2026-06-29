@@ -6,7 +6,7 @@ scrollStyle.textContent = `
     ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
     * { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
 
-    // light theme
+    /* light theme */
     body.theme-light #sclient-settings-overlay,
     body.theme-light #sclient-lyrics-sidebar {
         background: rgba(250, 250, 250, 0.95) !important;
@@ -18,16 +18,7 @@ scrollStyle.textContent = `
         color: #444 !important;
     }
 
-    body.theme-light #sclient-lazy-scroll {
-        background: rgba(250, 250, 250, 0.9) !important;
-        color: #333 !important;
-        border: 1px solid #ccc !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-    }
 
-    body.theme-light #sclient-lazy-scroll:hover {
-        background: rgba(235, 235, 235, 0.95) !important;
-    }
 
     body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"] {
         background: rgba(0,0,0,0.05) !important;
@@ -41,50 +32,46 @@ scrollStyle.textContent = `
 
     body.theme-light #sclient-add-account-btn,
     body.theme-light #sclient-accounts-list button {
-        background: #e0e0e0 !important;
+        background: #eee !important;
         color: #333 !important;
-        border: 1px solid #ccc !important;
+        border: 1px solid #ddd !important;
     }
 
     body.theme-light button#tab-css[style*="rgb(51, 51, 51)"],
     body.theme-light button#tab-css[style*="#333"],
     body.theme-light button#tab-js[style*="rgb(51, 51, 51)"],
     body.theme-light button#tab-js[style*="#333"] {
-        background: #e0e0e0 !important;
-        color: #333 !important;
-        border: 1px solid #ccc !important;
+        background: #eee !important;
+        color: #111 !important;
     }
 
     body.theme-light input[type="text"],
     body.theme-light textarea:not(#sclient-css-editor):not(#sclient-js-editor) {
         background: #fff !important;
         color: #333 !important;
-        border: 1px solid #bbb !important;
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.05) !important;
+        border: 1px solid #ccc !important;
     }
 
     body.theme-light #sclient-css-container,
     body.theme-light #sclient-js-container {
-        background: #121212 !important;
-        filter: invert(1) hue-rotate(180deg);
-        border: 1px solid #333 !important;
-        border-radius: 4px;
+        border-top: 1px solid rgba(0,0,0,0.1) !important;
     }
 
+    /* True Shuffle Settings - Light Theme */
     body.theme-light #sclient-trueshuffle-engine {
-        background-color: #fff !important;
-        color: #333 !important;
-        border: 1px solid #ccc !important;
-        background-image: url('data:image/svg+xml;utf8,<svg fill="%23333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') !important;
-    }
-    body.theme-light #sclient-trueshuffle-engine option {
         background: #fff !important;
         color: #333 !important;
+        border: 1px solid #ccc !important;
+    }
+    
+    body.theme-light #sclient-trueshuffle-engine option {
+        background: #fff;
+        color: #333;
     }
     body.theme-light #sclient-proxyurl-input {
         background: #fff !important;
         color: #333 !important;
-        border-color: #ccc !important;
+        border: 1px solid #ccc !important;
     }
 `;
 if (document.head) document.head.appendChild(scrollStyle);
@@ -320,7 +307,7 @@ function applyCollapsibleSidebar() {
             bottom: 46px !important;
             right: -360px !important;
             width: 360px !important;
-            background-color: var(--mui-palette-background-default, #fff) !important;
+            background-color: var(--background-surface-color, #fff) !important;
             z-index: 100 !important;
             transition: right 0.3s ease !important;
             box-sizing: border-box !important;
@@ -334,21 +321,7 @@ function applyCollapsibleSidebar() {
         }
         #sclient-sidebar-toggle {
             display: none !important;
-            position: fixed;
             top: 60px;
-            right: 20px;
-            z-index: 101;
-            background: var(--mui-palette-background-default, #333);
-            color: var(--highlight-color, #f50);
-            border: 1px solid rgba(128,128,128,0.2);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            transition: right 0.3s ease, background 0.2s, transform 0.2s;
         }
         body:has(.l-sidebar-right) #sclient-sidebar-toggle {
             display: flex !important;
@@ -363,32 +336,69 @@ function applyCollapsibleSidebar() {
     }
 }
 
+function injectFloatingButtonStyles() {
+    if (document.getElementById('sclient-floating-btn-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'sclient-floating-btn-styles';
+    style.textContent = `
+        .sclient-floating-btn {
+            position: fixed;
+            right: 20px;
+            z-index: 101;
+            background: var(--background-surface-color, #f2f2f2);
+            color: #333;
+            border: 1px solid #ccc !important;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: right 0.3s ease, background 0.2s, color 0.2s, border-color 0.2s;
+            padding: 0;
+            outline: none !important;
+        }
+        .sclient-floating-btn:focus {
+            outline: none !important;
+        }
+        .sclient-floating-btn:hover {
+            background: #e0e0e0;
+        }
+        .theme-dark .sclient-floating-btn {
+            color: #fff;
+            border: 1px solid #333 !important;
+        }
+        .theme-dark .sclient-floating-btn:hover {
+            background: #333;
+        }
+        
+        /* Active State (High Specificity) */
+        body button.sclient-floating-btn.active,
+        .theme-dark body button.sclient-floating-btn.active {
+            color: #f50 !important;
+            border: 1px solid #f50 !important;
+        }
+        
+        body button.sclient-floating-btn.active svg,
+        .theme-dark body button.sclient-floating-btn.active svg {
+            color: #f50 !important;
+            stroke: #f50 !important;
+        }
+    `;
+    if (document.head) document.head.appendChild(style);
+    else document.addEventListener('DOMContentLoaded', () => document.head.appendChild(style));
+}
+
 function setupLazyScroll() {
     if (document.getElementById('sclient-lazy-scroll')) return;
 
     const btn = document.createElement('button');
     btn.id = 'sclient-lazy-scroll';
-    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"></polyline><polyline points="7 6 12 11 17 6"></polyline></svg>`;
-    btn.style.cssText = `
-        position: fixed;
-        bottom: 68px;
-        right: 20px;
-        z-index: 999999;
-        background: rgba(18, 18, 18, 0.8);
-        color: #fff;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        cursor: pointer;
-        backdrop-filter: blur(5px);
-        transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    `;
+    btn.className = 'sclient-floating-btn';
+    btn.style.bottom = '68px';
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-down-icon lucide-chevrons-down"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg>`;
 
     let scrolling = false;
     let scrollInterval = null;
@@ -396,23 +406,14 @@ function setupLazyScroll() {
     btn.addEventListener('click', () => {
         scrolling = !scrolling;
         if (scrolling) {
-            btn.style.background = customAccentEnabled ? accentColor : '#f50';
-            btn.style.border = '2px solid #fff';
+            btn.classList.add('active');
             scrollInterval = setInterval(() => {
                 window.scrollBy({ top: 300, behavior: 'auto' });
             }, 16);
         } else {
-            btn.style.background = 'rgba(18, 18, 18, 0.8)';
-            btn.style.border = '2px solid #fff';
+            btn.classList.remove('active');
             clearInterval(scrollInterval);
         }
-    });
-
-    btn.addEventListener('mouseenter', () => {
-        if (!scrolling) btn.style.background = 'rgba(30, 30, 30, 0.9)';
-    });
-    btn.addEventListener('mouseleave', () => {
-        if (!scrolling) btn.style.background = 'rgba(18, 18, 18, 0.8)';
     });
 
     document.body.appendChild(btn);

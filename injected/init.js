@@ -53,8 +53,9 @@ if (typeof wideLayoutEnabled !== 'undefined' && wideLayoutEnabled) {
 if (typeof collapsibleSidebarEnabled !== 'undefined' && collapsibleSidebarEnabled) {
     applyCollapsibleSidebar();
 }
-// Always apply layout fixes to ensure smooth scaling and prevent clipping
+// Always apply layout and floating button styles
 applyLayoutFixes();
+injectFloatingButtonStyles();
 
 if (oledDarkModeEnabled) {
     const oledStyle = document.createElement('style');
@@ -68,14 +69,14 @@ if (oledDarkModeEnabled) {
           --surface-color: #000000 !important;
         }
         
-        /* Aggressively override the MUI background variable everywhere */
-        *, body, html {
-          --mui-palette-background-default: #000000 !important;
+        /* High specificity target for the artist tools container */
+        .theme-dark div.MuiBox-root.mui-1i9nq8r {
+          background-color: #000000 !important;
         }
         
-        /* High specificity target for the artist tools container */
-        body div.MuiBox-root.mui-1i9nq8r {
-          background-color: #000000 !important;
+        /* Aggressively override the MUI background variable everywhere but ONLY in dark mode */
+        .theme-dark, .theme-dark *, .theme-dark body, .theme-dark html {
+          --mui-palette-background-default: #000000 !important;
         }
     `;
     if (document.head) document.head.appendChild(oledStyle);
@@ -226,20 +227,19 @@ function injectSidebarToggle() {
     
     const btn = document.createElement('button');
     btn.id = 'sclient-sidebar-toggle';
+    btn.className = 'sclient-floating-btn';
     btn.title = "Toggle Sidebar";
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
-    
-    btn.addEventListener('mouseenter', () => btn.style.transform = 'scale(1.1)');
-    btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open-icon lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
     
     btn.addEventListener('click', (e) => {
         e.preventDefault();
         document.body.classList.toggle('sclient-sidebar-open');
         const isOpen = document.body.classList.contains('sclient-sidebar-open');
+        btn.classList.toggle('active', isOpen);
         btn.style.right = isOpen ? '360px' : '20px';
         btn.innerHTML = isOpen ? 
-            `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-close"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>` : 
-            `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
+            `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-close-icon lucide-panel-right-close"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>` : 
+            `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open-icon lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
     });
 
     document.body.appendChild(btn);
@@ -292,16 +292,21 @@ function replaceNavTabsWithIcons() {
         libraryTab.title = "Library";
     }
 
-    const notificationBtn = document.querySelector('.header__navMenu button[aria-label="Notifications"]');
+    const notificationBtn = document.querySelector('.header__userNavActivitiesButton .notificationIcon > div:first-child');
     if (notificationBtn) {
         safeReplaceSvg(notificationBtn, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-icon lucide-bell"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>');
         notificationBtn.title = "Notifications";
     }
 
-    const messageBtn = document.querySelector('.header__navMenu a[title="Messages"]');
+    const messageBtn = document.querySelector('.header__userNavMessagesButton .notificationIcon > div:first-child');
     if (messageBtn) {
         safeReplaceSvg(messageBtn, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-icon lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>');
         messageBtn.title = "Messages";
+    }
+
+    const userChevron = document.querySelector('.header__userNavUsernameButtonIcon > div:first-child');
+    if (userChevron) {
+        safeReplaceSvg(userChevron, '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="m6 9 6 6 6-6"/></svg>');
     }
 
     const moreContainer = document.querySelector('a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child');
