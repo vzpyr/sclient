@@ -95,6 +95,7 @@ let accentColor = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.accent_c
 let lazyScrollEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lazy_scroll : false;
 let hideDecorationsEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_decorations : false;
 let fluidViewportEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.fluid_viewport : false;
+let oledDarkModeEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.oled_dark_mode : false;
 let currentCss = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.css : '';
 let currentJs = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.js : '';
 let adblockEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.adblock : false;

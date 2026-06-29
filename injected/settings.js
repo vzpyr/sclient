@@ -78,6 +78,16 @@ function createOverlay() {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <span style="font-size: 14px; font-weight: 500;">Enable OLED Dark Mode</span>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                <input type="checkbox" id="sclient-oled-dark-mode-toggle" style="opacity: 0; width: 0; height: 0;">
+                <span id="sclient-toggle-bg-oled" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                    <span id="sclient-toggle-slider-oled" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                </span>
+            </label>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <span style="font-size: 14px; font-weight: 500;">Fluid Viewport (Wide Mode)</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
                 <input type="checkbox" id="sclient-fluid-viewport-toggle" style="opacity: 0; width: 0; height: 0;">
@@ -328,6 +338,10 @@ function createOverlay() {
     const accentPicker = overlay.querySelector('#sclient-accent-color-picker');
     const accentText = overlay.querySelector('#sclient-accent-color-text');
 
+    const oledToggle = overlay.querySelector('#sclient-oled-dark-mode-toggle');
+    const oledToggleBg = overlay.querySelector('#sclient-toggle-bg-oled');
+    const oledToggleSlider = overlay.querySelector('#sclient-toggle-slider-oled');
+
     const fluidToggle = overlay.querySelector('#sclient-fluid-viewport-toggle');
     const fluidToggleBg = overlay.querySelector('#sclient-toggle-bg-fluid');
     const fluidToggleSlider = overlay.querySelector('#sclient-toggle-slider-fluid');
@@ -411,6 +425,16 @@ function createOverlay() {
         }
     }
 
+    function updateOledToggleUI(checked) {
+        if (checked) {
+            oledToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            oledToggleSlider.style.transform = 'translateX(20px)';
+        } else {
+            oledToggleBg.style.backgroundColor = '#333';
+            oledToggleSlider.style.transform = 'translateX(0)';
+        }
+    }
+
     function updateFluidToggleUI(checked) {
         if (checked) {
             fluidToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
@@ -482,6 +506,10 @@ function createOverlay() {
     decToggle.checked = hideDecorationsEnabled;
     updateDecToggleUI(hideDecorationsEnabled);
     decToggle.addEventListener('change', (e) => updateDecToggleUI(e.target.checked));
+
+    oledToggle.checked = oledDarkModeEnabled;
+    updateOledToggleUI(oledDarkModeEnabled);
+    oledToggle.addEventListener('change', (e) => updateOledToggleUI(e.target.checked));
 
     fluidToggle.checked = fluidViewportEnabled;
     updateFluidToggleUI(fluidViewportEnabled);
@@ -664,6 +692,7 @@ function createOverlay() {
         const newCustomAccent = accentToggle.checked;
         const newAccentColor = accentText.value;
         const newFluidViewport = fluidToggle.checked;
+        const newOledDarkMode = oledToggle.checked;
         const newAdblock = adblockToggle.checked;
         const newDiscordRpc = rpcToggle.checked;
         const newTrayIcon = trayToggle.checked;
@@ -675,7 +704,7 @@ function createOverlay() {
         const newProxyUrl = document.querySelector('#sclient-proxyurl-input').value;
         
         if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, fluidViewport: newFluidViewport, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl })
+            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, fluidViewport: newFluidViewport, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl })
                 .then(() => {
                     window.location.reload();
                 })
@@ -724,6 +753,18 @@ function toggleOverlay() {
         } else {
             decToggleBgEl.style.backgroundColor = '#333';
             decToggleSliderEl.style.transform = 'translateX(0)';
+        }
+
+        const oledToggleEl = document.getElementById('sclient-oled-dark-mode-toggle');
+        oledToggleEl.checked = oledDarkModeEnabled;
+        const oledToggleBgEl = document.getElementById('sclient-toggle-bg-oled');
+        const oledToggleSliderEl = document.getElementById('sclient-toggle-slider-oled');
+        if (oledDarkModeEnabled) {
+            oledToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            oledToggleSliderEl.style.transform = 'translateX(20px)';
+        } else {
+            oledToggleBgEl.style.backgroundColor = '#333';
+            oledToggleSliderEl.style.transform = 'translateX(0)';
         }
 
         const fluidToggleEl = document.getElementById('sclient-fluid-viewport-toggle');

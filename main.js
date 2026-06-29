@@ -60,6 +60,7 @@ ipcMain.handle('get_custom_files', () => {
         custom_accent: readConfig('custom_accent.conf', 'false') === 'true',
         accent_color: readConfig('accent_color.conf', '#FF0000'),
         fluid_viewport: readConfig('fluid_viewport.conf', 'false') === 'true',
+        oled_dark_mode: readConfig('oled_dark_mode.conf', 'false') === 'true',
         adblock: readConfig('adblock.conf', 'false') === 'true',
         discord_rpc: readConfig('discord_rpc.conf', 'false') === 'true',
         tray_icon: readConfig('tray_icon.conf', 'false') === 'true',
@@ -80,6 +81,7 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('custom_accent.conf', args.customAccent ? 'true' : 'false');
     writeConfig('accent_color.conf', args.accentColor || '#f50');
     writeConfig('fluid_viewport.conf', args.fluidViewport ? 'true' : 'false');
+    writeConfig('oled_dark_mode.conf', args.oledDarkMode ? 'true' : 'false');
     writeConfig('adblock.conf', args.adblock ? 'true' : 'false');
     writeConfig('discord_rpc.conf', args.discordRpc ? 'true' : 'false');
     writeConfig('tray_icon.conf', args.trayIcon ? 'true' : 'false');
@@ -272,6 +274,7 @@ function createWindow() {
             custom_accent: readConfig('custom_accent.conf', 'false') === 'true',
             accent_color: readConfig('accent_color.conf', '#FF0000'),
             fluid_viewport: readConfig('fluid_viewport.conf', 'false') === 'true',
+            oled_dark_mode: readConfig('oled_dark_mode.conf', 'false') === 'true',
             adblock: readConfig('adblock.conf', 'false') === 'true',
             discord_rpc: readConfig('discord_rpc.conf', 'false') === 'true',
             tray_icon: readConfig('tray_icon.conf', 'false') === 'true',

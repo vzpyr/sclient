@@ -51,6 +51,21 @@ if (fluidViewportEnabled) {
     applyFluidViewport();
 }
 
+if (oledDarkModeEnabled) {
+    const oledStyle = document.createElement('style');
+    oledStyle.id = 'sclient-oled-dark-mode';
+    oledStyle.textContent = `
+        .theme-dark {
+          --background-surface-color: #000000 !important;
+          --button-secondary-background-color: #000000 !important;
+          --button-secondary-selected-background-color: #000000 !important;
+          --highlight-color: #000000 !important;
+        }
+    `;
+    if (document.head) document.head.appendChild(oledStyle);
+    else document.addEventListener('DOMContentLoaded', () => document.head.appendChild(oledStyle));
+}
+
 if (adblockEnabled) {
     applyAdblock();
 }
