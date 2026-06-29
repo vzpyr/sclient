@@ -287,12 +287,43 @@ function replaceNavTabsWithIcons() {
     }
 }
 
+function injectNavigationButtons() {
+    if (document.getElementById('sclient-nav-back-btn')) return;
+
+    const navMenu = document.querySelector('.header__navMenu');
+    if (navMenu && navMenu.firstChild) {
+        const backLi = document.createElement('li');
+        const backBtn = document.createElement('a');
+        backBtn.id = 'sclient-nav-back-btn';
+        backBtn.className = 'header__navMenuItem sc-mr-1x';
+        backBtn.title = 'Back';
+        backBtn.style.cssText = 'font-size: 0px; line-height: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; height: 46px; width: 30px; padding: 0;';
+        backBtn.innerHTML = `<div class="sclient-svg-container" style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-left-icon lucide-chevron-left"><path d="m15 18-6-6 6-6"/></svg></div>`;
+        backBtn.addEventListener('click', (e) => { e.preventDefault(); window.history.back(); });
+        backLi.appendChild(backBtn);
+
+        const fwdLi = document.createElement('li');
+        const fwdBtn = document.createElement('a');
+        fwdBtn.id = 'sclient-nav-fwd-btn';
+        fwdBtn.className = 'header__navMenuItem';
+        fwdBtn.title = 'Forward';
+        fwdBtn.style.cssText = 'font-size: 0px; line-height: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; height: 46px; width: 30px; padding: 0; margin-right: 10px;';
+        fwdBtn.innerHTML = `<div class="sclient-svg-container" style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-right-icon lucide-chevron-right"><path d="m9 18 6-6-6-6"/></svg></div>`;
+        fwdBtn.addEventListener('click', (e) => { e.preventDefault(); window.history.forward(); });
+        fwdLi.appendChild(fwdBtn);
+
+        navMenu.insertBefore(fwdLi, navMenu.firstChild);
+        navMenu.insertBefore(backLi, navMenu.firstChild);
+    }
+}
+
 // observe dom
 const settingsObserver = new MutationObserver(() => {
     injectSClientMenuButton();
     try { if (typeof injectDownloadButton === 'function') injectDownloadButton(); } catch(e) {}
     try { if (typeof injectLyricsButton === 'function') injectLyricsButton(); } catch(e) {}
     replaceNavTabsWithIcons();
+    injectNavigationButtons();
 });
 
 if (document.readyState === 'loading') {
