@@ -16,12 +16,13 @@ SClient adds several enhancements and quality of life features to the standard w
 * **True Shuffle**: Fixes the default shuffle behavior by loading the entire playlist or using an API-based shuffle engine.
 * **Ad Blocker**: Blocks audio and banner advertisements natively.
 * **Track Downloader**: Download tracks directly from the player interface.
-* **Lyrics Integration**: View lyrics for the currently playing song in a sidebar.
+* **Lyrics Integration**: View lyrics for the currently playing song in a sidebar, including a manual search fallback.
 * **Customization**: Inject your own custom CSS and JavaScript or change the global UI accent color.
+* **OLED Dark Mode**: A true black dark mode that comprehensively overrides the default theme, perfect for OLED displays.
 * **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
 * **Multi-Account Support**: Create, manage, and switch between multiple isolated profiles.
 * **Region Bypass**: Built-in proxy support to bypass geographic track restrictions. You can use the free public proxy (https://scproxy.vercel.app/) or self-host your own using the included `app.js` file.
-* **Interface Tweaks**: Options to hide window decorations, enable a fluid wide viewport, add a lazy scroll button, hide subscription upsells and hide artist features.
+* **Interface Tweaks**: Options to hide window decorations, enable a wide layout, use a collapsible sidebar, enable an enhanced header (with modern Lucide icons and navigation buttons), add a lazy scroll button, hide subscription upsells and hide artist features.
 * **System Tray**: Run the application in the background and control playback from your system tray.
 
 ## Installation
