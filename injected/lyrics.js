@@ -1,5 +1,6 @@
 let lyricsSidebarOpen = false;
 let currentLyricsTrack = '';
+let lastMediaSessionTrack = '';
 
 function createLyricsSidebar() {
     if (document.getElementById('sclient-lyrics-sidebar')) return;
@@ -56,22 +57,10 @@ function toggleLyricsSidebar() {
     }
 }
 
-async function fetchAndUpdateLyrics() {
-    if (!lyricsSidebarOpen) return;
-
-    let title = '';
-    let artist = '';
-    if (navigator.mediaSession && navigator.mediaSession.metadata) {
-        title = navigator.mediaSession.metadata.title || '';
-        artist = navigator.mediaSession.metadata.artist || '';
-    }
-
-    if (!title || !artist) return;
+async function doFetch(artist, title) {
+    currentLyricsTrack = artist + ' - ' + title;
+    const trackKey = currentLyricsTrack;
     
-    const trackKey = artist + ' - ' + title;
-    if (currentLyricsTrack === trackKey) return;
-
-    currentLyricsTrack = trackKey;
     const contentDiv = document.getElementById('sclient-lyrics-content');
     if (contentDiv) {
         contentDiv.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${title}</b>...</div>`;
@@ -87,14 +76,56 @@ async function fetchAndUpdateLyrics() {
                 const escapedLyrics = data.plainLyrics.replace(/</g, '&lt;').replace(/>/g, '&gt;');
                 contentDiv.innerHTML = `<div style="font-weight:bold; margin-bottom: 15px; color:${customAccentEnabled ? accentColor : '#f50'};">${title}<br><span style="font-size:12px; font-weight:normal; color:#aaa;">${artist}</span></div>${escapedLyrics}`;
             } else {
-                contentDiv.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>`;
+                renderManualSearch(artist, title);
             }
         }
     } catch (e) {
         if (contentDiv && currentLyricsTrack === trackKey) {
-            contentDiv.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>`;
+            renderManualSearch(artist, title);
         }
     }
+}
+
+function renderManualSearch(artist, title) {
+    const contentDiv = document.getElementById('sclient-lyrics-content');
+    if (!contentDiv) return;
+    
+    contentDiv.innerHTML = `
+        <div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>
+        <div style="margin-top: 15px; text-align: center;">
+            <div style="margin-bottom: 8px; font-size: 12px; color: #aaa;">Try manually:</div>
+            <input type="text" id="sclient-lyrics-manual-artist" placeholder="Artist" value="${artist.replace(/"/g, '&quot;')}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
+            <input type="text" id="sclient-lyrics-manual-title" placeholder="Title" value="${title.replace(/"/g, '&quot;')}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
+            <button id="sclient-lyrics-manual-search" style="width: 90%; padding: 6px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; cursor: pointer; transition: background 0.2s;">Search</button>
+        </div>
+    `;
+    
+    document.getElementById('sclient-lyrics-manual-search').addEventListener('click', () => {
+        const newArtist = document.getElementById('sclient-lyrics-manual-artist').value;
+        const newTitle = document.getElementById('sclient-lyrics-manual-title').value;
+        if (newArtist && newTitle) {
+            doFetch(newArtist, newTitle);
+        }
+    });
+}
+
+async function fetchAndUpdateLyrics() {
+    if (!lyricsSidebarOpen) return;
+
+    let title = '';
+    let artist = '';
+    if (navigator.mediaSession && navigator.mediaSession.metadata) {
+        title = navigator.mediaSession.metadata.title || '';
+        artist = navigator.mediaSession.metadata.artist || '';
+    }
+
+    if (!title || !artist) return;
+    
+    const trackKey = artist + ' - ' + title;
+    if (lastMediaSessionTrack === trackKey) return;
+
+    lastMediaSessionTrack = trackKey;
+    doFetch(artist, title);
 }
 
 // poll track
