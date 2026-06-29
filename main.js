@@ -126,16 +126,7 @@ ipcMain.handle('update_rpc', async (e, args) => {
         rpc = new Client({
             clientId: clientId,
             transport: {
-                type: 'ipc',
-                pathList: [
-                    {
-                        platform: ['linux'],
-                        format: (id) => {
-                            const uid = process.getuid ? process.getuid() : 1000;
-                            return `/run/user/${uid}/discord-ipc-${id}`;
-                        }
-                    }
-                ]
+                type: 'ipc'
             }
         });
         
