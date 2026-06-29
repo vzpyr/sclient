@@ -19,10 +19,8 @@ function injectSClientMenuButton() {
         button.title = 'SClient Settings';
         
         button.innerHTML = `
-        <div class="header__moreButtonIcon" style="width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"></path>
-            </svg>
+        <div class="header__moreButtonIcon" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
         </div>
         `;
 
@@ -36,6 +34,8 @@ function injectSClientMenuButton() {
         targetMenu.parentNode.insertBefore(customNavMenu, targetMenu);
     }
 }
+
+// REVERTED to vanilla
 
 
 
@@ -96,6 +96,8 @@ if (document.head) {
     document.addEventListener('DOMContentLoaded', () => document.head.appendChild(playerFixStyle));
 }
 
+// Spacing fixed in safeReorderStyle
+
 if (currentCss) {
     if (document.head) {
         const style = document.createElement('style');
@@ -130,11 +132,82 @@ try {
     console.error('[SClient] Error executing custom JS:', e);
 }
 
+function replaceNavTabsWithIcons() {
+    function safeReplaceSvg(container, svgHtml) {
+        if (!container || container.querySelector('.sclient-svg-container')) return;
+        
+        // Hide native SVGs without removing them from DOM
+        const nativeSvgs = container.querySelectorAll('svg');
+        nativeSvgs.forEach(svg => {
+            svg.style.display = 'none';
+        });
+
+        // Hide text nodes securely and collapse their physical dimensions
+        container.style.fontSize = '0';
+        container.style.lineHeight = '0';
+        
+        // Force the container to wrap the new SVG tightly
+        container.style.display = 'flex';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+
+        const customIcon = document.createElement('div');
+        customIcon.className = 'sclient-svg-container';
+        customIcon.style.display = 'flex';
+        customIcon.style.alignItems = 'center';
+        customIcon.style.justifyContent = 'center';
+        customIcon.innerHTML = svgHtml;
+        
+        container.appendChild(customIcon);
+    }
+
+    const homeTab = document.querySelector('a[data-menu-name="home"]');
+    if (homeTab) {
+        safeReplaceSvg(homeTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-house-icon lucide-house"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>');
+        homeTab.title = "Home";
+    }
+
+    const streamTab = document.querySelector('a[data-menu-name="stream"]');
+    if (streamTab) {
+        safeReplaceSvg(streamTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock-icon lucide-calendar-clock"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg>');
+        streamTab.title = "Feed";
+    }
+
+    const libTab = document.querySelector('a[data-menu-name="library"]');
+    if (libTab) {
+        safeReplaceSvg(libTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-library-icon lucide-library"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>');
+        libTab.title = "Library";
+    }
+
+    const notifContainer = document.querySelector('.notificationIcon.activities > div:first-child');
+    if (notifContainer) {
+        safeReplaceSvg(notifContainer, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-icon lucide-bell"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>');
+    }
+
+    const mailContainer = document.querySelector('.notificationIcon.messages > div:first-child');
+    if (mailContainer) {
+        safeReplaceSvg(mailContainer, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-icon lucide-mail"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>');
+    }
+
+    const moreContainer = document.querySelector('a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child');
+    if (moreContainer) {
+        safeReplaceSvg(moreContainer, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis-icon lucide-ellipsis"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>');
+    }
+
+    const uploadTitle = document.querySelector('.uploadButton__title');
+    if (uploadTitle) {
+        safeReplaceSvg(uploadTitle, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>');
+        const uploadBtn = document.querySelector('.uploadButton');
+        if (uploadBtn) uploadBtn.title = "Upload";
+    }
+}
+
 // observe dom
 const settingsObserver = new MutationObserver(() => {
     injectSClientMenuButton();
-    injectDownloadButton();
-    injectLyricsButton();
+    try { if (typeof injectDownloadButton === 'function') injectDownloadButton(); } catch(e) {}
+    try { if (typeof injectLyricsButton === 'function') injectLyricsButton(); } catch(e) {}
+    replaceNavTabsWithIcons();
 });
 
 if (document.readyState === 'loading') {
