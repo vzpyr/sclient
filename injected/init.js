@@ -96,7 +96,51 @@ if (document.head) {
     document.addEventListener('DOMContentLoaded', () => document.head.appendChild(playerFixStyle));
 }
 
-// Spacing fixed in safeReorderStyle
+// Spacing and reordering style
+const safeReorderStyle = document.createElement('style');
+safeReorderStyle.textContent = `
+    .header__right {
+        display: flex !important;
+        align-items: center !important;
+    }
+    .header__userNav {
+        display: contents !important;
+    }
+    .header__upsellWrapper {
+        order: 1 !important;
+    }
+    .header__forArtistsButton {
+        order: 2 !important;
+    }
+    .header__soundInput {
+        order: 3 !important;
+    }
+    .header__userNavActivitiesButton {
+        order: 4 !important;
+    }
+    .header__userNavMessagesButton {
+        order: 5 !important;
+    }
+    .header__right > ul:has(#sclient-settings-btn) {
+        order: 6 !important;
+        margin-right: 0 !important;
+    }
+    .header__userNavUsernameButton {
+        order: 7 !important;
+        margin-left: 8px !important;
+        margin-right: 8px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+    .header__right > ul:has(.header__moreButton:not(#sclient-settings-btn)) {
+        order: 8 !important;
+    }
+`;
+if (document.head) {
+    document.head.appendChild(safeReorderStyle);
+} else {
+    document.addEventListener('DOMContentLoaded', () => document.head.appendChild(safeReorderStyle));
+}
 
 if (currentCss) {
     if (document.head) {
