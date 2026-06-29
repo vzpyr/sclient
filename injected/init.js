@@ -111,9 +111,13 @@ safeReorderStyle.textContent = `
     }
     .header__forArtistsButton {
         order: 2 !important;
+        margin-right: 0 !important;
     }
     .header__soundInput {
         order: 3 !important;
+    }
+    .uploadButton {
+        margin-right: 0 !important;
     }
     .header__userNavActivitiesButton {
         order: 4 !important;
@@ -134,6 +138,12 @@ safeReorderStyle.textContent = `
     }
     .header__right > ul:has(.header__moreButton:not(#sclient-settings-btn)) {
         order: 8 !important;
+    }
+    .headerSearch__input {
+        border-radius: 50px !important;
+    }
+    .header__search .headerSearch {
+        margin: 0 8px !important;
     }
 `;
 if (document.head) {
@@ -243,6 +253,12 @@ function replaceNavTabsWithIcons() {
         safeReplaceSvg(uploadTitle, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-upload-icon lucide-upload"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>');
         const uploadBtn = document.querySelector('.uploadButton');
         if (uploadBtn) uploadBtn.title = "Upload";
+    }
+
+    const artistStudioBtn = document.querySelector('.header__forArtistsButton');
+    if (artistStudioBtn) {
+        safeReplaceSvg(artistStudioBtn, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-keyboard-music-icon lucide-keyboard-music"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>');
+        artistStudioBtn.title = "Artist Studio";
     }
 }
 
