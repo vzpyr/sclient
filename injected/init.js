@@ -61,9 +61,34 @@ if (oledDarkModeEnabled) {
           --button-secondary-selected-background-color: #000000 !important;
           --highlight-color: #000000 !important;
         }
+        
+        /* Aggressively override the MUI background variable everywhere */
+        *, body, html {
+          --mui-palette-background-default: #000000 !important;
+        }
+        
+        /* High specificity target for the artist tools container */
+        body div.MuiBox-root.mui-1i9nq8r {
+          background-color: #000000 !important;
+        }
     `;
     if (document.head) document.head.appendChild(oledStyle);
     else document.addEventListener('DOMContentLoaded', () => document.head.appendChild(oledStyle));
+
+    // Also inject into any same-origin iframes (like artist tools)
+    setInterval(() => {
+        document.querySelectorAll('iframe').forEach(iframe => {
+            try {
+                if (iframe.contentDocument && iframe.contentDocument.head) {
+                    if (!iframe.contentDocument.getElementById('sclient-oled-dark-mode')) {
+                        iframe.contentDocument.head.appendChild(oledStyle.cloneNode(true));
+                    }
+                }
+            } catch (e) {
+                // Cross-origin iframe, ignore
+            }
+        });
+    }, 1000);
 }
 
 if (adblockEnabled) {
