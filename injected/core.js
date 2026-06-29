@@ -94,7 +94,8 @@ let customAccentEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.
 let accentColor = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.accent_color : '#FF0000';
 let lazyScrollEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lazy_scroll : false;
 let hideDecorationsEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_decorations : false;
-let fluidViewportEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.fluid_viewport : false;
+let wideLayoutEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.wide_layout : false;
+let collapsibleSidebarEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.collapsible_sidebar : false;
 let oledDarkModeEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.oled_dark_mode : false;
 let currentCss = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.css : '';
 let currentJs = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.js : '';
@@ -107,7 +108,7 @@ let hideUpsellEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hi
 let hideArtistsEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_artists : false;
 let regionBypassEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.region_bypass : false;
 let proxyUrl = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.proxy_url : '';
-let disableEnhancedHeaderEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.disable_enhanced_header : false;
+let enhancedHeaderEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.enhanced_header : true;
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
@@ -247,7 +248,7 @@ function applyCustomAccentColor(newColor) {
     observer.observe(document.documentElement, { childList: true, subtree: true });
 }
 
-function applyFluidViewport() {
+function applyWideLayout() {
     const style = document.createElement('style');
     style.id = 'sclient-fluid-viewport';
     style.textContent = `
@@ -255,6 +256,102 @@ function applyFluidViewport() {
           min-width: 720px !important;
           max-width: 1470px !important;
           width: 100% !important;
+        }
+    `;
+    if (document.head) {
+        document.head.appendChild(style);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.head.appendChild(style);
+        });
+    }
+}
+
+function applyLayoutFixes() {
+    const style = document.createElement('style');
+    style.id = 'sclient-layout-fixes';
+    style.textContent = `
+        /* Fix clipping for tile galleries when expanded beyond normal widths */
+        .mixedSelectionModule,
+        .mixedSelectionGallery,
+        .tileGallery,
+        .tileGallery__sliderPeekContainer,
+        .tileGallery__sliderPanel {
+            height: auto !important;
+            min-height: min-content !important;
+        }
+
+        .tileGallery__slider {
+            height: auto !important;
+            min-height: min-content !important;
+            padding: 0 !important; /* Override the 48px bottom padding that triggers at 1239px */
+        }
+        
+        .playableTile {
+            height: auto !important;
+            padding-bottom: 10px !important; /* Ensure some space for text */
+            margin-bottom: 0 !important; /* Override .sc-mb-6x */
+        }
+        
+        .systemPlaylistTile {
+            height: auto !important;
+        }
+    `;
+    if (document.head) {
+        document.head.appendChild(style);
+    } else {
+        document.addEventListener('DOMContentLoaded', () => {
+            document.head.appendChild(style);
+        });
+    }
+}
+
+function applyCollapsibleSidebar() {
+    const style = document.createElement('style');
+    style.id = 'sclient-collapsible-sidebar';
+    style.textContent = `
+        /* Collapsable Sidebar Styles */
+        .l-fluid-fixed .l-main {
+            margin-right: 0 !important;
+        }
+        .l-sidebar-right {
+            position: fixed !important;
+            top: 46px !important;
+            bottom: 46px !important;
+            right: -360px !important;
+            width: 360px !important;
+            background-color: var(--mui-palette-background-default, #fff) !important;
+            z-index: 100 !important;
+            transition: right 0.3s ease !important;
+            box-sizing: border-box !important;
+            box-shadow: -5px 0 25px rgba(0,0,0,0.5) !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            padding-top: 20px !important;
+        }
+        body.sclient-sidebar-open .l-sidebar-right {
+            right: 0 !important;
+        }
+        #sclient-sidebar-toggle {
+            display: none !important;
+            position: fixed;
+            top: 60px;
+            right: 20px;
+            z-index: 101;
+            background: var(--mui-palette-background-default, #333);
+            color: var(--highlight-color, #f50);
+            border: 1px solid rgba(128,128,128,0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: right 0.3s ease, background 0.2s, transform 0.2s;
+        }
+        body:has(.l-sidebar-right) #sclient-sidebar-toggle {
+            display: flex !important;
         }
     `;
     if (document.head) {

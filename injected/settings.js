@@ -88,21 +88,31 @@ function createOverlay() {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Disable Enhanced Header</span>
+            <span style="font-size: 14px; font-weight: 500;">Enable Enhanced Header</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-disable-enhanced-header-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-deh" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-deh" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                <input type="checkbox" id="sclient-enhanced-header-toggle" style="opacity: 0; width: 0; height: 0;">
+                <span id="sclient-toggle-bg-eh" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                    <span id="sclient-toggle-slider-eh" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
                 </span>
             </label>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Fluid Viewport (Wide Mode)</span>
+            <span style="font-size: 14px; font-weight: 500;">Enable Wide Layout</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-fluid-viewport-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-fluid" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-fluid" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                <input type="checkbox" id="sclient-wide-layout-toggle" style="opacity: 0; width: 0; height: 0;">
+                <span id="sclient-toggle-bg-wide" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                    <span id="sclient-toggle-slider-wide" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                </span>
+            </label>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <span style="font-size: 14px; font-weight: 500;">Enable Collapsible Sidebar</span>
+            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                <input type="checkbox" id="sclient-collapsible-sidebar-toggle" style="opacity: 0; width: 0; height: 0;">
+                <span id="sclient-toggle-bg-sidebar" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                    <span id="sclient-toggle-slider-sidebar" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
                 </span>
             </label>
         </div>
@@ -352,13 +362,13 @@ function createOverlay() {
     const oledToggleBg = overlay.querySelector('#sclient-toggle-bg-oled');
     const oledToggleSlider = overlay.querySelector('#sclient-toggle-slider-oled');
 
-    const dehToggle = overlay.querySelector('#sclient-disable-enhanced-header-toggle');
-    const dehToggleBg = overlay.querySelector('#sclient-toggle-bg-deh');
-    const dehToggleSlider = overlay.querySelector('#sclient-toggle-slider-deh');
+    const ehToggle = overlay.querySelector('#sclient-enhanced-header-toggle');
+    const ehToggleBg = overlay.querySelector('#sclient-toggle-bg-eh');
+    const ehToggleSlider = overlay.querySelector('#sclient-toggle-slider-eh');
 
-    const fluidToggle = overlay.querySelector('#sclient-fluid-viewport-toggle');
-    const fluidToggleBg = overlay.querySelector('#sclient-toggle-bg-fluid');
-    const fluidToggleSlider = overlay.querySelector('#sclient-toggle-slider-fluid');
+    const wideToggle = overlay.querySelector('#sclient-wide-layout-toggle');
+    const wideToggleBg = overlay.querySelector('#sclient-toggle-bg-wide');
+    const wideToggleSlider = overlay.querySelector('#sclient-toggle-slider-wide');
     
     const adblockToggle = overlay.querySelector('#sclient-adblock-toggle');
     const adblockToggleBg = overlay.querySelector('#sclient-toggle-bg-adblock');
@@ -449,23 +459,33 @@ function createOverlay() {
         }
     }
 
-    function updateDehToggleUI(checked) {
+    function updateEhToggleUI(checked) {
         if (checked) {
-            dehToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            dehToggleSlider.style.transform = 'translateX(20px)';
+            ehToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            ehToggleSlider.style.transform = 'translateX(20px)';
         } else {
-            dehToggleBg.style.backgroundColor = '#333';
-            dehToggleSlider.style.transform = 'translateX(0)';
+            ehToggleBg.style.backgroundColor = '#333';
+            ehToggleSlider.style.transform = 'translateX(0)';
         }
     }
 
-    function updateFluidToggleUI(checked) {
+    function updateWideToggleUI(checked) {
         if (checked) {
-            fluidToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            fluidToggleSlider.style.transform = 'translateX(20px)';
+            wideToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            wideToggleSlider.style.transform = 'translateX(20px)';
         } else {
-            fluidToggleBg.style.backgroundColor = '#333';
-            fluidToggleSlider.style.transform = 'translateX(0)';
+            wideToggleBg.style.backgroundColor = '#333';
+            wideToggleSlider.style.transform = 'translateX(0)';
+        }
+    }
+
+    function updateSidebarToggleUI(checked) {
+        if (checked) {
+            sidebarToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            sidebarToggleSlider.style.transform = 'translateX(20px)';
+        } else {
+            sidebarToggleBg.style.backgroundColor = '#333';
+            sidebarToggleSlider.style.transform = 'translateX(0)';
         }
     }
 
@@ -535,13 +555,21 @@ function createOverlay() {
     updateOledToggleUI(oledDarkModeEnabled);
     oledToggle.addEventListener('change', (e) => updateOledToggleUI(e.target.checked));
 
-    dehToggle.checked = disableEnhancedHeaderEnabled;
-    updateDehToggleUI(disableEnhancedHeaderEnabled);
-    dehToggle.addEventListener('change', (e) => updateDehToggleUI(e.target.checked));
+    ehToggle.checked = enhancedHeaderEnabled;
+    updateEhToggleUI(enhancedHeaderEnabled);
+    ehToggle.addEventListener('change', (e) => updateEhToggleUI(e.target.checked));
 
-    fluidToggle.checked = fluidViewportEnabled;
-    updateFluidToggleUI(fluidViewportEnabled);
-    fluidToggle.addEventListener('change', (e) => updateFluidToggleUI(e.target.checked));
+    wideToggle.checked = wideLayoutEnabled;
+    updateWideToggleUI(wideLayoutEnabled);
+    wideToggle.addEventListener('change', (e) => updateWideToggleUI(e.target.checked));
+
+    const sidebarToggle = document.getElementById('sclient-collapsible-sidebar-toggle');
+    const sidebarToggleBg = document.getElementById('sclient-toggle-bg-sidebar');
+    const sidebarToggleSlider = document.getElementById('sclient-toggle-slider-sidebar');
+    
+    sidebarToggle.checked = collapsibleSidebarEnabled;
+    updateSidebarToggleUI(collapsibleSidebarEnabled);
+    sidebarToggle.addEventListener('change', (e) => updateSidebarToggleUI(e.target.checked));
 
     adblockToggle.checked = adblockEnabled;
     updateAdblockToggleUI(adblockEnabled);
@@ -719,9 +747,10 @@ function createOverlay() {
         const newHideDecorations = decToggle.checked;
         const newCustomAccent = accentToggle.checked;
         const newAccentColor = accentText.value;
-        const newFluidViewport = fluidToggle.checked;
+        const newWideLayout = wideToggle.checked;
+        const newCollapsibleSidebar = sidebarToggle.checked;
         const newOledDarkMode = oledToggle.checked;
-        const newDisableEnhancedHeader = dehToggle.checked;
+        const newEnhancedHeader = ehToggle.checked;
         const newAdblock = adblockToggle.checked;
         const newDiscordRpc = rpcToggle.checked;
         const newTrayIcon = trayToggle.checked;
@@ -733,7 +762,7 @@ function createOverlay() {
         const newProxyUrl = document.querySelector('#sclient-proxyurl-input').value;
         
         if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, fluidViewport: newFluidViewport, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, disableEnhancedHeader: newDisableEnhancedHeader })
+            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader })
                 .then(() => {
                     window.location.reload();
                 })
@@ -796,28 +825,40 @@ function toggleOverlay() {
             oledToggleSliderEl.style.transform = 'translateX(0)';
         }
 
-        const dehToggleEl = document.getElementById('sclient-disable-enhanced-header-toggle');
-        dehToggleEl.checked = disableEnhancedHeaderEnabled;
-        const dehToggleBgEl = document.getElementById('sclient-toggle-bg-deh');
-        const dehToggleSliderEl = document.getElementById('sclient-toggle-slider-deh');
-        if (disableEnhancedHeaderEnabled) {
-            dehToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            dehToggleSliderEl.style.transform = 'translateX(20px)';
+        const ehToggleEl = document.getElementById('sclient-enhanced-header-toggle');
+        ehToggleEl.checked = enhancedHeaderEnabled;
+        const ehToggleBgEl = document.getElementById('sclient-toggle-bg-eh');
+        const ehToggleSliderEl = document.getElementById('sclient-toggle-slider-eh');
+        if (enhancedHeaderEnabled) {
+            ehToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            ehToggleSliderEl.style.transform = 'translateX(20px)';
         } else {
-            dehToggleBgEl.style.backgroundColor = '#333';
-            dehToggleSliderEl.style.transform = 'translateX(0)';
+            ehToggleBgEl.style.backgroundColor = '#333';
+            ehToggleSliderEl.style.transform = 'translateX(0)';
         }
 
-        const fluidToggleEl = document.getElementById('sclient-fluid-viewport-toggle');
-        fluidToggleEl.checked = fluidViewportEnabled;
-        const fluidToggleBgEl = document.getElementById('sclient-toggle-bg-fluid');
-        const fluidToggleSliderEl = document.getElementById('sclient-toggle-slider-fluid');
-        if (fluidViewportEnabled) {
-            fluidToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            fluidToggleSliderEl.style.transform = 'translateX(20px)';
+        const wideToggleEl = document.getElementById('sclient-wide-layout-toggle');
+        wideToggleEl.checked = wideLayoutEnabled;
+        const wideToggleBgEl = document.getElementById('sclient-toggle-bg-wide');
+        const wideToggleSliderEl = document.getElementById('sclient-toggle-slider-wide');
+        if (wideLayoutEnabled) {
+            wideToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            wideToggleSliderEl.style.transform = 'translateX(20px)';
         } else {
-            fluidToggleBgEl.style.backgroundColor = '#333';
-            fluidToggleSliderEl.style.transform = 'translateX(0)';
+            wideToggleBgEl.style.backgroundColor = '#333';
+            wideToggleSliderEl.style.transform = 'translateX(0)';
+        }
+
+        const sidebarToggleEl = document.getElementById('sclient-collapsible-sidebar-toggle');
+        sidebarToggleEl.checked = collapsibleSidebarEnabled;
+        const sidebarToggleBgEl = document.getElementById('sclient-toggle-bg-sidebar');
+        const sidebarToggleSliderEl = document.getElementById('sclient-toggle-slider-sidebar');
+        if (collapsibleSidebarEnabled) {
+            sidebarToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            sidebarToggleSliderEl.style.transform = 'translateX(20px)';
+        } else {
+            sidebarToggleBgEl.style.backgroundColor = '#333';
+            sidebarToggleSliderEl.style.transform = 'translateX(0)';
         }
 
         const adblockToggleEl = document.getElementById('sclient-adblock-toggle');

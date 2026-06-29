@@ -59,7 +59,7 @@ ipcMain.handle('get_custom_files', () => {
         hide_decorations: readConfig('hide_decorations.conf', 'false') === 'true',
         custom_accent: readConfig('custom_accent.conf', 'false') === 'true',
         accent_color: readConfig('accent_color.conf', '#FF0000'),
-        fluid_viewport: readConfig('fluid_viewport.conf', 'false') === 'true',
+        wide_layout: readConfig('wide_layout.conf', 'false') === 'true',
         oled_dark_mode: readConfig('oled_dark_mode.conf', 'false') === 'true',
         adblock: readConfig('adblock.conf', 'false') === 'true',
         discord_rpc: readConfig('discord_rpc.conf', 'false') === 'true',
@@ -70,7 +70,8 @@ ipcMain.handle('get_custom_files', () => {
         true_shuffle_mode: readConfig('true_shuffle_mode.conf', 'native'),
         region_bypass: readConfig('region_bypass.conf', 'false') === 'true',
         proxy_url: readConfig('proxy_url.conf', ''),
-        disable_enhanced_header: readConfig('disable_enhanced_header.conf', 'false') === 'true'
+        enhanced_header: readConfig('enhanced_header.conf', 'true') === 'true',
+        collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true'
     };
 });
 
@@ -81,7 +82,7 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('hide_decorations.conf', args.hideDecorations ? 'true' : 'false');
     writeConfig('custom_accent.conf', args.customAccent ? 'true' : 'false');
     writeConfig('accent_color.conf', args.accentColor || '#f50');
-    writeConfig('fluid_viewport.conf', args.fluidViewport ? 'true' : 'false');
+    writeConfig('wide_layout.conf', args.wideLayout ? 'true' : 'false');
     writeConfig('oled_dark_mode.conf', args.oledDarkMode ? 'true' : 'false');
     writeConfig('adblock.conf', args.adblock ? 'true' : 'false');
     writeConfig('discord_rpc.conf', args.discordRpc ? 'true' : 'false');
@@ -92,7 +93,8 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('true_shuffle_mode.conf', args.true_shuffle_mode || args.trueShuffleMode || 'native');
     writeConfig('region_bypass.conf', args.regionBypass ? 'true' : 'false');
     writeConfig('proxy_url.conf', args.proxyUrl || '');
-    writeConfig('disable_enhanced_header.conf', args.disableEnhancedHeader ? 'true' : 'false');
+    writeConfig('enhanced_header.conf', args.enhancedHeader ? 'true' : 'false');
+    writeConfig('collapsible_sidebar.conf', args.collapsibleSidebar ? 'true' : 'false');
 });
 
 ipcMain.handle('__internal_fetch_sc_css', async (e, args) => {
@@ -275,7 +277,7 @@ function createWindow() {
             hide_decorations: readConfig('hide_decorations.conf', 'false') === 'true',
             custom_accent: readConfig('custom_accent.conf', 'false') === 'true',
             accent_color: readConfig('accent_color.conf', '#FF0000'),
-            fluid_viewport: readConfig('fluid_viewport.conf', 'false') === 'true',
+            wide_layout: readConfig('wide_layout.conf', 'false') === 'true',
             oled_dark_mode: readConfig('oled_dark_mode.conf', 'false') === 'true',
             adblock: readConfig('adblock.conf', 'false') === 'true',
             discord_rpc: readConfig('discord_rpc.conf', 'false') === 'true',
@@ -286,7 +288,8 @@ function createWindow() {
             true_shuffle_mode: readConfig('true_shuffle_mode.conf', 'native'),
             region_bypass: readConfig('region_bypass.conf', 'false') === 'true',
             proxy_url: readConfig('proxy_url.conf', ''),
-            disable_enhanced_header: readConfig('disable_enhanced_header.conf', 'false') === 'true'
+            enhanced_header: readConfig('enhanced_header.conf', 'true') === 'true',
+            collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true'
         };
 
         // inject config & mock tauri

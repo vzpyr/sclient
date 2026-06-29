@@ -47,9 +47,14 @@ if (customAccentEnabled) {
     applyCustomAccentColor(accentColor);
 }
 
-if (fluidViewportEnabled) {
-    applyFluidViewport();
+if (typeof wideLayoutEnabled !== 'undefined' && wideLayoutEnabled) {
+    applyWideLayout();
 }
+if (typeof collapsibleSidebarEnabled !== 'undefined' && collapsibleSidebarEnabled) {
+    applyCollapsibleSidebar();
+}
+// Always apply layout fixes to ensure smooth scaling and prevent clipping
+applyLayoutFixes();
 
 if (oledDarkModeEnabled) {
     const oledStyle = document.createElement('style');
@@ -171,8 +176,10 @@ safeReorderStyle.textContent = `
     .header__search .headerSearch {
         margin: 0 8px !important;
     }
+    
+
 `;
-if (typeof disableEnhancedHeaderEnabled !== 'undefined' && !disableEnhancedHeaderEnabled) {
+if (typeof enhancedHeaderEnabled !== 'undefined' && enhancedHeaderEnabled) {
     if (document.head) {
         document.head.appendChild(safeReorderStyle);
     } else {
@@ -214,6 +221,30 @@ try {
     console.error('[SClient] Error executing custom JS:', e);
 }
 
+function injectSidebarToggle() {
+    if (document.getElementById('sclient-sidebar-toggle')) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'sclient-sidebar-toggle';
+    btn.title = "Toggle Sidebar";
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
+    
+    btn.addEventListener('mouseenter', () => btn.style.transform = 'scale(1.1)');
+    btn.addEventListener('mouseleave', () => btn.style.transform = 'scale(1)');
+    
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.body.classList.toggle('sclient-sidebar-open');
+        const isOpen = document.body.classList.contains('sclient-sidebar-open');
+        btn.style.right = isOpen ? '360px' : '20px';
+        btn.innerHTML = isOpen ? 
+            `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-close"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>` : 
+            `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
+    });
+
+    document.body.appendChild(btn);
+}
+
 function replaceNavTabsWithIcons() {
     function safeReplaceSvg(container, svgHtml) {
         if (!container || container.querySelector('.sclient-svg-container')) return;
@@ -251,24 +282,26 @@ function replaceNavTabsWithIcons() {
 
     const streamTab = document.querySelector('a[data-menu-name="stream"]');
     if (streamTab) {
-        safeReplaceSvg(streamTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar-clock-icon lucide-calendar-clock"><path d="M16 14v2.2l1.6 1"/><path d="M16 2v4"/><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M3 10h5"/><path d="M8 2v4"/><circle cx="16" cy="16" r="6"/></svg>');
+        safeReplaceSvg(streamTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rss-icon lucide-rss"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>');
         streamTab.title = "Feed";
     }
 
-    const libTab = document.querySelector('a[data-menu-name="library"]');
-    if (libTab) {
-        safeReplaceSvg(libTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-library-icon lucide-library"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>');
-        libTab.title = "Library";
+    const libraryTab = document.querySelector('a[data-menu-name="library"]');
+    if (libraryTab) {
+        safeReplaceSvg(libraryTab, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-library-icon lucide-library"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>');
+        libraryTab.title = "Library";
     }
 
-    const notifContainer = document.querySelector('.notificationIcon.activities > div:first-child');
-    if (notifContainer) {
-        safeReplaceSvg(notifContainer, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-icon lucide-bell"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>');
+    const notificationBtn = document.querySelector('.header__navMenu button[aria-label="Notifications"]');
+    if (notificationBtn) {
+        safeReplaceSvg(notificationBtn, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bell-icon lucide-bell"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>');
+        notificationBtn.title = "Notifications";
     }
 
-    const mailContainer = document.querySelector('.notificationIcon.messages > div:first-child');
-    if (mailContainer) {
-        safeReplaceSvg(mailContainer, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-icon lucide-mail"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>');
+    const messageBtn = document.querySelector('.header__navMenu a[title="Messages"]');
+    if (messageBtn) {
+        safeReplaceSvg(messageBtn, '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail-icon lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>');
+        messageBtn.title = "Messages";
     }
 
     const moreContainer = document.querySelector('a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child');
@@ -325,9 +358,12 @@ const settingsObserver = new MutationObserver(() => {
     injectSClientMenuButton();
     try { if (typeof injectDownloadButton === 'function') injectDownloadButton(); } catch(e) {}
     try { if (typeof injectLyricsButton === 'function') injectLyricsButton(); } catch(e) {}
-    if (typeof disableEnhancedHeaderEnabled !== 'undefined' && !disableEnhancedHeaderEnabled) {
+    if (typeof enhancedHeaderEnabled !== 'undefined' && enhancedHeaderEnabled) {
         replaceNavTabsWithIcons();
         injectNavigationButtons();
+    }
+    if (typeof collapsibleSidebarEnabled !== 'undefined' && collapsibleSidebarEnabled) {
+        injectSidebarToggle();
     }
 });
 
