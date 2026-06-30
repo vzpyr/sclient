@@ -2,10 +2,6 @@
 
 A customizable desktop client for SoundCloud, built with Electron.
 
-<p align="center">
-  <img src="screenshots/screenshot1.png" alt="Home Screen" width="45%">
-  <img src="screenshots/screenshot2.png" alt="Lyrics Showcase" width="45%">
-</p>
 
 ## Features
 
