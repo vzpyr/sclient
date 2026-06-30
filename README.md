@@ -35,8 +35,8 @@ You can install SClient by downloading a pre-built binary or by compiling it fro
 
 Check the Releases page to download the latest version for your operating system.
 
-Linux: .deb, .rpm, .AppImage, .flatpak
-Windows: .exe (Setup), .exe (Portable)
+- Linux: .deb, .rpm, .AppImage, .flatpak
+- Windows: .exe (Setup), .exe (Portable)
 
 ### Build from Source
 
