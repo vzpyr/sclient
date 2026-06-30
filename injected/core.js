@@ -462,4 +462,24 @@ function setupLazyScroll() {
     document.body.appendChild(btn);
 }
 
+async function fetchGodModeData(songUrl) {
+    let clientId = null;
+    const resources = performance.getEntriesByType('resource');
+    for (const r of resources) {
+        if (r.name.includes('client_id=')) {
+            const url = new URL(r.name);
+            clientId = url.searchParams.get('client_id');
+            if (clientId) break;
+        }
+    }
+    if (!clientId) return null;
 
+    try {
+        const resolveUrl = `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`;
+        const res = await fetch(resolveUrl);
+        if (!res.ok) return null;
+        return await res.json();
+    } catch (e) {
+        return null;
+    }
+}

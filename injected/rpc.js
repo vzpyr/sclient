@@ -4,10 +4,13 @@ function setupDiscordRpc() {
     let lastIsPlaying = false;
     let lastArtwork = '';
     let lastTimeStart = 0;
+    
+    let currentTrackId = null;
+    let currentTrackData = null;
 
     console.log('[SClient] Initialized Discord RPC MediaSession Bridge. Waiting for playback...');
 
-    setInterval(() => {
+    setInterval(async () => {
         if (!discordRpcEnabled) return;
 
         try {
@@ -16,7 +19,7 @@ function setupDiscordRpc() {
             }
             
             const title = navigator.mediaSession.metadata.title || '';
-            const artist = navigator.mediaSession.metadata.artist || '';
+            let artist = navigator.mediaSession.metadata.artist || '';
             const isPlaying = navigator.mediaSession.playbackState === 'playing';
             
             const artworkArr = navigator.mediaSession.metadata.artwork;
@@ -56,6 +59,21 @@ function setupDiscordRpc() {
             let songUrl = '';
             if (titleLink && titleLink.href) {
                 songUrl = titleLink.href.split('?')[0]; // rm tracking
+            }
+
+            if (songUrl && songUrl !== currentTrackId) {
+                currentTrackId = songUrl;
+                const trackData = await fetchGodModeData(songUrl);
+                currentTrackData = trackData;
+            } else if (!songUrl) {
+                currentTrackId = null;
+                currentTrackData = null;
+            }
+
+            if (currentTrackData) {
+                artist = currentTrackData.publisher_metadata && currentTrackData.publisher_metadata.artist 
+                    ? currentTrackData.publisher_metadata.artist 
+                    : currentTrackData.user.username;
             }
 
             if (title !== lastTitle || artist !== lastArtist || isPlaying !== lastIsPlaying || artwork !== lastArtwork || (isPlaying && timeDrift > 2000)) {
