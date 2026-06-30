@@ -33,6 +33,8 @@ function writeConfig(name, val) {
     fs.writeFileSync(p, val);
 }
 
+let adblockEnabled = readConfig('adblock.conf', 'false') === 'true';
+
 const DEFAULT_CSS = ``;
 const DEFAULT_JS = ``;
 
@@ -84,6 +86,7 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('accent_color.conf', args.accentColor || '#f50');
     writeConfig('wide_layout.conf', args.wideLayout ? 'true' : 'false');
     writeConfig('oled_dark_mode.conf', args.oledDarkMode ? 'true' : 'false');
+    adblockEnabled = args.adblock ? true : false;
     writeConfig('adblock.conf', args.adblock ? 'true' : 'false');
     writeConfig('discord_rpc.conf', args.discordRpc ? 'true' : 'false');
     writeConfig('tray_icon.conf', args.trayIcon ? 'true' : 'false');
@@ -223,6 +226,18 @@ function createWindow() {
     
     const partition = active_account === 'main' ? 'persist:main' : `persist:${active_account}`;
     const ses = session.fromPartition(partition);
+
+    const adDomains = ['adswizz.com', 'doubleclick.net', '/ads'];
+    ses.webRequest.onBeforeRequest((details, callback) => {
+        if (adblockEnabled) {
+            const url = details.url;
+            if (adDomains.some(domain => url.includes(domain))) {
+                console.log('[SClient] Blocked ad request (network):', url);
+                return callback({ cancel: true });
+            }
+        }
+        callback({ cancel: false });
+    });
 
     // spoof ua
     const defaultUA = ses.getUserAgent();
