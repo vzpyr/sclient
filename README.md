@@ -7,10 +7,10 @@ A customizable desktop client for SoundCloud, built with Electron.
 
 SClient adds several enhancements and quality of life features to the standard web player. All settings can be toggled on the fly.
 
-* **Zero Telemetry**: No tracking or data collection built-in (except when using the public proxy).
+* **Zero Telemetry**: Actively blocks third-party trackers, analytics, and marketing pixels natively using Ghostery. SClient itself also collects absolutely zero data.
 * **DRM Support**: Play DRM-protected tracks using proper Widevine DRM out of the box (Castlabs Electron).
 * **True Shuffle**: Fixes the default shuffle behavior by loading the entire playlist or using an API-based shuffle engine.
-* **Ad Blocker**: Blocks audio and banner advertisements natively.
+* **Ad Blocker**: Powered by Ghostery's WebAssembly engine (EasyList/EasyPrivacy) to block all audio and banner advertisements directly at the network level.
 * **Track Downloader**: Download tracks directly from the player interface.
 * **Lyrics Integration**: View lyrics for the currently playing song in a sidebar, including a manual search fallback.
 * **Customization**: Inject your own custom CSS and JavaScript or change the global UI accent color.

@@ -1,7 +1,9 @@
-const { app, BrowserWindow, ipcMain, session, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, session } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { Client, StatusDisplayType } = require('@xhayper/discord-rpc');
+const { ElectronBlocker } = require('@ghostery/adblocker-electron');
+const fetch = require('cross-fetch');
 const ytdlexec = require('youtube-dl-exec');
 let ytdlBin = ytdlexec.constants.YOUTUBE_DL_PATH;
 if (ytdlBin.includes('app.asar')) ytdlBin = ytdlBin.replace('app.asar', 'app.asar.unpacked');
@@ -13,6 +15,8 @@ let rpcLoginPromise = null;
 let tray = null;
 let mainWindow = null;
 let isQuitting = false;
+let blockerInstance = null;
+let activeSession = null;
 
 app.on('before-quit', () => { isQuitting = true; });
 
@@ -34,6 +38,8 @@ function writeConfig(name, val) {
 }
 
 let adblockEnabled = readConfig('adblock.conf', 'false') === 'true';
+let discordRpcEnabled = readConfig('discord_rpc.conf', 'false') === 'true';
+let trayIconEnabled = readConfig('tray_icon.conf', 'false') === 'true';
 
 const DEFAULT_CSS = ``;
 const DEFAULT_JS = ``;
@@ -88,8 +94,18 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('wide_layout.conf', args.wideLayout ? 'true' : 'false');
     writeConfig('wide_layout_width.conf', args.wideLayoutWidth ? args.wideLayoutWidth.toString() : '1200');
     writeConfig('oled_dark_mode.conf', args.oledDarkMode ? 'true' : 'false');
+    
+    const oldAdblockEnabled = adblockEnabled;
     adblockEnabled = args.adblock ? true : false;
     writeConfig('adblock.conf', args.adblock ? 'true' : 'false');
+    
+    if (oldAdblockEnabled !== adblockEnabled && blockerInstance && activeSession) {
+        if (adblockEnabled) {
+            blockerInstance.enableBlockingInSession(activeSession);
+        } else {
+            blockerInstance.disableBlockingInSession(activeSession);
+        }
+    }
     writeConfig('discord_rpc.conf', args.discordRpc ? 'true' : 'false');
     writeConfig('tray_icon.conf', args.trayIcon ? 'true' : 'false');
     writeConfig('hide_upsell.conf', args.hideUpsell ? 'true' : 'false');
@@ -228,17 +244,13 @@ function createWindow() {
     
     const partition = active_account === 'main' ? 'persist:main' : `persist:${active_account}`;
     const ses = session.fromPartition(partition);
+    activeSession = ses;
 
-    const adDomains = ['adswizz.com', 'doubleclick.net', '/ads'];
-    ses.webRequest.onBeforeRequest((details, callback) => {
+    ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
+        blockerInstance = blocker;
         if (adblockEnabled) {
-            const url = details.url;
-            if (adDomains.some(domain => url.includes(domain))) {
-                console.log('[SClient] Blocked ad request (network):', url);
-                return callback({ cancel: true });
-            }
+            blocker.enableBlockingInSession(ses);
         }
-        callback({ cancel: false });
     });
 
     // spoof ua
