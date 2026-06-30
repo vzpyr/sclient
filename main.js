@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, session } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, session, safeStorage } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { Client, StatusDisplayType } = require('@xhayper/discord-rpc');
@@ -35,6 +35,35 @@ function readConfig(name, defaultVal) {
 function writeConfig(name, val) {
     const p = path.join(configDir, name);
     fs.writeFileSync(p, val);
+}
+
+function readSecureConfig(name, defaultVal) {
+    const p = path.join(configDir, name);
+    if (!fs.existsSync(p)) return defaultVal;
+    try {
+        const buffer = fs.readFileSync(p);
+        if (safeStorage.isEncryptionAvailable()) {
+            return safeStorage.decryptString(buffer);
+        }
+        return buffer.toString('utf8');
+    } catch (e) {
+        console.error('Failed to read secure config', e);
+        return defaultVal;
+    }
+}
+
+function writeSecureConfig(name, val) {
+    const p = path.join(configDir, name);
+    try {
+        if (safeStorage.isEncryptionAvailable()) {
+            const buffer = safeStorage.encryptString(val);
+            fs.writeFileSync(p, buffer);
+        } else {
+            fs.writeFileSync(p, val);
+        }
+    } catch (e) {
+        console.error('Failed to write secure config', e);
+    }
 }
 
 let adblockEnabled = readConfig('adblock.conf', 'false') === 'true';
@@ -80,7 +109,9 @@ ipcMain.handle('get_custom_files', () => {
         region_bypass: readConfig('region_bypass.conf', 'false') === 'true',
         proxy_url: readConfig('proxy_url.conf', ''),
         enhanced_header: readConfig('enhanced_header.conf', 'true') === 'true',
-        collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true'
+        collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true',
+        listenbrainz: readConfig('listenbrainz.conf', 'false') === 'true',
+        listenbrainz_token: readSecureConfig('listenbrainz_token.conf', '')
     };
 });
 
@@ -116,11 +147,30 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('proxy_url.conf', args.proxyUrl || '');
     writeConfig('enhanced_header.conf', args.enhancedHeader ? 'true' : 'false');
     writeConfig('collapsible_sidebar.conf', args.collapsibleSidebar ? 'true' : 'false');
+    writeConfig('listenbrainz.conf', args.listenbrainz ? 'true' : 'false');
+    writeSecureConfig('listenbrainz_token.conf', args.listenbrainzToken || '');
 });
 
 ipcMain.handle('__internal_fetch_sc_css', async (e, args) => {
     const res = await fetch(args.url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' } });
     return await res.text();
+});
+
+ipcMain.handle('submit_listenbrainz', async (e, args) => {
+    try {
+        const token = readSecureConfig('listenbrainz_token.conf', '').trim();
+        if (!token) return;
+        await fetch('https://api.listenbrainz.org/1/submit-listens', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Token ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(args)
+        });
+    } catch (err) {
+        console.error('Listenbrainz submit error:', err);
+    }
 });
 
 ipcMain.handle('download_song', async (e, args) => {
@@ -297,6 +347,7 @@ function createWindow() {
             'rpc.js',
             'downloader.js',
             'lyrics.js',
+            'listenbrainz.js',
             'settings.js',
             'init.js'
         ];
@@ -323,7 +374,9 @@ function createWindow() {
             region_bypass: readConfig('region_bypass.conf', 'false') === 'true',
             proxy_url: readConfig('proxy_url.conf', ''),
             enhanced_header: readConfig('enhanced_header.conf', 'true') === 'true',
-            collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true'
+            collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true',
+            listenbrainz: readConfig('listenbrainz.conf', 'false') === 'true',
+            listenbrainz_token: readSecureConfig('listenbrainz_token.conf', '')
         };
 
         // inject config & mock tauri

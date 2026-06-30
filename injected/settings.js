@@ -140,6 +140,23 @@ function createOverlay() {
             </label>
         </div>
 
+        <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 14px; font-weight: 500;">ListenBrainz Scrobbling</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="sclient-listenbrainz-status" style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc;">Waiting...</span>
+                    <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="sclient-listenbrainz-toggle" style="opacity: 0; width: 0; height: 0;">
+                        <span id="sclient-toggle-bg-listenbrainz" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                            <span id="sclient-toggle-slider-listenbrainz" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <input type="password" id="sclient-listenbrainz-token-input" placeholder="Enter ListenBrainz User Token..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;">
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your token from <a href="https://listenbrainz.org/profile/" target="_blank" style="color: #aaa; text-decoration: underline;">listenbrainz.org/profile</a></div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <span style="font-size: 14px; font-weight: 500;">Enable Adblocker (Audio & Banners)</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
@@ -443,6 +460,18 @@ function createOverlay() {
         }
     }
 
+    function updateListenbrainzToggleUI(enabled) {
+        const bg = overlay.querySelector('#sclient-toggle-bg-listenbrainz');
+        const sl = overlay.querySelector('#sclient-toggle-slider-listenbrainz');
+        if (enabled) {
+            bg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            sl.style.transform = 'translateX(20px)';
+        } else {
+            bg.style.backgroundColor = '#333';
+            sl.style.transform = 'translateX(0)';
+        }
+    }
+
     function updateAdblockToggleUI(checked) {
         if (checked) {
             adblockToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
@@ -597,6 +626,13 @@ function createOverlay() {
     trayToggle.checked = trayIconEnabled;
     updateTrayToggleUI(trayIconEnabled);
     trayToggle.addEventListener('change', (e) => updateTrayToggleUI(e.target.checked));
+
+    const listenbrainzToggle = document.getElementById('sclient-listenbrainz-toggle');
+    const listenbrainzTokenInput = document.getElementById('sclient-listenbrainz-token-input');
+    listenbrainzToggle.checked = listenbrainzEnabled;
+    updateListenbrainzToggleUI(listenbrainzEnabled);
+    listenbrainzTokenInput.value = listenbrainzToken;
+    listenbrainzToggle.addEventListener('change', (e) => updateListenbrainzToggleUI(e.target.checked));
 
     upsellToggle.checked = hideUpsellEnabled;
     updateUpsellToggleUI(hideUpsellEnabled);
@@ -782,9 +818,11 @@ function createOverlay() {
         const newTrueShuffleMode = trueShuffleEngineSelect.value;
         const newRegionBypass = document.querySelector('#sclient-regionbypass-toggle').checked;
         const newProxyUrl = document.querySelector('#sclient-proxyurl-input').value;
+        const newListenbrainz = document.querySelector('#sclient-listenbrainz-toggle').checked;
+        const newListenbrainzToken = document.querySelector('#sclient-listenbrainz-token-input').value;
         
         if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader })
+            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader, listenbrainz: newListenbrainz, listenbrainzToken: newListenbrainzToken })
                 .then(() => {
                     window.location.reload();
                 })
@@ -906,6 +944,19 @@ function toggleOverlay() {
             rpcToggleBgEl.style.backgroundColor = '#333';
             rpcToggleSliderEl.style.transform = 'translateX(0)';
         }
+
+        const lbToggleEl = document.getElementById('sclient-listenbrainz-toggle');
+        lbToggleEl.checked = listenbrainzEnabled;
+        const lbToggleBgEl = document.getElementById('sclient-toggle-bg-listenbrainz');
+        const lbToggleSliderEl = document.getElementById('sclient-toggle-slider-listenbrainz');
+        if (listenbrainzEnabled) {
+            lbToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            lbToggleSliderEl.style.transform = 'translateX(20px)';
+        } else {
+            lbToggleBgEl.style.backgroundColor = '#333';
+            lbToggleSliderEl.style.transform = 'translateX(0)';
+        }
+        document.getElementById('sclient-listenbrainz-token-input').value = listenbrainzToken;
 
         const accentToggleEl = document.getElementById('sclient-accent-toggle');
         accentToggleEl.checked = customAccentEnabled;

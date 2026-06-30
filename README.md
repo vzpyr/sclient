@@ -16,6 +16,7 @@ SClient adds several enhancements and quality of life features to the standard w
 * **Customization**: Inject your own custom CSS and JavaScript or change the global UI accent color.
 * **OLED Dark Mode**: A true black dark mode that comprehensively overrides the default theme, perfect for OLED displays.
 * **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
+* **ListenBrainz Scrobbling**: Automatically scrobble your playback history directly to ListenBrainz. Securely stores your user token using your operating system's native encrypted keyring (safeStorage).
 * **Multi-Account Support**: Create, manage, and switch between multiple isolated profiles.
 * **Region Bypass**: Built-in proxy support to bypass geographic track restrictions. You can use the free public proxy (https://scproxy.vercel.app/) or self-host your own using the included `app.js` file.
 * **Interface Tweaks**: Options to hide window decorations, enable a wide layout, use a collapsible sidebar, enable an enhanced header (with modern Lucide icons and navigation buttons), add a lazy scroll button, hide subscription upsells and hide artist features.

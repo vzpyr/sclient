@@ -97,6 +97,8 @@ let hideArtistsEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.h
 let regionBypassEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.region_bypass : false;
 let proxyUrl = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.proxy_url : '';
 let enhancedHeaderEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.enhanced_header : true;
+let listenbrainzEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.listenbrainz : false;
+let listenbrainzToken = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.listenbrainz_token : '';
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
@@ -459,3 +461,5 @@ function setupLazyScroll() {
 
     document.body.appendChild(btn);
 }
+
+
