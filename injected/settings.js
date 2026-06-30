@@ -158,7 +158,7 @@ function createOverlay() {
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Adblocker (Audio & Banners)</span>
+            <span style="font-size: 14px; font-weight: 500;">Enable Adblocker</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
                 <input type="checkbox" id="sclient-adblock-toggle" style="opacity: 0; width: 0; height: 0;">
                 <span id="sclient-toggle-bg-adblock" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
