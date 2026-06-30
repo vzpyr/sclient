@@ -82,13 +82,41 @@ if (oledDarkModeEnabled) {
     if (document.head) document.head.appendChild(oledStyle);
     else document.addEventListener('DOMContentLoaded', () => document.head.appendChild(oledStyle));
 
-    // Also inject into any same-origin iframes (like artist tools)
+    // Also inject into any same-origin iframes (like artist tools or the new player iframe)
     setInterval(() => {
         document.querySelectorAll('iframe').forEach(iframe => {
             try {
                 if (iframe.contentDocument && iframe.contentDocument.head) {
                     if (!iframe.contentDocument.getElementById('sclient-oled-dark-mode')) {
                         iframe.contentDocument.head.appendChild(oledStyle.cloneNode(true));
+                    }
+                    
+                    // The new player iframe might not use the .theme-dark class internally, 
+                    // or it defines MUI variables directly on :root. Force the variables here.
+                    if (!iframe.contentDocument.getElementById('sclient-oled-iframe-force')) {
+                        const isMainPageDark = document.body && document.body.classList.contains('theme-dark');
+                        const isIframeDark = iframe.src && iframe.src.includes('theme=dark');
+                        
+                        const forceStyle = document.createElement('style');
+                        forceStyle.id = 'sclient-oled-iframe-force';
+                        forceStyle.textContent = `
+                            :root, html, body {
+                                --mui-palette-background-default: #000000 !important;
+                                --background-surface-color: #000000 !important;
+                                --button-secondary-background-color: #000000 !important;
+                                --button-secondary-selected-background-color: #000000 !important;
+                                --highlight-color: #000000 !important;
+                                --surface-color: #000000 !important;
+                            }
+                        `;
+                        // Only enable the forced styles if we are actually in dark mode
+                        forceStyle.disabled = !(isMainPageDark || isIframeDark);
+                        iframe.contentDocument.head.appendChild(forceStyle);
+                    } else {
+                        // Keep synced if user toggles the main page theme dynamically
+                        const forceStyle = iframe.contentDocument.getElementById('sclient-oled-iframe-force');
+                        const isMainPageDark = document.body && document.body.classList.contains('theme-dark');
+                        forceStyle.disabled = !isMainPageDark;
                     }
                 }
             } catch (e) {
