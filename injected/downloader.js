@@ -17,25 +17,38 @@ function injectDownloadButton() {
                 let songIdentifier = urlPath.substring(1);
                 let fullUrl = "https://soundcloud.com" + urlPath;
                 let toast = document.createElement('div');
+                toast.className = 'sclient-download-toast';
                 toast.innerText = `Downloading ${songIdentifier}...\nYou will be notified upon completion.`;
-                Object.assign(toast.style, {
-                    position: 'fixed', bottom: '68px', right: (typeof lazyScrollEnabled !== 'undefined' && lazyScrollEnabled) ? '90px' : '20px', 
-                    background: 'rgba(18, 18, 18, 0.8)', color: '#fff', border: '2px solid #fff', backdropFilter: 'blur(5px)',
-                    padding: '12px 24px', borderRadius: '50px', zIndex: '99999', boxShadow: '0 4px 12px rgba(0,0,0,0.3)', transition: 'opacity 0.3s'
-                });
+                toast.style.right = (typeof lazyScrollEnabled !== 'undefined' && lazyScrollEnabled) ? '70px' : '20px';
                 document.body.appendChild(toast);
+                
+                requestAnimationFrame(() => {
+                    toast.style.opacity = '1';
+                });
+
                 const callbackId = 'download_song_' + Date.now();
                 const handler = (event) => {
                     if (event.source !== window || !event.data || event.data.source !== 'sclient-bridge-reply') return;
                     if (event.data.callbackId === callbackId) {
                         window.removeEventListener('message', handler);
-                        if (event.data.success) {
-                            toast.innerText = 'Download finished!';
-                            setTimeout(() => toast.remove(), 3000);
-                        } else {
-                            toast.innerText = 'Download failed: ' + event.data.error;
-                            setTimeout(() => toast.remove(), 5000);
-                        }
+                        toast.style.opacity = '0';
+                        setTimeout(() => {
+                            if (event.data.success) {
+                                toast.innerText = 'Download finished!';
+                                toast.style.opacity = '1';
+                                setTimeout(() => {
+                                    toast.style.opacity = '0';
+                                    setTimeout(() => toast.remove(), 300);
+                                }, 3000);
+                            } else {
+                                toast.innerText = 'Download failed: ' + event.data.error;
+                                toast.style.opacity = '1';
+                                setTimeout(() => {
+                                    toast.style.opacity = '0';
+                                    setTimeout(() => toast.remove(), 300);
+                                }, 5000);
+                            }
+                        }, 300);
                     }
                 };
                 window.addEventListener('message', handler);

@@ -19,7 +19,7 @@ function createLyricsSidebar() {
         border-radius: 12px;
         box-shadow: 5px 5px 25px rgba(0,0,0,0.5);
         z-index: 999999;
-        transition: left 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: left 0.3s ease;
         display: flex;
         flex-direction: column;
         color: #fff;

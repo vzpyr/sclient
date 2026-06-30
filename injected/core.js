@@ -385,6 +385,36 @@ function injectFloatingButtonStyles() {
             background: #333;
         }
         
+        .sclient-download-toast {
+            position: fixed;
+            bottom: 68px;
+            z-index: 99999;
+            background: var(--background-surface-color, #f2f2f2);
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 50px;
+            min-height: 40px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: opacity 0.3s ease, right 0.3s ease;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            pointer-events: none;
+            opacity: 0;
+            white-space: pre-line;
+            text-align: center;
+        }
+        
+        .theme-dark .sclient-download-toast {
+            color: #fff;
+            border: 1px solid #333;
+        }
+        
         /* Active State (High Specificity) */
         body button.sclient-floating-btn.active,
         .theme-dark body button.sclient-floating-btn.active {
