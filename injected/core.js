@@ -82,6 +82,7 @@ let accentColor = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.accent_c
 let lazyScrollEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lazy_scroll : false;
 let hideDecorationsEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_decorations : false;
 let wideLayoutEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.wide_layout : false;
+let wideLayoutWidth = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.wide_layout_width : '1200';
 let collapsibleSidebarEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.collapsible_sidebar : false;
 let oledDarkModeEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.oled_dark_mode : false;
 let currentCss = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.css : '';
@@ -236,13 +237,23 @@ function applyCustomAccentColor(newColor) {
 }
 
 function applyWideLayout() {
+    const width = (typeof wideLayoutWidth !== 'undefined' && wideLayoutWidth) ? wideLayoutWidth : '1200';
+    const maxWidthRule = width === 'unlimited' ? 'max-width: none !important;' : `max-width: ${width}px !important;`;
+    
     const style = document.createElement('style');
     style.id = 'sclient-fluid-viewport';
     style.textContent = `
         .l-container {
           min-width: 720px !important;
-          max-width: 1470px !important;
+          ${maxWidthRule}
           width: 100% !important;
+        }
+        
+        /* Let the header and playback controls stretch to full width */
+        header .l-container,
+        .playControls .l-container {
+          max-width: none !important;
+          padding: 0 24px !important;
         }
     `;
     if (document.head) {

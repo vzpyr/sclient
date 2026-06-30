@@ -62,6 +62,7 @@ ipcMain.handle('get_custom_files', () => {
         custom_accent: readConfig('custom_accent.conf', 'false') === 'true',
         accent_color: readConfig('accent_color.conf', '#FF0000'),
         wide_layout: readConfig('wide_layout.conf', 'false') === 'true',
+        wide_layout_width: readConfig('wide_layout_width.conf', '1200'),
         oled_dark_mode: readConfig('oled_dark_mode.conf', 'false') === 'true',
         adblock: readConfig('adblock.conf', 'false') === 'true',
         discord_rpc: readConfig('discord_rpc.conf', 'false') === 'true',
@@ -85,6 +86,7 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('custom_accent.conf', args.customAccent ? 'true' : 'false');
     writeConfig('accent_color.conf', args.accentColor || '#f50');
     writeConfig('wide_layout.conf', args.wideLayout ? 'true' : 'false');
+    writeConfig('wide_layout_width.conf', args.wideLayoutWidth ? args.wideLayoutWidth.toString() : '1200');
     writeConfig('oled_dark_mode.conf', args.oledDarkMode ? 'true' : 'false');
     adblockEnabled = args.adblock ? true : false;
     writeConfig('adblock.conf', args.adblock ? 'true' : 'false');
@@ -297,6 +299,7 @@ function createWindow() {
             custom_accent: readConfig('custom_accent.conf', 'false') === 'true',
             accent_color: readConfig('accent_color.conf', '#FF0000'),
             wide_layout: readConfig('wide_layout.conf', 'false') === 'true',
+            wide_layout_width: readConfig('wide_layout_width.conf', '1200'),
             oled_dark_mode: readConfig('oled_dark_mode.conf', 'false') === 'true',
             adblock: readConfig('adblock.conf', 'false') === 'true',
             discord_rpc: readConfig('discord_rpc.conf', 'false') === 'true',

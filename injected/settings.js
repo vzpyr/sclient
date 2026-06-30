@@ -99,12 +99,15 @@ function createOverlay() {
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <span style="font-size: 14px; font-weight: 500;">Enable Wide Layout</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-wide-layout-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-wide" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-wide" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="text" id="sclient-wide-layout-width" placeholder="1200" style="width: 50px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; border-radius: 4px; padding: 4px; font-family: monospace; font-size: 12px; text-align: center;" title="Max width in px (min 960) or leave empty for 1200">
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="sclient-wide-layout-toggle" style="opacity: 0; width: 0; height: 0;">
+                    <span id="sclient-toggle-bg-wide" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                        <span id="sclient-toggle-slider-wide" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                    </span>
+                </label>
+            </div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
@@ -369,6 +372,7 @@ function createOverlay() {
     const wideToggle = overlay.querySelector('#sclient-wide-layout-toggle');
     const wideToggleBg = overlay.querySelector('#sclient-toggle-bg-wide');
     const wideToggleSlider = overlay.querySelector('#sclient-toggle-slider-wide');
+    const wideWidthInput = overlay.querySelector('#sclient-wide-layout-width');
     
     const adblockToggle = overlay.querySelector('#sclient-adblock-toggle');
     const adblockToggleBg = overlay.querySelector('#sclient-toggle-bg-adblock');
@@ -562,6 +566,8 @@ function createOverlay() {
     wideToggle.checked = wideLayoutEnabled;
     updateWideToggleUI(wideLayoutEnabled);
     wideToggle.addEventListener('change', (e) => updateWideToggleUI(e.target.checked));
+    
+    wideWidthInput.value = (typeof wideLayoutWidth !== 'undefined' && wideLayoutWidth !== '1200') ? wideLayoutWidth : '';
 
     const sidebarToggle = document.getElementById('sclient-collapsible-sidebar-toggle');
     const sidebarToggleBg = document.getElementById('sclient-toggle-bg-sidebar');
@@ -748,6 +754,22 @@ function createOverlay() {
         const newCustomAccent = accentToggle.checked;
         const newAccentColor = accentText.value;
         const newWideLayout = wideToggle.checked;
+        let newWideLayoutWidth = wideWidthInput.value.trim();
+        
+        if (newWideLayout) {
+            if (newWideLayoutWidth === '') {
+                newWideLayoutWidth = '1200';
+            } else if (newWideLayoutWidth.toLowerCase() === 'unlimited') {
+                newWideLayoutWidth = 'unlimited';
+            } else {
+                const parsed = parseInt(newWideLayoutWidth, 10);
+                if (isNaN(parsed) || parsed < 960) {
+                    customAlert('Wide Layout max width must be a number >= 960');
+                    return;
+                }
+                newWideLayoutWidth = parsed.toString();
+            }
+        }
         const newCollapsibleSidebar = sidebarToggle.checked;
         const newOledDarkMode = oledToggle.checked;
         const newEnhancedHeader = ehToggle.checked;
@@ -762,7 +784,7 @@ function createOverlay() {
         const newProxyUrl = document.querySelector('#sclient-proxyurl-input').value;
         
         if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader })
+            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader })
                 .then(() => {
                     window.location.reload();
                 })
