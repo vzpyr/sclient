@@ -17,7 +17,7 @@ SClient adds several enhancements and quality of life features to the standard w
 
 ### 🔌 Integrations & Tools
 * **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`.
-* **ListenBrainz Scrobbling**: Automatically scrobble your playback history directly to ListenBrainz. Your user token is securely encrypted using your OS's native keyring (safeStorage).
+* **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Any sensitive information is securely stored and encrypted using your OS's native keyring (safeStorage).
 * **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
 * **Lyrics Integration**: View lyrics for the currently playing song in a sleek sidebar (with a manual search fallback).
 
