@@ -99,6 +99,11 @@ let proxyUrl = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.proxy_url :
 let enhancedHeaderEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.enhanced_header : true;
 let listenbrainzEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.listenbrainz : false;
 let listenbrainzToken = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.listenbrainz_token : '';
+let lastfmEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm : false;
+let lastfmApiKey = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_api_key : '';
+let lastfmSecret = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_secret : '';
+let lastfmSessionKey = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_session_key : '';
+let lastfmUsername = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_username : '';
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {

@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, session, safeStorage } = require('electron');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const { Client, StatusDisplayType } = require('@xhayper/discord-rpc');
@@ -111,7 +112,12 @@ ipcMain.handle('get_custom_files', () => {
         enhanced_header: readConfig('enhanced_header.conf', 'true') === 'true',
         collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true',
         listenbrainz: readConfig('listenbrainz.conf', 'false') === 'true',
-        listenbrainz_token: readSecureConfig('listenbrainz_token.conf', '')
+        listenbrainz_token: readSecureConfig('listenbrainz_token.conf', ''),
+        lastfm: readConfig('lastfm.conf', 'false') === 'true',
+        lastfm_api_key: readSecureConfig('lastfm_api_key.conf', ''),
+        lastfm_secret: readSecureConfig('lastfm_secret.conf', ''),
+        lastfm_session_key: readSecureConfig('lastfm_session_key.conf', ''),
+        lastfm_username: readConfig('lastfm_username.conf', '')
     };
 });
 
@@ -149,6 +155,9 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('collapsible_sidebar.conf', args.collapsibleSidebar ? 'true' : 'false');
     writeConfig('listenbrainz.conf', args.listenbrainz ? 'true' : 'false');
     writeSecureConfig('listenbrainz_token.conf', args.listenbrainzToken || '');
+    writeConfig('lastfm.conf', args.lastfm ? 'true' : 'false');
+    writeSecureConfig('lastfm_api_key.conf', args.lastfmApiKey || '');
+    writeSecureConfig('lastfm_secret.conf', args.lastfmSecret || '');
 });
 
 ipcMain.handle('__internal_fetch_sc_css', async (e, args) => {
@@ -159,8 +168,8 @@ ipcMain.handle('__internal_fetch_sc_css', async (e, args) => {
 ipcMain.handle('submit_listenbrainz', async (e, args) => {
     try {
         const token = readSecureConfig('listenbrainz_token.conf', '').trim();
-        if (!token) return;
-        await fetch('https://api.listenbrainz.org/1/submit-listens', {
+        if (!token) return { ok: false, code: 0 };
+        const res = await fetch('https://api.listenbrainz.org/1/submit-listens', {
             method: 'POST',
             headers: {
                 'Authorization': `Token ${token}`,
@@ -168,8 +177,126 @@ ipcMain.handle('submit_listenbrainz', async (e, args) => {
             },
             body: JSON.stringify(args)
         });
+        const data = await res.json();
+        if (data.code) return { ok: false, code: data.code, message: data.error };
+        return { ok: true };
     } catch (err) {
         console.error('Listenbrainz submit error:', err);
+        return { ok: false, code: 0, message: err.message };
+    }
+});
+
+// --- Last.fm ---
+
+function generateLastFmSig(params, secret) {
+    const str = Object.keys(params).sort().map(k => `${k}${params[k]}`).join('') + secret;
+    return crypto.createHash('md5').update(str, 'utf8').digest('hex');
+}
+
+ipcMain.handle('lastfm_authenticate', async () => {
+    const apiKey = readSecureConfig('lastfm_api_key.conf', '').trim();
+    const secret = readSecureConfig('lastfm_secret.conf', '').trim();
+    if (!apiKey || !secret) return { error: 'Missing API key or secret' };
+
+    return new Promise((resolve) => {
+        let settled = false;
+        const settle = (value) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+        };
+
+        const authWin = new BrowserWindow({
+            width: 850,
+            height: 650,
+            title: 'Connect Last.fm',
+            webPreferences: { nodeIntegration: false, contextIsolation: true }
+        });
+
+        const authUrl = `https://www.last.fm/api/auth/?api_key=${apiKey}&cb=https://soundcloud.com/discover`;
+        authWin.loadURL(authUrl);
+
+        const handleUrl = async (url) => {
+            try {
+                const urlObj = new URL(url);
+                const token = urlObj.searchParams.get('token');
+                if (!token) return;
+                // Do the fetch BEFORE closing so the closed handler doesn't race us
+                const sig = generateLastFmSig({ method: 'auth.getSession', api_key: apiKey, token }, secret);
+                const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=auth.getSession&api_key=${apiKey}&token=${token}&api_sig=${sig}&format=json`);
+                const data = await res.json();
+                if (!authWin.isDestroyed()) authWin.close();
+                if (data.error) {
+                    settle({ error: data.message });
+                } else {
+                    writeSecureConfig('lastfm_session_key.conf', data.session.key);
+                    writeConfig('lastfm_username.conf', data.session.name);
+                    settle({ success: true, username: data.session.name });
+                }
+            } catch (err) {
+                settle({ error: err.message });
+            }
+        };
+
+        // Listen to both — Last.fm may use either depending on how it redirects
+        authWin.webContents.on('will-redirect', (event, url) => handleUrl(url));
+        authWin.webContents.on('will-navigate', (event, url) => handleUrl(url));
+
+        authWin.on('closed', () => settle({ error: 'cancelled' }));
+    });
+});
+
+ipcMain.handle('lastfm_save_credentials', (e, args) => {
+    writeSecureConfig('lastfm_api_key.conf', args.apiKey || '');
+    writeSecureConfig('lastfm_secret.conf', args.secret || '');
+});
+
+ipcMain.handle('lastfm_disconnect', () => {
+    writeSecureConfig('lastfm_session_key.conf', '');
+    writeConfig('lastfm_username.conf', '');
+});
+
+ipcMain.handle('lastfm_now_playing', async (e, args) => {
+    try {
+        const apiKey = readSecureConfig('lastfm_api_key.conf', '').trim();
+        const secret = readSecureConfig('lastfm_secret.conf', '').trim();
+        const sk = readSecureConfig('lastfm_session_key.conf', '').trim();
+        if (!apiKey || !secret || !sk) return { ok: false, code: 0 };
+        const params = { method: 'track.updateNowPlaying', api_key: apiKey, sk, artist: args.artist, track: args.title };
+        const api_sig = generateLastFmSig(params, secret);
+        const res = await fetch('https://ws.audioscrobbler.com/2.0/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ ...params, api_sig, format: 'json' })
+        });
+        const data = await res.json();
+        if (data.error) return { ok: false, code: data.error, message: data.message };
+        return { ok: true };
+    } catch (err) {
+        console.error('[SClient] Last.fm now playing error:', err);
+        return { ok: false, code: 0, message: err.message };
+    }
+});
+
+ipcMain.handle('lastfm_scrobble', async (e, args) => {
+    try {
+        const apiKey = readSecureConfig('lastfm_api_key.conf', '').trim();
+        const secret = readSecureConfig('lastfm_secret.conf', '').trim();
+        const sk = readSecureConfig('lastfm_session_key.conf', '').trim();
+        if (!apiKey || !secret || !sk) return { ok: false, code: 0 };
+        const params = { method: 'track.scrobble', api_key: apiKey, sk, artist: args.artist, track: args.title, timestamp: args.timestamp.toString() };
+        const api_sig = generateLastFmSig(params, secret);
+        const res = await fetch('https://ws.audioscrobbler.com/2.0/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ ...params, api_sig, format: 'json' })
+        });
+        const data = await res.json();
+        if (data.error) return { ok: false, code: data.error, message: data.message };
+        return { ok: true };
+    } catch (err) {
+        console.error('[SClient] Last.fm scrobble error:', err);
+        return { ok: false, code: 0, message: err.message };
     }
 });
 
@@ -348,6 +475,7 @@ function createWindow() {
             'downloader.js',
             'lyrics.js',
             'listenbrainz.js',
+            'lastfm.js',
             'settings.js',
             'init.js'
         ];
@@ -376,7 +504,12 @@ function createWindow() {
             enhanced_header: readConfig('enhanced_header.conf', 'true') === 'true',
             collapsible_sidebar: readConfig('collapsible_sidebar.conf', 'false') === 'true',
             listenbrainz: readConfig('listenbrainz.conf', 'false') === 'true',
-            listenbrainz_token: readSecureConfig('listenbrainz_token.conf', '')
+            listenbrainz_token: readSecureConfig('listenbrainz_token.conf', ''),
+            lastfm: readConfig('lastfm.conf', 'false') === 'true',
+            lastfm_api_key: readSecureConfig('lastfm_api_key.conf', ''),
+            lastfm_secret: readSecureConfig('lastfm_secret.conf', ''),
+            lastfm_session_key: readSecureConfig('lastfm_session_key.conf', ''),
+            lastfm_username: readConfig('lastfm_username.conf', '')
         };
 
         // inject config & mock tauri

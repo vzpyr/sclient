@@ -1,7 +1,7 @@
-const LB_AUTH_ERRORS = new Set([401]);
+const LASTFM_AUTH_ERRORS = new Set([4, 9, 14]);
 
-function setupListenbrainz() {
-    if (!listenbrainzEnabled) return;
+function setupLastFm() {
+    if (!lastfmEnabled) return;
 
     let currentTrackId = null;
     let currentTrackData = null;
@@ -11,15 +11,15 @@ function setupListenbrainz() {
     let scrobbleThreshold = 0;
 
     function updateStatus(text, color) {
-        const el = document.getElementById('sclient-listenbrainz-status');
+        const el = document.getElementById('sclient-lastfm-status');
         if (el) {
             el.innerText = text;
             el.style.color = color || '#ccc';
         }
     }
 
-    if (!listenbrainzToken || listenbrainzToken.length < 10) {
-        updateStatus('Invalid Key', '#f55');
+    if (!lastfmSessionKey) {
+        updateStatus('Not Connected', '#f55');
         return;
     }
 
@@ -27,7 +27,7 @@ function setupListenbrainz() {
 
     function sendBridgeCall(cmd, args) {
         return new Promise((resolve) => {
-            const callbackId = 'lb_' + cmd + '_' + Date.now();
+            const callbackId = 'lfm_' + cmd + '_' + Date.now();
             const handler = (event) => {
                 if (event.source !== window || !event.data || event.data.source !== 'sclient-bridge-reply') return;
                 if (event.data.callbackId !== callbackId) return;
@@ -41,10 +41,10 @@ function setupListenbrainz() {
 
     function handleApiResult(result, text, color) {
         if (!result || !result.ok) {
-            if (result && LB_AUTH_ERRORS.has(result.code)) {
+            if (result && LASTFM_AUTH_ERRORS.has(result.code)) {
                 updateStatus('Auth Error', '#f55');
             } else if (!result || result.code === 0) {
-                // no token or network error — don't change status
+                // no session key or network error — don't change status
             } else {
                 updateStatus('Error', '#f55');
             }
@@ -55,18 +55,12 @@ function setupListenbrainz() {
     }
 
     async function sendNowPlaying(artist, title) {
-        const result = await sendBridgeCall('submit_listenbrainz', {
-            listen_type: 'playing_now',
-            payload: [{ track_metadata: { artist_name: artist, track_name: title } }]
-        });
+        const result = await sendBridgeCall('lastfm_now_playing', { artist, title });
         handleApiResult(result, 'Now Playing', '#789cff');
     }
 
-    async function sendFinalScrobble(artist, title, timestamp) {
-        const result = await sendBridgeCall('submit_listenbrainz', {
-            listen_type: 'single',
-            payload: [{ listened_at: timestamp, track_metadata: { artist_name: artist, track_name: title } }]
-        });
+    async function sendScrobble(artist, title, timestamp) {
+        const result = await sendBridgeCall('lastfm_scrobble', { artist, title, timestamp });
         handleApiResult(result, 'Scrobbled!', '#5f5');
     }
 
@@ -95,7 +89,9 @@ function setupListenbrainz() {
                 scrobbleThreshold = Math.min((trackData.duration / 1000) / 2, 240);
 
                 if (isPlaying) {
-                    const artist = trackData.publisher_metadata && trackData.publisher_metadata.artist ? trackData.publisher_metadata.artist : trackData.user.username;
+                    const artist = trackData.publisher_metadata && trackData.publisher_metadata.artist
+                        ? trackData.publisher_metadata.artist
+                        : trackData.user.username;
                     sendNowPlaying(artist, trackData.title);
                     updateStatus('Now Playing', '#789cff');
                 }
@@ -113,8 +109,10 @@ function setupListenbrainz() {
             }
 
             if (elapsedTime >= scrobbleThreshold && !hasScrobbled) {
-                const artist = currentTrackData.publisher_metadata && currentTrackData.publisher_metadata.artist ? currentTrackData.publisher_metadata.artist : currentTrackData.user.username;
-                sendFinalScrobble(artist, currentTrackData.title, startTime);
+                const artist = currentTrackData.publisher_metadata && currentTrackData.publisher_metadata.artist
+                    ? currentTrackData.publisher_metadata.artist
+                    : currentTrackData.user.username;
+                sendScrobble(artist, currentTrackData.title, startTime);
                 hasScrobbled = true;
                 updateStatus('Scrobbled!', '#5f5');
             }
@@ -125,4 +123,4 @@ function setupListenbrainz() {
     }, 2000);
 }
 
-setupListenbrainz();
+setupLastFm();

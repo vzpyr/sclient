@@ -157,6 +157,29 @@ function createOverlay() {
             <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your token from <a href="https://listenbrainz.org/profile/" target="_blank" style="color: #aaa; text-decoration: underline;">listenbrainz.org/profile</a></div>
         </div>
 
+        <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 14px; font-weight: 500;">Last.fm Scrobbling</span>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="sclient-lastfm-status" style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc;">Waiting...</span>
+                    <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                        <input type="checkbox" id="sclient-lastfm-toggle" style="opacity: 0; width: 0; height: 0;">
+                        <span id="sclient-toggle-bg-lastfm" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                            <span id="sclient-toggle-slider-lastfm" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+            <input type="text" id="sclient-lastfm-apikey-input" placeholder="API Key" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s; margin-bottom: 6px;">
+            <input type="password" id="sclient-lastfm-secret-input" placeholder="Shared Secret" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s; margin-bottom: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="sclient-lastfm-connect-btn" style="flex: 1; padding: 7px 12px; background: ${customAccentEnabled ? accentColor : '#f50'}; color: white; border: none; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Connect Last.fm Account</button>
+                <button id="sclient-lastfm-disconnect-btn" style="padding: 7px 12px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid #444; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; display: none;">Disconnect</button>
+            </div>
+            <div id="sclient-lastfm-connected-info" style="margin-top: 6px; font-size: 11px; color: #888; display: none;">Connected as: <span id="sclient-lastfm-username" style="color: ${customAccentEnabled ? accentColor : '#f50'}; font-weight: 600;"></span></div>
+            <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color: #aaa; text-decoration: underline;">last.fm/api/account/create</a></div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <span style="font-size: 14px; font-weight: 500;">Enable Adblocker</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
@@ -472,6 +495,18 @@ function createOverlay() {
         }
     }
 
+    function updateLastfmToggleUI(enabled) {
+        const bg = overlay.querySelector('#sclient-toggle-bg-lastfm');
+        const sl = overlay.querySelector('#sclient-toggle-slider-lastfm');
+        if (enabled) {
+            bg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            sl.style.transform = 'translateX(20px)';
+        } else {
+            bg.style.backgroundColor = '#333';
+            sl.style.transform = 'translateX(0)';
+        }
+    }
+
     function updateAdblockToggleUI(checked) {
         if (checked) {
             adblockToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
@@ -633,6 +668,60 @@ function createOverlay() {
     updateListenbrainzToggleUI(listenbrainzEnabled);
     listenbrainzTokenInput.value = listenbrainzToken;
     listenbrainzToggle.addEventListener('change', (e) => updateListenbrainzToggleUI(e.target.checked));
+
+    // Last.fm
+    const lastfmToggle = document.getElementById('sclient-lastfm-toggle');
+    lastfmToggle.checked = lastfmEnabled;
+    updateLastfmToggleUI(lastfmEnabled);
+    lastfmToggle.addEventListener('change', (e) => updateLastfmToggleUI(e.target.checked));
+
+    document.getElementById('sclient-lastfm-apikey-input').value = typeof lastfmApiKey !== 'undefined' ? lastfmApiKey : '';
+    document.getElementById('sclient-lastfm-secret-input').value = typeof lastfmSecret !== 'undefined' ? lastfmSecret : '';
+
+    function updateLastfmConnectedUI(username) {
+        const connectBtn = document.getElementById('sclient-lastfm-connect-btn');
+        const disconnectBtn = document.getElementById('sclient-lastfm-disconnect-btn');
+        const connectedInfo = document.getElementById('sclient-lastfm-connected-info');
+        const usernameEl = document.getElementById('sclient-lastfm-username');
+        if (username) {
+            connectBtn.textContent = 'Reconnect';
+            disconnectBtn.style.display = '';
+            connectedInfo.style.display = '';
+            usernameEl.textContent = username;
+        } else {
+            connectBtn.textContent = 'Connect Last.fm Account';
+            disconnectBtn.style.display = 'none';
+            connectedInfo.style.display = 'none';
+        }
+    }
+    updateLastfmConnectedUI(lastfmUsername);
+
+    document.getElementById('sclient-lastfm-connect-btn').addEventListener('click', async () => {
+        const connectBtn = document.getElementById('sclient-lastfm-connect-btn');
+        connectBtn.textContent = 'Waiting for Last.fm...';
+        connectBtn.disabled = true;
+        // Save only the credentials — don't touch any other settings
+        await sendBridgeMsg('lastfm_save_credentials', {
+            apiKey: document.getElementById('sclient-lastfm-apikey-input').value.trim(),
+            secret: document.getElementById('sclient-lastfm-secret-input').value.trim()
+        });
+        const result = await sendBridgeMsg('lastfm_authenticate', {});
+        connectBtn.disabled = false;
+        if (result && result.success) {
+            updateLastfmConnectedUI(result.username);
+        } else if (result && result.error && result.error !== 'cancelled') {
+            customAlert('Last.fm auth failed: ' + result.error);
+            connectBtn.textContent = 'Connect Last.fm Account';
+        } else {
+            connectBtn.textContent = 'Connect Last.fm Account';
+        }
+    });
+
+
+    document.getElementById('sclient-lastfm-disconnect-btn').addEventListener('click', async () => {
+        await sendBridgeMsg('lastfm_disconnect', {});
+        updateLastfmConnectedUI('');
+    });
 
     upsellToggle.checked = hideUpsellEnabled;
     updateUpsellToggleUI(hideUpsellEnabled);
@@ -820,9 +909,12 @@ function createOverlay() {
         const newProxyUrl = document.querySelector('#sclient-proxyurl-input').value;
         const newListenbrainz = document.querySelector('#sclient-listenbrainz-toggle').checked;
         const newListenbrainzToken = document.querySelector('#sclient-listenbrainz-token-input').value;
+        const newLastfm = document.querySelector('#sclient-lastfm-toggle').checked;
+        const newLastfmApiKey = document.getElementById('sclient-lastfm-apikey-input').value.trim();
+        const newLastfmSecret = document.getElementById('sclient-lastfm-secret-input').value.trim();
         
         if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader, listenbrainz: newListenbrainz, listenbrainzToken: newListenbrainzToken })
+            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader, listenbrainz: newListenbrainz, listenbrainzToken: newListenbrainzToken, lastfm: newLastfm, lastfmApiKey: newLastfmApiKey, lastfmSecret: newLastfmSecret })
                 .then(() => {
                     window.location.reload();
                 })
