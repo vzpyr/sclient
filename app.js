@@ -28,9 +28,7 @@ export default async function handler(req, res) {
       res.statusCode = 403;
       return res.end("Forbidden");
     }
-    if (tu.pathname.includes("/media/")) {
-      tu.searchParams.delete("track_authorization");
-    }
+
     finalUrl = tu.toString();
   } catch {
     res.setHeader("Access-Control-Allow-Origin", origin);
@@ -45,7 +43,6 @@ export default async function handler(req, res) {
       if (kl === "host" || kl === "origin" || kl === "referer") continue;
       outHeaders[k] = v;
     }
-    delete outHeaders["authorization"];
 
     const response = await fetch(finalUrl, {
       method: req.method,
