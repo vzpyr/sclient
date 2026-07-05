@@ -9,6 +9,7 @@ function setupListenbrainz() {
     let hasScrobbled = false;
     let startTime = 0;
     let scrobbleThreshold = 0;
+    let prevIsPlaying = false;
 
     function updateStatus(text, color) {
         const el = document.getElementById('sclient-listenbrainz-status');
@@ -77,6 +78,7 @@ function setupListenbrainz() {
         if (!titleLink) {
             updateStatus('Waiting...', '#ccc');
             currentTrackId = null;
+            prevIsPlaying = false;
             return;
         }
 
@@ -102,6 +104,15 @@ function setupListenbrainz() {
             } else {
                 currentTrackData = null;
             }
+            prevIsPlaying = isPlaying;
+            return;
+        }
+
+        // Resume detection: was paused, now playing on same track
+        if (currentTrackData && isPlaying && !prevIsPlaying && !hasScrobbled) {
+            const artist = currentTrackData.publisher_metadata && currentTrackData.publisher_metadata.artist ? currentTrackData.publisher_metadata.artist : currentTrackData.user.username;
+            sendNowPlaying(artist, currentTrackData.title);
+            updateStatus('Now Playing', '#789cff');
         }
 
         // Active playback tracking
@@ -122,6 +133,8 @@ function setupListenbrainz() {
             if (hasScrobbled) updateStatus('Scrobbled!', '#5f5');
             else updateStatus('Paused', '#f9a826');
         }
+
+        prevIsPlaying = isPlaying;
     }, 2000);
 }
 
