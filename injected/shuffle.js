@@ -10,24 +10,6 @@ window.fetch = async function(...args) {
         url = args[0].url;
     }
 
-    // proxy
-    if (!window.__SC_FAST_PROXY__ && regionBypassEnabled && proxyUrl && proxyUrl.startsWith("http")) {
-        if (url.includes("api-v2.soundcloud.com/resolve") ||
-            url.includes("api-v2.soundcloud.com/tracks") ||
-            url.includes("api-v2.soundcloud.com/playlists") ||
-            url.includes("api-v2.soundcloud.com/media")) {
-            
-            const targetUrl = new URL(proxyUrl);
-            targetUrl.searchParams.set("url", url);
-            
-            if (typeof args[0] === "string" || args[0] instanceof URL) {
-                args[0] = targetUrl.toString();
-            } else if (args[0] && args[0].url) {
-                args[0].url = targetUrl.toString();
-            }
-        }
-    }
-
     if (trueShuffleEnabled && url && typeof url === "string" &&
         url.includes("api-v2.soundcloud.com/playlists/") && 
         url.includes("representation=full")) {
@@ -113,18 +95,6 @@ XMLHttpRequest.prototype.open = function(method, url) {
         finalUrl = url.href;
     }
 
-    // region bypass proxy
-    if (!window.__SC_FAST_PROXY__ && regionBypassEnabled && proxyUrl && proxyUrl.startsWith("http") && finalUrl) {
-        if (finalUrl.includes("api-v2.soundcloud.com/resolve") ||
-            finalUrl.includes("api-v2.soundcloud.com/tracks") ||
-            finalUrl.includes("api-v2.soundcloud.com/playlists") ||
-            finalUrl.includes("api-v2.soundcloud.com/media")) {
-            const targetUrl = new URL(proxyUrl);
-            targetUrl.searchParams.set("url", finalUrl);
-            finalUrl = targetUrl.toString();
-        }
-    }
-    
     this._scMethod = method;
     this._scUrl = finalUrl;
     this._scHeaders = {};

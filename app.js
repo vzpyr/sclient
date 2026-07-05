@@ -44,13 +44,17 @@ export default async function handler(req, res) {
       outHeaders[k] = v;
     }
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
     const response = await fetch(finalUrl, {
       method: req.method,
       headers: outHeaders,
-      redirect: "follow"
+      redirect: "follow",
+      signal: controller.signal
     });
 
-    const body = Buffer.from(await response.arrayBuffer());
+    clearTimeout(timeout);
 
     response.headers.forEach((value, key) => {
       const kl = key.toLowerCase();
@@ -63,7 +67,20 @@ export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "*");
     res.statusCode = response.status;
-    res.end(body);
+
+    // Stream the response body instead of buffering
+    const reader = response.body.getReader();
+    const pump = async () => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          res.end();
+          break;
+        }
+        res.write(value);
+      }
+    };
+    await pump();
   } catch (e) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.statusCode = 502;

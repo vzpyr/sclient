@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, session, safeStorage } = require('electron');
+const { app, components, BrowserWindow, ipcMain, shell, Menu, Tray, nativeImage, session, safeStorage } = require('electron');
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
@@ -571,6 +571,7 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+    await components.whenReady();
     createWindow();
 
     const trayEnabled = readConfig('tray_icon.conf', 'false') === 'true';

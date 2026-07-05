@@ -12,7 +12,11 @@
   "build": {
     "appId": "com.vzpyr.sclient",
     "productName": "SClient",
-    "electronVersion": "42.3.3",
+    "electronVersion": "42.3.3+wvcus",
+    "electronDownload": {
+      "mirror": "https://github.com/castlabs/electron-releases/releases/download/",
+      "customDir": "v42.3.3+wvcus"
+    },
     "directories": {
       "buildResources": "icons"
     },
