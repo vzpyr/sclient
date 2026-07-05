@@ -6,6 +6,8 @@ const { Client, StatusDisplayType } = require('@xhayper/discord-rpc');
 const { ElectronBlocker } = require('@ghostery/adblocker-electron');
 const fetch = require('cross-fetch');
 const ytdlexec = require('youtube-dl-exec');
+let Database = null;
+try { Database = require('better-sqlite3'); } catch (e) { console.error('[SClient] better-sqlite3 not available, stats disabled.'); }
 let ytdlBin = ytdlexec.constants.YOUTUBE_DL_PATH;
 if (ytdlBin.includes('app.asar')) ytdlBin = ytdlBin.replace('app.asar', 'app.asar.unpacked');
 const exec = ytdlexec.create(ytdlBin);
@@ -70,6 +72,8 @@ function writeSecureConfig(name, val) {
 let adblockEnabled = readConfig('adblock.conf', 'false') === 'true';
 let discordRpcEnabled = readConfig('discord_rpc.conf', 'false') === 'true';
 let trayIconEnabled = readConfig('tray_icon.conf', 'false') === 'true';
+let statsApiSyncEnabled = readConfig('stats_api_sync.conf', 'false') === 'true';
+let statsLocalTrackingEnabled = readConfig('stats_local_tracking.conf', 'false') === 'true';
 
 const DEFAULT_CSS = ``;
 const DEFAULT_JS = ``;
@@ -117,7 +121,9 @@ ipcMain.handle('get_custom_files', () => {
         lastfm_api_key: readSecureConfig('lastfm_api_key.conf', ''),
         lastfm_secret: readSecureConfig('lastfm_secret.conf', ''),
         lastfm_session_key: readSecureConfig('lastfm_session_key.conf', ''),
-        lastfm_username: readConfig('lastfm_username.conf', '')
+        lastfm_username: readConfig('lastfm_username.conf', ''),
+        stats_api_sync: statsApiSyncEnabled,
+        stats_local_tracking: statsLocalTrackingEnabled
     };
 });
 
@@ -158,6 +164,10 @@ ipcMain.handle('save_custom_files', (e, args) => {
     writeConfig('lastfm.conf', args.lastfm ? 'true' : 'false');
     writeSecureConfig('lastfm_api_key.conf', args.lastfmApiKey || '');
     writeSecureConfig('lastfm_secret.conf', args.lastfmSecret || '');
+    statsApiSyncEnabled = args.statsApiSync || false;
+    writeConfig('stats_api_sync.conf', args.statsApiSync ? 'true' : 'false');
+    statsLocalTrackingEnabled = args.statsLocalTracking || false;
+    writeConfig('stats_local_tracking.conf', args.statsLocalTracking ? 'true' : 'false');
 });
 
 ipcMain.handle('__internal_fetch_sc_css', async (e, args) => {
@@ -297,6 +307,163 @@ ipcMain.handle('lastfm_scrobble', async (e, args) => {
     } catch (err) {
         console.error('[SClient] Last.fm scrobble error:', err);
         return { ok: false, code: 0, message: err.message };
+    }
+});
+
+// ===================================================================
+// STATS — Listening history polling + local SQLite DB
+// ===================================================================
+
+const statsDbPath = path.join(configDir, 'stats.db');
+let statsDb = null;
+let statsCredentials = { clientId: null, oauthToken: null };
+let statsSyncInterval = null;
+let syncing = false;
+let statsRecordStmt = null;
+
+function getStatsDb() {
+    if (!Database) return null;
+    if (statsDb) return statsDb;
+    try {
+        statsDb = new Database(statsDbPath);
+        statsDb.pragma('journal_mode = WAL');
+        statsDb.exec(`
+            CREATE TABLE IF NOT EXISTS listens (
+                played_at INTEGER NOT NULL,
+                track_id INTEGER NOT NULL,
+                track_json TEXT NOT NULL,
+                source TEXT NOT NULL DEFAULT 'api',
+                PRIMARY KEY (played_at, track_id)
+            )
+        `);
+        // Migration: add source column if upgrading from old schema
+        const cols = statsDb.pragma('table_info(listens)');
+        if (!cols.some(c => c.name === 'source')) {
+            statsDb.exec(`ALTER TABLE listens ADD COLUMN source TEXT NOT NULL DEFAULT 'api'`);
+        }
+        statsDb.exec(`CREATE INDEX IF NOT EXISTS idx_listens_played_at ON listens(played_at)`);
+        return statsDb;
+    } catch (e) {
+        console.error('[SClient] Failed to open stats DB:', e);
+        return null;
+    }
+}
+
+async function syncPlayHistory() {
+    if (!statsApiSyncEnabled) return;
+    if (!statsCredentials.clientId || !statsCredentials.oauthToken) return;
+    if (!Database) return;
+
+    const db = getStatsDb();
+    if (!db) return;
+    if (syncing) return;
+    syncing = true;
+
+    try {
+        console.log('[SClient] Syncing play history...');
+
+        const insert = db.prepare('INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)');
+        const insertMany = db.transaction((entries) => {
+            for (const entry of entries) {
+                insert.run(entry.played_at, entry.track_id, JSON.stringify(entry.track), 'api');
+            }
+        });
+
+        let url = `https://api-v2.soundcloud.com/me/play-history/tracks?client_id=${statsCredentials.clientId}&limit=50&linked_partitioning=1&app_version=1782999645&app_locale=en`;
+        console.log('[SClient] Stats sync URL:', url.replace(statsCredentials.clientId, 'CLIENT_ID'));
+        let totalInserted = 0;
+        let pages = 0;
+
+        while (url) {
+            pages++;
+            console.log(`[SClient] Stats sync page ${pages}...`);
+            try {
+                const res = await fetch(url, {
+                    headers: { 'Authorization': `OAuth ${statsCredentials.oauthToken}` }
+                });
+                console.log(`[SClient] Stats sync page ${pages} HTTP ${res.status}`);
+                if (!res.ok) {
+                    const body = await res.text();
+                    console.error('[SClient] Stats sync HTTP error body:', body.slice(0, 200));
+                    break;
+                }
+                const data = await res.json();
+                if (data.collection && data.collection.length > 0) {
+                    const entries = data.collection.map(e => ({
+                        played_at: e.played_at,
+                        track_id: e.track_id,
+                        track: e.track
+                    }));
+                    insertMany(entries);
+                    totalInserted += entries.length;
+                }
+                url = data.next_href || null;
+            } catch (e) {
+                console.error('[SClient] Stats sync error:', e.message);
+                break;
+            }
+        }
+
+        console.log(`[SClient] Stats sync done — ${totalInserted} new entries`);
+    } finally {
+        syncing = false;
+    }
+}
+
+ipcMain.handle('stats_store_credentials', async (e, args) => {
+    statsCredentials.clientId = args.clientId;
+    statsCredentials.oauthToken = args.oauthToken;
+    console.log('[SClient] Stats credentials stored', statsApiSyncEnabled ? '- triggering initial sync...' : '(API sync disabled)');
+    await syncPlayHistory();
+    // Start periodic sync every 2 hours
+    if (statsSyncInterval) clearInterval(statsSyncInterval);
+    statsSyncInterval = setInterval(() => {
+        if (statsApiSyncEnabled) syncPlayHistory();
+    }, 2 * 60 * 60 * 1000);
+});
+
+ipcMain.handle('stats_record_listen', (e, args) => {
+    if (!Database) return;
+    const db = getStatsDb();
+    if (!db) return;
+    try {
+        if (!statsRecordStmt) {
+            statsRecordStmt = db.prepare('INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)');
+        }
+        statsRecordStmt.run(args.played_at, args.track_id, JSON.stringify(args.track), 'local');
+    } catch (err) {
+        console.error('[SClient] Stats record error:', err);
+    }
+});
+
+ipcMain.handle('stats_get_data', (e, args) => {
+    if (!Database) return [];
+    const db = getStatsDb();
+    if (!db) return [];
+    try {
+        let query = 'SELECT played_at, track_id, track_json, source FROM listens';
+        const params = [];
+        if (args && args.source && (args.source === 'api' || args.source === 'local')) {
+            query += ' WHERE source = ?';
+            params.push(args.source);
+        }
+        query += ' ORDER BY played_at DESC';
+        return db.prepare(query).all(...params);
+    } catch (e) {
+        console.error('[SClient] Stats get data error:', e);
+        return [];
+    }
+});
+
+ipcMain.handle('stats_wipe_db', () => {
+    if (!Database) return;
+    const db = getStatsDb();
+    if (!db) return;
+    try {
+        db.exec('DELETE FROM listens');
+        console.log('[SClient] Stats DB wiped.');
+    } catch (e) {
+        console.error('[SClient] Stats wipe error:', e);
     }
 });
 
@@ -476,12 +643,15 @@ function createWindow() {
             'lyrics.js',
             'listenbrainz.js',
             'lastfm.js',
+            'stats.js',
             'settings.js',
             'init.js'
         ];
         let injectedJs = injectedFiles
             .map(file => fs.readFileSync(path.join(__dirname, 'injected', file), 'utf8'))
             .join('\n');
+        // Prepend Chart.js (bundled from node_modules, replaces CDN dependency)
+        injectedJs = fs.readFileSync(path.join(__dirname, 'node_modules', 'chart.js', 'dist', 'chart.umd.js'), 'utf8') + '\n' + injectedJs;
         const config = {
             css: readConfig('custom.css', ''),
             js: readConfig('custom.js', ''),
@@ -509,7 +679,9 @@ function createWindow() {
             lastfm_api_key: readSecureConfig('lastfm_api_key.conf', ''),
             lastfm_secret: readSecureConfig('lastfm_secret.conf', ''),
             lastfm_session_key: readSecureConfig('lastfm_session_key.conf', ''),
-            lastfm_username: readConfig('lastfm_username.conf', '')
+            lastfm_username: readConfig('lastfm_username.conf', ''),
+            stats_api_sync: statsApiSyncEnabled,
+            stats_local_tracking: statsLocalTrackingEnabled
         };
 
         // inject config & mock tauri

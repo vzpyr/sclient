@@ -180,6 +180,41 @@ function createOverlay() {
             <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color: #aaa; text-decoration: underline;">last.fm/api/account/create</a></div>
         </div>
 
+        <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+            <span style="font-size: 14px; font-weight: 500; display: block; margin-bottom: 12px;">Listening Stats</span>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 13px; color: #ccc;">History Sync</span>
+                    <span style="font-size: 10px; color: #666;">(every 2h)</span>
+                </div>
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="sclient-stats-api-toggle" style="opacity: 0; width: 0; height: 0;">
+                    <span id="sclient-toggle-bg-stats-api" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                        <span id="sclient-toggle-slider-stats-api" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                    </span>
+                </label>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 13px; color: #ccc;">Local Tracking</span>
+                    <span id="sclient-stats-status" style="font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #666;">--</span>
+                </div>
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+                    <input type="checkbox" id="sclient-stats-local-toggle" style="opacity: 0; width: 0; height: 0;">
+                    <span id="sclient-toggle-bg-stats-local" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                        <span id="sclient-toggle-slider-stats-local" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+                    </span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="sclient-stats-analytics-btn" style="flex: 1; padding: 7px 12px; background: ${customAccentEnabled ? accentColor : '#f50'}; color: white; border: none; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Open Analytics</button>
+                <button id="sclient-stats-wipe-btn" style="padding: 7px 12px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid #444; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer;">Wipe Data</button>
+            </div>
+        </div>
+
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             <span style="font-size: 14px; font-weight: 500;">Enable Adblocker</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
@@ -723,6 +758,51 @@ function createOverlay() {
         updateLastfmConnectedUI('');
     });
 
+    // Stats toggles
+    const statsApiToggle = document.getElementById('sclient-stats-api-toggle');
+    const statsApiToggleBg = document.getElementById('sclient-toggle-bg-stats-api');
+    const statsApiToggleSlider = document.getElementById('sclient-toggle-slider-stats-api');
+    const statsLocalToggle = document.getElementById('sclient-stats-local-toggle');
+    const statsLocalToggleBg = document.getElementById('sclient-toggle-bg-stats-local');
+    const statsLocalToggleSlider = document.getElementById('sclient-toggle-slider-stats-local');
+
+    function makeStatsToggleUI(bg, slider, enabled) {
+        if (enabled) {
+            bg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            slider.style.transform = 'translateX(20px)';
+        } else {
+            bg.style.backgroundColor = '#333';
+            slider.style.transform = 'translateX(0)';
+        }
+    }
+
+    statsApiToggle.checked = typeof statsApiSyncEnabled !== 'undefined' ? statsApiSyncEnabled : false;
+    makeStatsToggleUI(statsApiToggleBg, statsApiToggleSlider, statsApiToggle.checked);
+    statsApiToggle.addEventListener('change', (e) => makeStatsToggleUI(statsApiToggleBg, statsApiToggleSlider, e.target.checked));
+
+    statsLocalToggle.checked = typeof statsLocalTrackingEnabled !== 'undefined' ? statsLocalTrackingEnabled : false;
+    makeStatsToggleUI(statsLocalToggleBg, statsLocalToggleSlider, statsLocalToggle.checked);
+    statsLocalToggle.addEventListener('change', (e) => makeStatsToggleUI(statsLocalToggleBg, statsLocalToggleSlider, e.target.checked));
+
+    document.getElementById('sclient-stats-analytics-btn').addEventListener('click', () => {
+        // Close settings sidebar first
+        document.getElementById('sclient-settings-overlay').style.right = '-450px';
+        // Call the global toggle function from stats.js
+        if (typeof toggleAnalyticsOverlay === 'function') {
+            setTimeout(() => toggleAnalyticsOverlay(), 300);
+        }
+    });
+
+    document.getElementById('sclient-stats-wipe-btn').addEventListener('click', () => {
+        customConfirm('Delete all listening data? This cannot be undone.').then(confirmed => {
+            if (confirmed) {
+                sendBridgeMsg('stats_wipe_db', {}).then(() => {
+                    customAlert('Stats data wiped.');
+                }).catch(e => customAlert('Wipe failed: ' + e));
+            }
+        });
+    });
+
     upsellToggle.checked = hideUpsellEnabled;
     updateUpsellToggleUI(hideUpsellEnabled);
     upsellToggle.addEventListener('change', (e) => updateUpsellToggleUI(e.target.checked));
@@ -912,9 +992,11 @@ function createOverlay() {
         const newLastfm = document.querySelector('#sclient-lastfm-toggle').checked;
         const newLastfmApiKey = document.getElementById('sclient-lastfm-apikey-input').value.trim();
         const newLastfmSecret = document.getElementById('sclient-lastfm-secret-input').value.trim();
+        const newStatsApiSync = document.querySelector('#sclient-stats-api-toggle').checked;
+        const newStatsLocalTracking = document.querySelector('#sclient-stats-local-toggle').checked;
         
         if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader, listenbrainz: newListenbrainz, listenbrainzToken: newListenbrainzToken, lastfm: newLastfm, lastfmApiKey: newLastfmApiKey, lastfmSecret: newLastfmSecret })
+            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader, listenbrainz: newListenbrainz, listenbrainzToken: newListenbrainzToken, lastfm: newLastfm, lastfmApiKey: newLastfmApiKey, lastfmSecret: newLastfmSecret, statsApiSync: newStatsApiSync, statsLocalTracking: newStatsLocalTracking })
                 .then(() => {
                     window.location.reload();
                 })
@@ -1049,6 +1131,30 @@ function toggleOverlay() {
             lbToggleSliderEl.style.transform = 'translateX(0)';
         }
         document.getElementById('sclient-listenbrainz-token-input').value = listenbrainzToken;
+
+        const statsApiToggleEl = document.getElementById('sclient-stats-api-toggle');
+        statsApiToggleEl.checked = typeof statsApiSyncEnabled !== 'undefined' ? statsApiSyncEnabled : false;
+        const statsApiToggleBgEl = document.getElementById('sclient-toggle-bg-stats-api');
+        const statsApiToggleSliderEl = document.getElementById('sclient-toggle-slider-stats-api');
+        if (statsApiSyncEnabled) {
+            statsApiToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            statsApiToggleSliderEl.style.transform = 'translateX(20px)';
+        } else {
+            statsApiToggleBgEl.style.backgroundColor = '#333';
+            statsApiToggleSliderEl.style.transform = 'translateX(0)';
+        }
+
+        const statsLocalToggleEl = document.getElementById('sclient-stats-local-toggle');
+        statsLocalToggleEl.checked = typeof statsLocalTrackingEnabled !== 'undefined' ? statsLocalTrackingEnabled : false;
+        const statsLocalToggleBgEl = document.getElementById('sclient-toggle-bg-stats-local');
+        const statsLocalToggleSliderEl = document.getElementById('sclient-toggle-slider-stats-local');
+        if (statsLocalTrackingEnabled) {
+            statsLocalToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
+            statsLocalToggleSliderEl.style.transform = 'translateX(20px)';
+        } else {
+            statsLocalToggleBgEl.style.backgroundColor = '#333';
+            statsLocalToggleSliderEl.style.transform = 'translateX(0)';
+        }
 
         const accentToggleEl = document.getElementById('sclient-accent-toggle');
         accentToggleEl.checked = customAccentEnabled;

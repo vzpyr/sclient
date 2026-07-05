@@ -104,6 +104,35 @@ let lastfmApiKey = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_
 let lastfmSecret = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_secret : '';
 let lastfmSessionKey = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_session_key : '';
 let lastfmUsername = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.lastfm_username : '';
+let statsApiSyncEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.stats_api_sync : false;
+let statsLocalTrackingEnabled = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.stats_local_tracking : false;
+
+function sendBridgeMsg(cmd, args = {}) {
+    return new Promise((resolve, reject) => {
+        const callbackId = cmd + '_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+        const handler = (event) => {
+            if (event.source !== window || !event.data || event.data.source !== 'sclient-bridge-reply') return;
+            if (event.data.callbackId === callbackId) {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                if (event.data.success) resolve(event.data.result);
+                else reject(new Error(event.data.error));
+            }
+        };
+        window.addEventListener('message', handler);
+        const timeout = setTimeout(() => {
+            window.removeEventListener('message', handler);
+            reject(new Error('Bridge timeout'));
+        }, 10000);
+        window.postMessage({
+            source: 'sclient-bridge',
+            action: 'invoke',
+            cmd: cmd,
+            args: args,
+            callbackId: callbackId
+        }, '*');
+    });
+}
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
@@ -467,16 +496,22 @@ function setupLazyScroll() {
     document.body.appendChild(btn);
 }
 
-async function fetchGodModeData(songUrl) {
-    let clientId = null;
+function extractClientId() {
     const resources = performance.getEntriesByType('resource');
     for (const r of resources) {
         if (r.name.includes('client_id=')) {
-            const url = new URL(r.name);
-            clientId = url.searchParams.get('client_id');
-            if (clientId) break;
+            try {
+                const url = new URL(r.name);
+                const cid = url.searchParams.get('client_id');
+                if (cid) return cid;
+            } catch (e) { /* skip malformed URLs */ }
         }
     }
+    return null;
+}
+
+async function fetchGodModeData(songUrl) {
+    const clientId = extractClientId();
     if (!clientId) return null;
 
     try {

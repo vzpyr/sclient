@@ -19,7 +19,7 @@ SClient adds several enhancements and quality of life features to the standard w
 * **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`.
 * **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Any sensitive information is securely stored and encrypted using your OS's native keyring (safeStorage).
 * **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
-* **Lyrics Integration**: View lyrics for the currently playing song in a sleek sidebar (with a manual search fallback).
+* **Listening Stats & Analytics**: Track your listening history locally with an SQLite database. View detailed analytics with charts for top artists, tracks, genres, listening hours, and more. Optionally sync your SoundCloud play history automatically.
 
 ### 🎨 Customization & UI Tweaks
 * **Extensive Interface Tweaks**: Enable a true black OLED dark mode, wide layout, collapsible sidebar, and an enhanced header with modern Lucide icons. Add a lazy scroll button, hide window decorations, and disable subscription upsells.
