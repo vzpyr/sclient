@@ -1,1184 +1,913 @@
-function sendBridgeMsg(cmd, args = {}) {
-    return new Promise((resolve, reject) => {
-        const callbackId = cmd + '_' + Date.now();
-        const handler = (event) => {
-            if (event.source !== window || !event.data || event.data.source !== 'sclient-bridge-reply') return;
-            if (event.data.callbackId === callbackId) {
-                window.removeEventListener('message', handler);
-                if (event.data.success) resolve(event.data.result);
-                else reject(event.data.error);
-            }
-        };
-        window.addEventListener('message', handler);
-        window.postMessage({
-            source: 'sclient-bridge',
-            action: 'invoke',
-            cmd: cmd,
-            args: args,
-            callbackId: callbackId
-        }, '*');
-    });
+// settings overlay — uses consolidated core helpers
+
+function createToggleHtml({ label, toggleId, bgId, sliderId }) {
+	return `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+      <span style="font-size: 14px; font-weight: 500;">${label}</span>
+      <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+        <input type="checkbox" id="${toggleId}" style="opacity: 0; width: 0; height: 0;">
+        <span id="${bgId}" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+          <span id="${sliderId}" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+        </span>
+      </label>
+    </div>`;
 }
 
+function updateToggleUI(bgEl, sliderEl, checked) {
+	if (checked) {
+		bgEl.style.backgroundColor = getAccent();
+		sliderEl.style.transform = "translateX(20px)";
+	} else {
+		bgEl.style.backgroundColor = "#333";
+		sliderEl.style.transform = "translateX(0)";
+	}
+}
+
+function setupToggle(
+	overlay,
+	{ toggleId, bgId, sliderId, initialValue, onChange },
+) {
+	const toggle = overlay.querySelector("#" + toggleId);
+	const bg = overlay.querySelector("#" + bgId);
+	const slider = overlay.querySelector("#" + sliderId);
+	toggle.checked = initialValue;
+	updateToggleUI(bg, slider, initialValue);
+	toggle.addEventListener("change", (e) => {
+		updateToggleUI(bg, slider, e.target.checked);
+		if (onChange) onChange(e.target.checked);
+	});
+	return { toggle, bg, slider };
+}
+
+// --- syntax highlighting ---
+
+function highlightCss(text) {
+	const tokens = [];
+	let html = text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
+
+	const patterns = [
+		[/(\/\*[\s\S]*?\*\/)/g, "#6a9955"],
+		[/([.#][a-zA-Z0-9_-]+)(?=[\s{])/g, "#d7ba7d"],
+		[/([a-zA-Z-]+)\s*(?=:)/g, "#9cdcfe"],
+		[/(:\s*)([^;}]+)(?=;|\})/g, "#ce9178"],
+	];
+
+	for (const [re, color] of patterns) {
+		html = html.replace(re, (match, ...groups) => {
+			const content = groups[0] ? groups[0] + groups[1] : match;
+			const wrapped = `<span style="color: ${color};">${content}</span>`;
+			const tokenIdx = tokens.length;
+			tokens.push(wrapped);
+			return `__TOKEN${tokenIdx}__`;
+		});
+	}
+
+	// last pattern has positional groups
+	html = html.replace(/__TOKEN(\d+)__/g, (_, i) => tokens[parseInt(i)]);
+
+	if (text[text.length - 1] === "\n") html += " ";
+	return html;
+}
+
+function highlightJs(text) {
+	const tokens = [];
+	let html = text
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
+
+	const patterns = [
+		[/(\/\/.*)/g, "#6a9955"],
+		[/('.*?'|".*?"|`[\s\S]*?`)/g, "#ce9178"],
+		[
+			/\b(const|let|var|function|return|if|else|for|while|try|catch|async|await|class|new|this|import|export|from|true|false|null|undefined)\b/g,
+			"#569cd6",
+		],
+		[/\b([a-zA-Z0-9_]+)(?=\s*\()/g, "#dcdcaa"],
+	];
+
+	for (const [re, color] of patterns) {
+		html = html.replace(re, (match) => {
+			const wrapped = `<span style="color: ${color};">${match}</span>`;
+			const tokenIdx = tokens.length;
+			tokens.push(wrapped);
+			return `__TOKEN${tokenIdx}__`;
+		});
+	}
+
+	html = html.replace(/__TOKEN(\d+)__/g, (_, i) => tokens[parseInt(i)]);
+
+	if (text[text.length - 1] === "\n") html += " ";
+	return html;
+}
+
+// --- code editor setup ---
+
+function setupCodeEditors(overlay) {
+	const tabCss = overlay.querySelector("#tab-css");
+	const tabJs = overlay.querySelector("#tab-js");
+	const cssEditor = overlay.querySelector("#sclient-css-editor");
+	const jsEditor = overlay.querySelector("#sclient-js-editor");
+	const cssContainer = overlay.querySelector("#sclient-css-container");
+	const jsContainer = overlay.querySelector("#sclient-js-container");
+	const cssHighlight = overlay.querySelector("#sclient-css-highlight");
+	const jsHighlight = overlay.querySelector("#sclient-js-highlight");
+
+	function updateCssHighlight() {
+		cssHighlight.innerHTML = highlightCss(cssEditor.value);
+	}
+	function updateJsHighlight() {
+		jsHighlight.innerHTML = highlightJs(jsEditor.value);
+	}
+
+	cssEditor.addEventListener("input", updateCssHighlight);
+	jsEditor.addEventListener("input", updateJsHighlight);
+
+	cssEditor.addEventListener("scroll", () => {
+		cssHighlight.scrollTop = cssEditor.scrollTop;
+		cssHighlight.scrollLeft = cssEditor.scrollLeft;
+	});
+	jsEditor.addEventListener("scroll", () => {
+		jsHighlight.scrollTop = jsEditor.scrollTop;
+		jsHighlight.scrollLeft = jsEditor.scrollLeft;
+	});
+
+	const switchTab = (activeTab, inactiveTab, show, hide) => {
+		activeTab.style.background = getAccent();
+		activeTab.style.color = "white";
+		inactiveTab.style.background = "#333";
+		inactiveTab.style.color = "#ccc";
+		show.style.display = "block";
+		hide.style.display = "none";
+	};
+
+	tabCss.addEventListener("click", () =>
+		switchTab(tabCss, tabJs, cssContainer, jsContainer),
+	);
+	tabJs.addEventListener("click", () =>
+		switchTab(tabJs, tabCss, jsContainer, cssContainer),
+	);
+
+	cssEditor.value = currentCss;
+	jsEditor.value = currentJs;
+	updateCssHighlight();
+	updateJsHighlight();
+}
+
+// --- account management ---
+
+function renderAccounts(overlay) {
+	sendBridgeMsg("get_accounts")
+		.then((accounts) => {
+			sendBridgeMsg("get_active_account")
+				.then((active) => {
+					const list = overlay.querySelector("#sclient-accounts-list");
+					list.replaceChildren();
+					for (const acc of accounts) {
+						const div = document.createElement("div");
+						div.style.cssText =
+							"display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;";
+
+						const nameSpan = document.createElement("span");
+						nameSpan.textContent = acc;
+						if (acc === active) {
+							nameSpan.style.cssText = `color: ${getAccent()}; font-weight: bold;`;
+							nameSpan.textContent += " (Active)";
+						}
+
+						const btnContainer = document.createElement("div");
+						btnContainer.style.cssText = "display: flex; gap: 5px;";
+
+						if (acc !== active) {
+							const switchBtn = document.createElement("button");
+							switchBtn.textContent = "Switch";
+							switchBtn.style.cssText =
+								"padding: 4px 8px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;";
+							switchBtn.onclick = () => {
+								sendBridgeMsg("set_active_account", { name: acc })
+									.then(() => sendBridgeMsg("restart_app"))
+									.catch((e) => customAlert("Switch Error: " + e));
+							};
+							btnContainer.appendChild(switchBtn);
+						}
+
+						if (acc !== "main" && acc !== active) {
+							const deleteBtn = document.createElement("button");
+							deleteBtn.textContent = "Delete";
+							deleteBtn.style.cssText =
+								"padding: 4px 8px; background: #800; color: white; border: none; border-radius: 3px; cursor: pointer;";
+							deleteBtn.onclick = () => {
+								customConfirm("Delete account " + acc + "?").then(
+									(confirmed) => {
+										if (confirmed) {
+											sendBridgeMsg("delete_account", { name: acc })
+												.then(() => renderAccounts(overlay))
+												.catch((e) => customAlert("Delete Error: " + e));
+										}
+									},
+								);
+							};
+							btnContainer.appendChild(deleteBtn);
+						}
+
+						if (acc === "main") {
+							const resetBtn = document.createElement("button");
+							resetBtn.textContent = "Reset";
+							resetBtn.style.cssText =
+								"padding: 4px 8px; background: #3a1515; color: #f88; border: 1px solid #5a2020; border-radius: 3px; cursor: pointer;";
+							resetBtn.onclick = () => {
+								const isActive = acc === active;
+								const msg = isActive
+									? "Clear all cookies and browser data? The app will restart."
+									: "Clear all cookies and browser data for main profile?";
+								customConfirm(msg).then((confirmed) => {
+									if (confirmed && window.__TAURI__ && window.__TAURI__.core) {
+										sendBridgeMsg(
+											isActive ? "clear_data_and_restart" : "clear_data",
+										);
+									}
+								});
+							};
+							btnContainer.appendChild(resetBtn);
+						}
+
+						div.appendChild(nameSpan);
+						div.appendChild(btnContainer);
+						list.appendChild(div);
+					}
+				})
+				.catch((e) => customAlert("Active Account Error: " + e));
+		})
+		.catch((e) => customAlert("Get Accounts Error: " + e));
+}
+
+// --- main overlay ---
+
 function createOverlay() {
-    if (document.getElementById('sclient-settings-overlay')) return;
+	if (document.getElementById("sclient-settings-overlay")) return;
 
-    const overlay = document.createElement('div');
-    overlay.id = 'sclient-settings-overlay';
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        right: -450px;
-        width: 400px;
-        height: 100%;
-        background: rgba(18, 18, 18, 0.95);
-        backdrop-filter: blur(10px);
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: -5px 0 25px rgba(0,0,0,0.5);
-        z-index: 999999;
-        transition: right 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        color: #fff;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        padding: 20px;
-        box-sizing: border-box;
-    `;
+	const accent = getAccent();
 
-    overlay.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-            <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: ${customAccentEnabled ? accentColor : '#f50'}; display: flex; align-items: center; gap: 8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                SClient Settings
-            </h3>
-            <button id="sclient-close-btn" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 20px; padding: 5px;">&times;</button>
+	const overlay = document.createElement("div");
+	overlay.id = "sclient-settings-overlay";
+	overlay.style.cssText = `
+    position: fixed; top: 0; right: -450px; width: 400px; height: 100%;
+    background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -5px 0 25px rgba(0,0,0,0.5); z-index: 999999;
+    transition: right 0.3s ease; display: flex; flex-direction: column;
+    color: #fff; font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    padding: 20px; box-sizing: border-box;
+  `;
+
+	// build toggle definitions (simple toggles only; accent & wide-layout have their own row)
+	const TOGGLES = [
+		{ label: "Enable OLED Dark Mode", id: "oled-dark-mode" },
+		{ label: "Enable Enhanced Header", id: "enhanced-header" },
+		{ label: "Enable Collapsible Sidebar", id: "collapsible-sidebar" },
+		{ label: "Enable Discord Rich Presence", id: "rpc" },
+		{ label: "Enable System Tray (Minimize to background)", id: "tray" },
+		{ label: "Enable Adblocker", id: "adblock" },
+		{ label: "Enable Lazy Scroll Button", id: "lazy-scroll" },
+		{ label: "Disable Window Decorations", id: "decorations" },
+		{ label: "Hide Subscription Upsell", id: "upsell" },
+		{ label: "Hide Artist Features", id: "artists" },
+	];
+
+	const toggleHtml = TOGGLES.map((t) =>
+		createToggleHtml({
+			label: t.label,
+			toggleId: `sclient-${t.id}-toggle`,
+			bgId: `sclient-toggle-bg-${t.id}`,
+			sliderId: `sclient-toggle-slider-${t.id}`,
+		}),
+	).join("");
+
+	overlay.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+      <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: ${accent}; display: flex; align-items: center; gap: 8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        SClient Settings
+      </h3>
+      <button id="sclient-close-btn" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 20px; padding: 5px;">&times;</button>
+    </div>
+
+    <style>
+      #sclient-settings-scroll::-webkit-scrollbar { width: 8px; }
+      #sclient-settings-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+      #sclient-settings-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+      #sclient-settings-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+      #sclient-settings-scroll label { flex-shrink: 0; }
+    </style>
+
+    <div id="sclient-settings-scroll" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 8px; display: flex; flex-direction: column; min-height: 0; margin-bottom: 15px;">
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-size: 14px; font-weight: 500;">Custom Accent Color</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="color" id="sclient-accent-color-picker" style="width: 24px; height: 24px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: transparent;">
+          <input type="text" id="sclient-accent-color-text" style="width: 60px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; border-radius: 4px; padding: 4px; font-family: monospace; font-size: 12px; text-transform: uppercase;">
+          <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+            <input type="checkbox" id="sclient-accent-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span id="sclient-toggle-bg-accent" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+              <span id="sclient-toggle-slider-accent" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </span>
+          </label>
         </div>
-        
-        <style>
-            #sclient-settings-scroll::-webkit-scrollbar { width: 8px; }
-            #sclient-settings-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-            #sclient-settings-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-            #sclient-settings-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-            #sclient-settings-scroll label { flex-shrink: 0; }
-        </style>
-        <div id="sclient-settings-scroll" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 8px; display: flex; flex-direction: column; min-height: 0; margin-bottom: 15px;">
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Custom Accent Color</span>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="color" id="sclient-accent-color-picker" style="width: 24px; height: 24px; padding: 0; border: none; border-radius: 4px; cursor: pointer; background: transparent;">
-                <input type="text" id="sclient-accent-color-text" style="width: 60px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; border-radius: 4px; padding: 4px; font-family: monospace; font-size: 12px; text-transform: uppercase;">
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                    <input type="checkbox" id="sclient-accent-toggle" style="opacity: 0; width: 0; height: 0;">
-                    <span id="sclient-toggle-bg-accent" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                        <span id="sclient-toggle-slider-accent" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                    </span>
-                </label>
-            </div>
-        </div>
+      </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable OLED Dark Mode</span>
+      ${toggleHtml}
+
+      <!-- Wide Layout toggle with width input -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-size: 14px; font-weight: 500;">Enable Wide Layout</span>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="text" id="sclient-wide-layout-width" placeholder="1200" style="width: 50px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; border-radius: 4px; padding: 4px; font-family: monospace; font-size: 12px; text-align: center;" title="Max width in px (min 960)">
+          <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+            <input type="checkbox" id="sclient-wide-layout-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span id="sclient-toggle-bg-wide-layout" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+              <span id="sclient-toggle-slider-wide-layout" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ListenBrainz -->
+      <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-size: 14px; font-weight: 500;">ListenBrainz Scrobbling</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="sclient-listenbrainz-status" style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc;">Waiting...</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-oled-dark-mode-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-oled" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-oled" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
+              <input type="checkbox" id="sclient-listenbrainz-toggle" style="opacity: 0; width: 0; height: 0;">
+              <span id="sclient-toggle-bg-listenbrainz" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                <span id="sclient-toggle-slider-listenbrainz" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+              </span>
             </label>
+          </div>
         </div>
+        <input type="password" id="sclient-listenbrainz-token-input" placeholder="Enter ListenBrainz User Token..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;">
+        <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your token from <a href="https://listenbrainz.org/profile/" target="_blank" style="color: #aaa; text-decoration: underline;">listenbrainz.org/profile</a></div>
+      </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Enhanced Header</span>
+      <!-- Last.fm -->
+      <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-size: 14px; font-weight: 500;">Last.fm Scrobbling</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="sclient-lastfm-status" style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc;">Waiting...</span>
             <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-enhanced-header-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-eh" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-eh" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
+              <input type="checkbox" id="sclient-lastfm-toggle" style="opacity: 0; width: 0; height: 0;">
+              <span id="sclient-toggle-bg-lastfm" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+                <span id="sclient-toggle-slider-lastfm" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+              </span>
             </label>
+          </div>
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Wide Layout</span>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="text" id="sclient-wide-layout-width" placeholder="1200" style="width: 50px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; border-radius: 4px; padding: 4px; font-family: monospace; font-size: 12px; text-align: center;" title="Max width in px (min 960) or leave empty for 1200">
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                    <input type="checkbox" id="sclient-wide-layout-toggle" style="opacity: 0; width: 0; height: 0;">
-                    <span id="sclient-toggle-bg-wide" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                        <span id="sclient-toggle-slider-wide" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                    </span>
-                </label>
-            </div>
+        <input type="text" id="sclient-lastfm-apikey-input" placeholder="API Key" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s; margin-bottom: 6px;">
+        <input type="password" id="sclient-lastfm-secret-input" placeholder="Shared Secret" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s; margin-bottom: 8px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button id="sclient-lastfm-connect-btn" style="flex: 1; padding: 7px 12px; background: ${accent}; color: white; border: none; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Connect Last.fm Account</button>
+          <button id="sclient-lastfm-disconnect-btn" style="padding: 7px 12px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid #444; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; display: none;">Disconnect</button>
         </div>
+        <div id="sclient-lastfm-connected-info" style="margin-top: 6px; font-size: 11px; color: #888; display: none;">Connected as: <span id="sclient-lastfm-username" style="color: ${accent}; font-weight: 600;"></span></div>
+        <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color: #aaa; text-decoration: underline;">last.fm/api/account/create</a></div>
+      </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Collapsible Sidebar</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-collapsible-sidebar-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-sidebar" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-sidebar" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+      <!-- Stats -->
+      <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <span style="font-size: 14px; font-weight: 500; display: block; margin-bottom: 12px;">Listening Stats</span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 13px; color: #ccc;">History Sync</span>
+            <span style="font-size: 10px; color: #666;">(every 2h)</span>
+          </div>
+          <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+            <input type="checkbox" id="sclient-stats-api-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span id="sclient-toggle-bg-stats-api" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+              <span id="sclient-toggle-slider-stats-api" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </span>
+          </label>
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Discord Rich Presence</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-rpc-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-rpc" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-rpc" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 13px; color: #ccc;">Local Tracking</span>
+            <span id="sclient-stats-status" style="font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #666;">--</span>
+          </div>
+          <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+            <input type="checkbox" id="sclient-stats-local-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span id="sclient-toggle-bg-stats-local" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+              <span id="sclient-toggle-slider-stats-local" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </span>
+          </label>
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable System Tray (Minimize to background)</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-tray-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-tray" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-tray" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button id="sclient-stats-analytics-btn" style="flex: 1; padding: 7px 12px; background: ${accent}; color: white; border: none; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Open Analytics</button>
+          <button id="sclient-stats-wipe-btn" style="padding: 7px 12px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid #444; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer;">Wipe Data</button>
         </div>
+      </div>
 
-        <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 14px; font-weight: 500;">ListenBrainz Scrobbling</span>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span id="sclient-listenbrainz-status" style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc;">Waiting...</span>
-                    <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                        <input type="checkbox" id="sclient-listenbrainz-toggle" style="opacity: 0; width: 0; height: 0;">
-                        <span id="sclient-toggle-bg-listenbrainz" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                            <span id="sclient-toggle-slider-listenbrainz" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-            <input type="password" id="sclient-listenbrainz-token-input" placeholder="Enter ListenBrainz User Token..." style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;">
-            <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your token from <a href="https://listenbrainz.org/profile/" target="_blank" style="color: #aaa; text-decoration: underline;">listenbrainz.org/profile</a></div>
+      <!-- True Shuffle -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 14px; font-weight: 500;">Enable True Shuffle (Fix native shuffle)</span>
+          <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+            <input type="checkbox" id="sclient-trueshuffle-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span id="sclient-toggle-bg-trueshuffle" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+              <span id="sclient-toggle-slider-trueshuffle" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </span>
+          </label>
         </div>
-
-        <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 14px; font-weight: 500;">Last.fm Scrobbling</span>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span id="sclient-lastfm-status" style="font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc;">Waiting...</span>
-                    <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                        <input type="checkbox" id="sclient-lastfm-toggle" style="opacity: 0; width: 0; height: 0;">
-                        <span id="sclient-toggle-bg-lastfm" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                            <span id="sclient-toggle-slider-lastfm" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                        </span>
-                    </label>
-                </div>
-            </div>
-            <input type="text" id="sclient-lastfm-apikey-input" placeholder="API Key" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s; margin-bottom: 6px;">
-            <input type="password" id="sclient-lastfm-secret-input" placeholder="Shared Secret" style="width: 100%; box-sizing: border-box; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 6px 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s; margin-bottom: 8px;">
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="sclient-lastfm-connect-btn" style="flex: 1; padding: 7px 12px; background: ${customAccentEnabled ? accentColor : '#f50'}; color: white; border: none; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Connect Last.fm Account</button>
-                <button id="sclient-lastfm-disconnect-btn" style="padding: 7px 12px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid #444; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; display: none;">Disconnect</button>
-            </div>
-            <div id="sclient-lastfm-connected-info" style="margin-top: 6px; font-size: 11px; color: #888; display: none;">Connected as: <span id="sclient-lastfm-username" style="color: ${customAccentEnabled ? accentColor : '#f50'}; font-weight: 600;"></span></div>
-            <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color: #aaa; text-decoration: underline;">last.fm/api/account/create</a></div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: #888;">Engine:</span>
+          <select id="sclient-trueshuffle-engine" style="-webkit-appearance: none; appearance: none; background: rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg fill=%22%23ccc%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>') no-repeat right 4px center; padding-right: 28px; border: 1px solid #333; color: white; border-radius: 6px; padding-top: 6px; padding-bottom: 6px; padding-left: 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; cursor: pointer; transition: border-color 0.2s;">
+            <option value="native" style="background: #1e1e1e; color: white;">Native (song ~1-50 won't be shuffled)</option>
+            <option value="api" style="background: #1e1e1e; color: white;">API (overrides full order in the UI)</option>
+          </select>
         </div>
+      </div>
 
-        <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500; display: block; margin-bottom: 12px;">Listening Stats</span>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px; color: #ccc;">History Sync</span>
-                    <span style="font-size: 10px; color: #666;">(every 2h)</span>
-                </div>
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                    <input type="checkbox" id="sclient-stats-api-toggle" style="opacity: 0; width: 0; height: 0;">
-                    <span id="sclient-toggle-bg-stats-api" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                        <span id="sclient-toggle-slider-stats-api" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                    </span>
-                </label>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 13px; color: #ccc;">Local Tracking</span>
-                    <span id="sclient-stats-status" style="font-size: 10px; font-weight: bold; padding: 1px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #666;">--</span>
-                </div>
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                    <input type="checkbox" id="sclient-stats-local-toggle" style="opacity: 0; width: 0; height: 0;">
-                    <span id="sclient-toggle-bg-stats-local" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                        <span id="sclient-toggle-slider-stats-local" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                    </span>
-                </label>
-            </div>
-
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="sclient-stats-analytics-btn" style="flex: 1; padding: 7px 12px; background: ${customAccentEnabled ? accentColor : '#f50'}; color: white; border: none; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Open Analytics</button>
-                <button id="sclient-stats-wipe-btn" style="padding: 7px 12px; background: rgba(255,255,255,0.08); color: #aaa; border: 1px solid #444; border-radius: 4px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer;">Wipe Data</button>
-            </div>
+      <!-- Region Bypass -->
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 14px; font-weight: 500;">Bypass Song Region Blocks</span>
+          <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
+            <input type="checkbox" id="sclient-regionbypass-toggle" style="opacity: 0; width: 0; height: 0;">
+            <span id="sclient-toggle-bg-regionbypass" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
+              <span id="sclient-toggle-slider-regionbypass" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
+            </span>
+          </label>
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Adblocker</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-adblock-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-adblock" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-adblock" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <span style="font-size: 12px; color: #888; white-space: nowrap; flex-shrink: 0;">Proxy URL:</span>
+          <input type="text" id="sclient-proxyurl-input" placeholder="https://example.com/" style="flex: 1; min-width: 0; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 4px 8px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;">
+          <button id="sclient-proxyurl-public-btn" style="flex-shrink: 0; white-space: nowrap; padding: 4px 8px; background: #333; border: 1px solid #444; color: #ccc; border-radius: 4px; font-size: 11px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Use Public</button>
         </div>
+        <div style="font-size: 10px; color: #666; margin-top: 2px;">Opening profile may geo-lock some songs</div>
+      </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Enable Lazy Scroll Button</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-lazy-scroll-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+      <!-- Code Editors -->
+      <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+        <button id="tab-css" style="flex: 1; padding: 8px; background: ${accent}; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: 500;">Custom CSS</button>
+        <button id="tab-js" style="flex: 1; padding: 8px; background: #333; border: none; color: #ccc; border-radius: 4px; cursor: pointer; font-weight: 500;">Custom JS</button>
+      </div>
+
+      <div style="flex: 1 0 400px; min-height: 400px; display: flex; flex-direction: column; margin-bottom: 20px; position: relative; border: 1px solid #333; border-radius: 4px; background: #0c0c0c;">
+        <div id="sclient-css-container" style="flex: 1; position: relative; overflow: hidden; display: block;">
+          <pre id="sclient-css-highlight" aria-hidden="true" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; color: #ccc; pointer-events: none; white-space: pre-wrap; word-wrap: break-word; overflow: hidden;"></pre>
+          <textarea id="sclient-css-editor" spellcheck="false" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: transparent; caret-color: #fff; border: none; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; padding: 10px; resize: none; box-sizing: border-box; outline: none; white-space: pre-wrap; word-wrap: break-word;" placeholder="/* Add your custom CSS here */"></textarea>
         </div>
-        
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Disable Window Decorations</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-decorations-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-dec" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-dec" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+        <div id="sclient-js-container" style="flex: 1; position: relative; overflow: hidden; display: none;">
+          <pre id="sclient-js-highlight" aria-hidden="true" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; color: #ccc; pointer-events: none; white-space: pre-wrap; word-wrap: break-word; overflow: hidden;"></pre>
+          <textarea id="sclient-js-editor" spellcheck="false" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: transparent; caret-color: #fff; border: none; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; padding: 10px; resize: none; box-sizing: border-box; outline: none; white-space: pre-wrap; word-wrap: break-word;" placeholder="// Add your custom JS here"></textarea>
         </div>
+      </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Hide Subscription Upsell</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-upsell-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-upsell" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-upsell" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
+      <!-- Accounts -->
+      <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+        <span style="font-size: 16px; font-weight: bold; margin-bottom: 15px; display: block;">Accounts</span>
+        <div id="sclient-accounts-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;"></div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="sclient-new-account-name" placeholder="New Profile Name" style="flex: 1; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; font-family: monospace;">
+          <button id="sclient-add-account-btn" style="padding: 8px 15px; background: #333; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold;">+ Add Account</button>
         </div>
-
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <span style="font-size: 14px; font-weight: 500;">Hide Artist Features</span>
-            <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                <input type="checkbox" id="sclient-artists-toggle" style="opacity: 0; width: 0; height: 0;">
-                <span id="sclient-toggle-bg-artists" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                    <span id="sclient-toggle-slider-artists" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                </span>
-            </label>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 14px; font-weight: 500;">Enable True Shuffle (Fix native shuffle)</span>
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                    <input type="checkbox" id="sclient-trueshuffle-toggle" style="opacity: 0; width: 0; height: 0;">
-                    <span id="sclient-toggle-bg-trueshuffle" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                        <span id="sclient-toggle-slider-trueshuffle" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                    </span>
-                </label>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 12px; color: #888;">Engine:</span>
-                <select id="sclient-trueshuffle-engine" style="-webkit-appearance: none; appearance: none; background: rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg fill=%22%23ccc%22 height=%2224%22 viewBox=%220 0 24 24%22 width=%2224%22 xmlns=%22http://www.w3.org/2000/svg%22><path d=%22M7 10l5 5 5-5z%22/></svg>') no-repeat right 4px center; padding-right: 28px; border: 1px solid #333; color: white; border-radius: 6px; padding-top: 6px; padding-bottom: 6px; padding-left: 10px; font-family: Inter, sans-serif; font-size: 12px; outline: none; cursor: pointer; transition: border-color 0.2s;">
-                    <option value="native" style="background: #1e1e1e; color: white;">Native (song ~1-50 won't be shuffled)</option>
-                    <option value="api" style="background: #1e1e1e; color: white;">API (overrides full order in the UI)</option>
-                </select>
-            </div>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 14px; font-weight: 500;">Bypass Song Region Blocks</span>
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px;">
-                    <input type="checkbox" id="sclient-regionbypass-toggle" style="opacity: 0; width: 0; height: 0;">
-                    <span id="sclient-toggle-bg-regionbypass" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s; border-radius: 24px;">
-                        <span id="sclient-toggle-slider-regionbypass" style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;"></span>
-                    </span>
-                </label>
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <span style="font-size: 12px; color: #888; white-space: nowrap; flex-shrink: 0;">Proxy URL:</span>
-                <input type="text" id="sclient-proxyurl-input" placeholder="https://example.com/" style="flex: 1; min-width: 0; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; padding: 4px 8px; font-family: Inter, sans-serif; font-size: 12px; outline: none; transition: border-color 0.2s;">
-                <button id="sclient-proxyurl-public-btn" style="flex-shrink: 0; white-space: nowrap; padding: 4px 8px; background: #333; border: 1px solid #444; color: #ccc; border-radius: 4px; font-size: 11px; font-family: Inter, sans-serif; cursor: pointer; transition: background 0.2s;">Use Public</button>
-            </div>
-            <div style="font-size: 10px; color: #666; margin-top: 2px;">Opening profile may geo-lock some songs</div>
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-            <button id="tab-css" style="flex: 1; padding: 8px; background: ${customAccentEnabled ? accentColor : '#f50'}; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: 500;">Custom CSS</button>
-            <button id="tab-js" style="flex: 1; padding: 8px; background: #333; border: none; color: #ccc; border-radius: 4px; cursor: pointer; font-weight: 500;">Custom JS</button>
-        </div>
-
-        <div style="flex: 1 0 400px; min-height: 400px; display: flex; flex-direction: column; margin-bottom: 20px; position: relative; border: 1px solid #333; border-radius: 4px; background: #0c0c0c;">
-            <div id="sclient-css-container" style="flex: 1; position: relative; overflow: hidden; display: block;">
-                <pre id="sclient-css-highlight" aria-hidden="true" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; letter-spacing: normal; word-spacing: normal; tab-size: 4; color: #ccc; pointer-events: none; white-space: pre-wrap; word-wrap: break-word; overflow: hidden;"></pre>
-                <textarea id="sclient-css-editor" spellcheck="false" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: transparent; caret-color: #fff; border: none; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; letter-spacing: normal; word-spacing: normal; tab-size: 4; padding: 10px; resize: none; box-sizing: border-box; outline: none; white-space: pre-wrap; word-wrap: break-word;" placeholder="/* Add your custom CSS here */"></textarea>
-            </div>
-            <div id="sclient-js-container" style="flex: 1; position: relative; overflow: hidden; display: none;">
-                <pre id="sclient-js-highlight" aria-hidden="true" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; letter-spacing: normal; word-spacing: normal; tab-size: 4; color: #ccc; pointer-events: none; white-space: pre-wrap; word-wrap: break-word; overflow: hidden;"></pre>
-                <textarea id="sclient-js-editor" spellcheck="false" style="margin: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: transparent; caret-color: #fff; border: none; font-family: 'Fira Code', Consolas, monospace; font-size: 13px; line-height: 1.5; letter-spacing: normal; word-spacing: normal; tab-size: 4; padding: 10px; resize: none; box-sizing: border-box; outline: none; white-space: pre-wrap; word-wrap: break-word;" placeholder="// Add your custom JS here"></textarea>
-            </div>
-        </div>
-
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
-            <span style="font-size: 16px; font-weight: bold; margin-bottom: 15px; display: block;">Accounts</span>
-            <div id="sclient-accounts-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="sclient-new-account-name" placeholder="New Profile Name" style="flex: 1; padding: 8px; background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; border-radius: 4px; font-family: monospace;">
-                <button id="sclient-add-account-btn" style="padding: 8px 15px; background: #333; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: bold;">+ Add Account</button>
-            </div>
-        </div>
-
-        </div>
-
-        <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <button id="sclient-save-btn" style="flex: 1; padding: 12px; background: ${customAccentEnabled ? accentColor : '#f50'}; border: none; color: white; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">Save & Apply</button>
-        </div>
-        <div style="margin-top: 10px; text-align: center; font-size: 11px; color: #666;">
-            Press <kbd style="background: #333; padding: 2px 5px; border-radius: 3px; color: #ccc;">Ctrl + I</kbd> to toggle this menu
-        </div>
-    `;
-
-    document.body.appendChild(overlay);
-    void overlay.offsetHeight;
-
-    const tabCss = overlay.querySelector('#tab-css');
-    const tabJs = overlay.querySelector('#tab-js');
-    const cssEditor = overlay.querySelector('#sclient-css-editor');
-    const jsEditor = overlay.querySelector('#sclient-js-editor');
-    const cssContainer = overlay.querySelector('#sclient-css-container');
-    const jsContainer = overlay.querySelector('#sclient-js-container');
-    const cssHighlight = overlay.querySelector('#sclient-css-highlight');
-    const jsHighlight = overlay.querySelector('#sclient-js-highlight');
-
-    function highlightCss(text) {
-        let tokens = [];
-        let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        
-        html = html.replace(/(\/\*[\s\S]*?\*\/)/g, (m) => { tokens.push(`<span style="color: #6a9955;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        html = html.replace(/([\.#][a-zA-Z0-9_-]+)(?=[\s\{])/g, (m) => { tokens.push(`<span style="color: #d7ba7d;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        html = html.replace(/([a-zA-Z-]+)\s*(?=:)/g, (m) => { tokens.push(`<span style="color: #9cdcfe;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        html = html.replace(/(:\s*)([^;\}]+)(?=;|\})/g, (m, p1, p2) => { tokens.push(`${p1}<span style="color: #ce9178;">${p2}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        
-        for (let i = tokens.length - 1; i >= 0; i--) {
-            html = html.replace(`__TOKEN${i}__`, tokens[i]);
-        }
-        
-        if (text[text.length - 1] === '\n') html += ' ';
-        return html;
-    }
-
-    function highlightJs(text) {
-        let tokens = [];
-        let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        
-        html = html.replace(/(\/\/.*)/g, (m) => { tokens.push(`<span style="color: #6a9955;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        html = html.replace(/('.*?'|".*?"|`[\s\S]*?`)/g, (m) => { tokens.push(`<span style="color: #ce9178;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        html = html.replace(/\b(const|let|var|function|return|if|else|for|while|try|catch|async|await|class|new|this|import|export|from|true|false|null|undefined)\b/g, (m) => { tokens.push(`<span style="color: #569cd6;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        html = html.replace(/\b([a-zA-Z0-9_]+)(?=\s*\()/g, (m) => { tokens.push(`<span style="color: #dcdcaa;">${m}</span>`); return `__TOKEN${tokens.length-1}__`; });
-        
-        for (let i = tokens.length - 1; i >= 0; i--) {
-            html = html.replace(`__TOKEN${i}__`, tokens[i]);
-        }
-        
-        if (text[text.length - 1] === '\n') html += ' ';
-        return html;
-    }
-
-    function updateCssHighlight() { cssHighlight.innerHTML = highlightCss(cssEditor.value); }
-    function updateJsHighlight() { jsHighlight.innerHTML = highlightJs(jsEditor.value); }
-
-    cssEditor.addEventListener('input', updateCssHighlight);
-    jsEditor.addEventListener('input', updateJsHighlight);
-    
-    cssEditor.addEventListener('scroll', () => {
-        cssHighlight.scrollTop = cssEditor.scrollTop;
-        cssHighlight.scrollLeft = cssEditor.scrollLeft;
-    });
-    jsEditor.addEventListener('scroll', () => {
-        jsHighlight.scrollTop = jsEditor.scrollTop;
-        jsHighlight.scrollLeft = jsEditor.scrollLeft;
-    });
-
-    tabCss.addEventListener('click', () => {
-        tabCss.style.background = customAccentEnabled ? accentColor : '#f50';
-        tabCss.style.color = 'white';
-        tabJs.style.background = '#333';
-        tabJs.style.color = '#ccc';
-        cssContainer.style.display = 'block';
-        jsContainer.style.display = 'none';
-    });
-
-    tabJs.addEventListener('click', () => {
-        tabJs.style.background = customAccentEnabled ? accentColor : '#f50';
-        tabJs.style.color = 'white';
-        tabCss.style.background = '#333';
-        tabCss.style.color = '#ccc';
-        jsContainer.style.display = 'block';
-        cssContainer.style.display = 'none';
-    });
-
-    cssEditor.value = currentCss;
-    jsEditor.value = currentJs;
-    updateCssHighlight();
-    updateJsHighlight();
-
-    const lazyScrollToggle = overlay.querySelector('#sclient-lazy-scroll-toggle');
-    const toggleBg = overlay.querySelector('#sclient-toggle-bg');
-    const toggleSlider = overlay.querySelector('#sclient-toggle-slider');
-
-    const decToggle = overlay.querySelector('#sclient-decorations-toggle');
-    const decToggleBg = overlay.querySelector('#sclient-toggle-bg-dec');
-    const decToggleSlider = overlay.querySelector('#sclient-toggle-slider-dec');
-
-    const accentToggle = overlay.querySelector('#sclient-accent-toggle');
-    const accentToggleBg = overlay.querySelector('#sclient-toggle-bg-accent');
-    const accentToggleSlider = overlay.querySelector('#sclient-toggle-slider-accent');
-    const accentPicker = overlay.querySelector('#sclient-accent-color-picker');
-    const accentText = overlay.querySelector('#sclient-accent-color-text');
-
-    const oledToggle = overlay.querySelector('#sclient-oled-dark-mode-toggle');
-    const oledToggleBg = overlay.querySelector('#sclient-toggle-bg-oled');
-    const oledToggleSlider = overlay.querySelector('#sclient-toggle-slider-oled');
-
-    const ehToggle = overlay.querySelector('#sclient-enhanced-header-toggle');
-    const ehToggleBg = overlay.querySelector('#sclient-toggle-bg-eh');
-    const ehToggleSlider = overlay.querySelector('#sclient-toggle-slider-eh');
-
-    const wideToggle = overlay.querySelector('#sclient-wide-layout-toggle');
-    const wideToggleBg = overlay.querySelector('#sclient-toggle-bg-wide');
-    const wideToggleSlider = overlay.querySelector('#sclient-toggle-slider-wide');
-    const wideWidthInput = overlay.querySelector('#sclient-wide-layout-width');
-    
-    const adblockToggle = overlay.querySelector('#sclient-adblock-toggle');
-    const adblockToggleBg = overlay.querySelector('#sclient-toggle-bg-adblock');
-    const adblockToggleSlider = overlay.querySelector('#sclient-toggle-slider-adblock');
-    
-    const rpcToggle = overlay.querySelector('#sclient-rpc-toggle');
-    const rpcToggleBg = overlay.querySelector('#sclient-toggle-bg-rpc');
-    const rpcToggleSlider = overlay.querySelector('#sclient-toggle-slider-rpc');
-
-    const trayToggle = overlay.querySelector('#sclient-tray-toggle');
-    const trayToggleBg = overlay.querySelector('#sclient-toggle-bg-tray');
-    const trayToggleSlider = overlay.querySelector('#sclient-toggle-slider-tray');
-
-    const upsellToggle = overlay.querySelector('#sclient-upsell-toggle');
-    const upsellToggleBg = overlay.querySelector('#sclient-toggle-bg-upsell');
-    const upsellToggleSlider = overlay.querySelector('#sclient-toggle-slider-upsell');
-
-    const artistsToggle = overlay.querySelector('#sclient-artists-toggle');
-    const artistsToggleBg = overlay.querySelector('#sclient-toggle-bg-artists');
-    const artistsToggleSlider = overlay.querySelector('#sclient-toggle-slider-artists');
-
-    const trueShuffleToggle = overlay.querySelector('#sclient-trueshuffle-toggle');
-    const trueShuffleToggleBg = overlay.querySelector('#sclient-toggle-bg-trueshuffle');
-    const trueShuffleToggleSlider = overlay.querySelector('#sclient-toggle-slider-trueshuffle');
-    const trueShuffleEngineSelect = overlay.querySelector('#sclient-trueshuffle-engine');
-    const regionBypassToggle = overlay.querySelector("#sclient-regionbypass-toggle");
-    const proxyUrlInput = overlay.querySelector("#sclient-proxyurl-input");
-    const toggleBgRegionBypass = overlay.querySelector("#sclient-toggle-bg-regionbypass");
-    const toggleSliderRegionBypass = overlay.querySelector("#sclient-toggle-slider-regionbypass");
-
-    function updateToggleUI(checked) {
-        if (checked) {
-            toggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            toggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            toggleBg.style.backgroundColor = '#333';
-            toggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateDecToggleUI(checked) {
-        if (checked) {
-            decToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            decToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            decToggleBg.style.backgroundColor = '#333';
-            decToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateRpcToggleUI(enabled) {
-        if (enabled) {
-            rpcToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            rpcToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            rpcToggleBg.style.backgroundColor = '#333';
-            rpcToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateTrayToggleUI(enabled) {
-        if (enabled) {
-            trayToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            trayToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            trayToggleBg.style.backgroundColor = '#333';
-            trayToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateListenbrainzToggleUI(enabled) {
-        const bg = overlay.querySelector('#sclient-toggle-bg-listenbrainz');
-        const sl = overlay.querySelector('#sclient-toggle-slider-listenbrainz');
-        if (enabled) {
-            bg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            sl.style.transform = 'translateX(20px)';
-        } else {
-            bg.style.backgroundColor = '#333';
-            sl.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateLastfmToggleUI(enabled) {
-        const bg = overlay.querySelector('#sclient-toggle-bg-lastfm');
-        const sl = overlay.querySelector('#sclient-toggle-slider-lastfm');
-        if (enabled) {
-            bg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            sl.style.transform = 'translateX(20px)';
-        } else {
-            bg.style.backgroundColor = '#333';
-            sl.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateAdblockToggleUI(checked) {
-        if (checked) {
-            adblockToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            adblockToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            adblockToggleBg.style.backgroundColor = '#333';
-            adblockToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateOledToggleUI(checked) {
-        if (checked) {
-            oledToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            oledToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            oledToggleBg.style.backgroundColor = '#333';
-            oledToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateEhToggleUI(checked) {
-        if (checked) {
-            ehToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            ehToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            ehToggleBg.style.backgroundColor = '#333';
-            ehToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateWideToggleUI(checked) {
-        if (checked) {
-            wideToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            wideToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            wideToggleBg.style.backgroundColor = '#333';
-            wideToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateSidebarToggleUI(checked) {
-        if (checked) {
-            sidebarToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            sidebarToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            sidebarToggleBg.style.backgroundColor = '#333';
-            sidebarToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateAccentToggleUI(checked) {
-        if (checked) {
-            accentToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            accentToggleSlider.style.transform = 'translateX(20px)';
-            accentPicker.style.opacity = '1';
-            accentText.style.opacity = '1';
-        } else {
-            accentToggleBg.style.backgroundColor = '#333';
-            accentToggleSlider.style.transform = 'translateX(0)';
-            accentPicker.style.opacity = '0.5';
-            accentText.style.opacity = '0.5';
-        }
-    }
-
-    function updateUpsellToggleUI(checked) {
-        if (checked) {
-            upsellToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            upsellToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            upsellToggleBg.style.backgroundColor = '#333';
-            upsellToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateArtistsToggleUI(checked) {
-        if (checked) {
-            artistsToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            artistsToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            artistsToggleBg.style.backgroundColor = '#333';
-            artistsToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-    
-    function updateTrueShuffleToggleUI(checked) {
-        if (checked) {
-            trueShuffleToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            trueShuffleToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            trueShuffleToggleBg.style.backgroundColor = '#333';
-            trueShuffleToggleSlider.style.transform = 'translateX(0)';
-        }
-    }
-
-    function updateRegionBypassToggleUI(checked) {
-        if (checked) {
-            toggleBgRegionBypass.style.backgroundColor = customAccentEnabled ? accentColor : "#f50";
-            toggleSliderRegionBypass.style.transform = "translateX(20px)";
-        } else {
-            toggleBgRegionBypass.style.backgroundColor = "#333";
-            toggleSliderRegionBypass.style.transform = "translateX(0)";
-        }
-    }
-
-    lazyScrollToggle.checked = lazyScrollEnabled;
-    updateToggleUI(lazyScrollEnabled);
-    lazyScrollToggle.addEventListener('change', (e) => updateToggleUI(e.target.checked));
-
-    decToggle.checked = hideDecorationsEnabled;
-    updateDecToggleUI(hideDecorationsEnabled);
-    decToggle.addEventListener('change', (e) => updateDecToggleUI(e.target.checked));
-
-    oledToggle.checked = oledDarkModeEnabled;
-    updateOledToggleUI(oledDarkModeEnabled);
-    oledToggle.addEventListener('change', (e) => updateOledToggleUI(e.target.checked));
-
-    ehToggle.checked = enhancedHeaderEnabled;
-    updateEhToggleUI(enhancedHeaderEnabled);
-    ehToggle.addEventListener('change', (e) => updateEhToggleUI(e.target.checked));
-
-    wideToggle.checked = wideLayoutEnabled;
-    updateWideToggleUI(wideLayoutEnabled);
-    wideToggle.addEventListener('change', (e) => updateWideToggleUI(e.target.checked));
-    
-    wideWidthInput.value = (typeof wideLayoutWidth !== 'undefined' && wideLayoutWidth !== '1200') ? wideLayoutWidth : '';
-
-    const sidebarToggle = document.getElementById('sclient-collapsible-sidebar-toggle');
-    const sidebarToggleBg = document.getElementById('sclient-toggle-bg-sidebar');
-    const sidebarToggleSlider = document.getElementById('sclient-toggle-slider-sidebar');
-    
-    sidebarToggle.checked = collapsibleSidebarEnabled;
-    updateSidebarToggleUI(collapsibleSidebarEnabled);
-    sidebarToggle.addEventListener('change', (e) => updateSidebarToggleUI(e.target.checked));
-
-    adblockToggle.checked = adblockEnabled;
-    updateAdblockToggleUI(adblockEnabled);
-    adblockToggle.addEventListener('change', (e) => updateAdblockToggleUI(e.target.checked));
-
-    rpcToggle.checked = discordRpcEnabled;
-    updateRpcToggleUI(discordRpcEnabled);
-    
-    // clear rpc
-    rpcToggle.addEventListener('change', (e) => {
-        updateRpcToggleUI(e.target.checked);
-        if (!e.target.checked) {
-            if (true) {
-                sendBridgeMsg('update_rpc', { title: '', artist: '', isPlaying: false, artwork: '', timeStart: 0, timeEnd: 0 });
-            }
-        }
-    });
-    
-    trayToggle.checked = trayIconEnabled;
-    updateTrayToggleUI(trayIconEnabled);
-    trayToggle.addEventListener('change', (e) => updateTrayToggleUI(e.target.checked));
-
-    const listenbrainzToggle = document.getElementById('sclient-listenbrainz-toggle');
-    const listenbrainzTokenInput = document.getElementById('sclient-listenbrainz-token-input');
-    listenbrainzToggle.checked = listenbrainzEnabled;
-    updateListenbrainzToggleUI(listenbrainzEnabled);
-    listenbrainzTokenInput.value = listenbrainzToken;
-    listenbrainzToggle.addEventListener('change', (e) => updateListenbrainzToggleUI(e.target.checked));
-
-    // Last.fm
-    const lastfmToggle = document.getElementById('sclient-lastfm-toggle');
-    lastfmToggle.checked = lastfmEnabled;
-    updateLastfmToggleUI(lastfmEnabled);
-    lastfmToggle.addEventListener('change', (e) => updateLastfmToggleUI(e.target.checked));
-
-    document.getElementById('sclient-lastfm-apikey-input').value = typeof lastfmApiKey !== 'undefined' ? lastfmApiKey : '';
-    document.getElementById('sclient-lastfm-secret-input').value = typeof lastfmSecret !== 'undefined' ? lastfmSecret : '';
-
-    function updateLastfmConnectedUI(username) {
-        const connectBtn = document.getElementById('sclient-lastfm-connect-btn');
-        const disconnectBtn = document.getElementById('sclient-lastfm-disconnect-btn');
-        const connectedInfo = document.getElementById('sclient-lastfm-connected-info');
-        const usernameEl = document.getElementById('sclient-lastfm-username');
-        if (username) {
-            connectBtn.textContent = 'Reconnect';
-            disconnectBtn.style.display = '';
-            connectedInfo.style.display = '';
-            usernameEl.textContent = username;
-        } else {
-            connectBtn.textContent = 'Connect Last.fm Account';
-            disconnectBtn.style.display = 'none';
-            connectedInfo.style.display = 'none';
-        }
-    }
-    updateLastfmConnectedUI(lastfmUsername);
-
-    document.getElementById('sclient-lastfm-connect-btn').addEventListener('click', async () => {
-        const connectBtn = document.getElementById('sclient-lastfm-connect-btn');
-        connectBtn.textContent = 'Waiting for Last.fm...';
-        connectBtn.disabled = true;
-        // Save only the credentials — don't touch any other settings
-        await sendBridgeMsg('lastfm_save_credentials', {
-            apiKey: document.getElementById('sclient-lastfm-apikey-input').value.trim(),
-            secret: document.getElementById('sclient-lastfm-secret-input').value.trim()
-        });
-        const result = await sendBridgeMsg('lastfm_authenticate', {});
-        connectBtn.disabled = false;
-        if (result && result.success) {
-            updateLastfmConnectedUI(result.username);
-        } else if (result && result.error && result.error !== 'cancelled') {
-            customAlert('Last.fm auth failed: ' + result.error);
-            connectBtn.textContent = 'Connect Last.fm Account';
-        } else {
-            connectBtn.textContent = 'Connect Last.fm Account';
-        }
-    });
-
-
-    document.getElementById('sclient-lastfm-disconnect-btn').addEventListener('click', async () => {
-        await sendBridgeMsg('lastfm_disconnect', {});
-        updateLastfmConnectedUI('');
-    });
-
-    // Stats toggles
-    const statsApiToggle = document.getElementById('sclient-stats-api-toggle');
-    const statsApiToggleBg = document.getElementById('sclient-toggle-bg-stats-api');
-    const statsApiToggleSlider = document.getElementById('sclient-toggle-slider-stats-api');
-    const statsLocalToggle = document.getElementById('sclient-stats-local-toggle');
-    const statsLocalToggleBg = document.getElementById('sclient-toggle-bg-stats-local');
-    const statsLocalToggleSlider = document.getElementById('sclient-toggle-slider-stats-local');
-
-    function makeStatsToggleUI(bg, slider, enabled) {
-        if (enabled) {
-            bg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            slider.style.transform = 'translateX(20px)';
-        } else {
-            bg.style.backgroundColor = '#333';
-            slider.style.transform = 'translateX(0)';
-        }
-    }
-
-    statsApiToggle.checked = typeof statsApiSyncEnabled !== 'undefined' ? statsApiSyncEnabled : false;
-    makeStatsToggleUI(statsApiToggleBg, statsApiToggleSlider, statsApiToggle.checked);
-    statsApiToggle.addEventListener('change', (e) => makeStatsToggleUI(statsApiToggleBg, statsApiToggleSlider, e.target.checked));
-
-    statsLocalToggle.checked = typeof statsLocalTrackingEnabled !== 'undefined' ? statsLocalTrackingEnabled : false;
-    makeStatsToggleUI(statsLocalToggleBg, statsLocalToggleSlider, statsLocalToggle.checked);
-    statsLocalToggle.addEventListener('change', (e) => makeStatsToggleUI(statsLocalToggleBg, statsLocalToggleSlider, e.target.checked));
-
-    document.getElementById('sclient-stats-analytics-btn').addEventListener('click', () => {
-        // Close settings sidebar first
-        document.getElementById('sclient-settings-overlay').style.right = '-450px';
-        // Call the global toggle function from stats.js
-        if (typeof toggleAnalyticsOverlay === 'function') {
-            setTimeout(() => toggleAnalyticsOverlay(), 300);
-        }
-    });
-
-    document.getElementById('sclient-stats-wipe-btn').addEventListener('click', () => {
-        customConfirm('Delete all listening data? This cannot be undone.').then(confirmed => {
-            if (confirmed) {
-                sendBridgeMsg('stats_wipe_db', {}).then(() => {
-                    customAlert('Stats data wiped.');
-                }).catch(e => customAlert('Wipe failed: ' + e));
-            }
-        });
-    });
-
-    upsellToggle.checked = hideUpsellEnabled;
-    updateUpsellToggleUI(hideUpsellEnabled);
-    upsellToggle.addEventListener('change', (e) => updateUpsellToggleUI(e.target.checked));
-
-    artistsToggle.checked = hideArtistsEnabled;
-    updateArtistsToggleUI(hideArtistsEnabled);
-    artistsToggle.addEventListener('change', (e) => updateArtistsToggleUI(e.target.checked));
-    
-    trueShuffleToggle.checked = trueShuffleEnabled;
-    updateTrueShuffleToggleUI(trueShuffleEnabled);
-    trueShuffleToggle.addEventListener('change', (e) => updateTrueShuffleToggleUI(e.target.checked));
-    
-    trueShuffleEngineSelect.value = trueShuffleMode;
-
-    regionBypassToggle.checked = regionBypassEnabled;
-    proxyUrlInput.value = proxyUrl;
-    updateRegionBypassToggleUI(regionBypassEnabled);
-    regionBypassToggle.addEventListener('change', (e) => updateRegionBypassToggleUI(e.target.checked));
-
-    accentToggle.checked = customAccentEnabled;
-    accentPicker.value = accentColor;
-    accentText.value = accentColor;
-    updateAccentToggleUI(customAccentEnabled);
-
-    accentToggle.addEventListener('change', (e) => updateAccentToggleUI(e.target.checked));
-    accentPicker.addEventListener('input', (e) => { accentText.value = e.target.value; });
-    accentText.addEventListener('input', (e) => {
-        if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-            accentPicker.value = e.target.value;
-        }
-    });
-
-    const renderAccounts = () => {
-        sendBridgeMsg('get_accounts').then(accounts => {
-            sendBridgeMsg('get_active_account').then(active => {
-                const list = overlay.querySelector('#sclient-accounts-list');
-                list.innerHTML = '';
-                accounts.forEach(acc => {
-                    const div = document.createElement('div');
-                    div.style.display = 'flex';
-                    div.style.justifyContent = 'space-between';
-                    div.style.alignItems = 'center';
-                    div.style.padding = '8px';
-                    div.style.background = 'rgba(255,255,255,0.05)';
-                    div.style.borderRadius = '4px';
-                    
-                    const nameSpan = document.createElement('span');
-                    nameSpan.innerText = acc;
-                    if (acc === active) {
-                        nameSpan.style.color = customAccentEnabled ? accentColor : '#f50';
-                        nameSpan.style.fontWeight = 'bold';
-                        nameSpan.innerText += ' (Active)';
-                    }
-                    
-                    const btnContainer = document.createElement('div');
-                    btnContainer.style.display = 'flex';
-                    btnContainer.style.gap = '5px';
-                    
-                    if (acc !== active) {
-                        const switchBtn = document.createElement('button');
-                        switchBtn.innerText = 'Switch';
-                        switchBtn.style.padding = '4px 8px';
-                        switchBtn.style.background = '#333';
-                        switchBtn.style.color = 'white';
-                        switchBtn.style.border = 'none';
-                        switchBtn.style.borderRadius = '3px';
-                        switchBtn.style.cursor = 'pointer';
-                        switchBtn.onclick = () => {
-                            sendBridgeMsg('set_active_account', { name: acc }).then(() => {
-                                sendBridgeMsg('restart_app');
-                            }).catch(e => customAlert("Switch Error: " + e));
-                        };
-                        btnContainer.appendChild(switchBtn);
-                    }
-                    
-                    if (acc !== 'main' && acc !== active) {
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.innerText = 'Delete';
-                        deleteBtn.style.padding = '4px 8px';
-                        deleteBtn.style.background = '#800';
-                        deleteBtn.style.color = 'white';
-                        deleteBtn.style.border = 'none';
-                        deleteBtn.style.borderRadius = '3px';
-                        deleteBtn.style.cursor = 'pointer';
-                        deleteBtn.onclick = () => {
-                            customConfirm('Delete account ' + acc + '?').then(confirmed => {
-                                if (confirmed) {
-                                    sendBridgeMsg('delete_account', { name: acc }).then(() => renderAccounts()).catch(e => customAlert("Delete Error: " + e));
-                                }
-                            });
-                        };
-                        btnContainer.appendChild(deleteBtn);
-                    }
-
-                    if (acc === 'main') {
-                        const resetBtn = document.createElement('button');
-                        resetBtn.innerText = 'Reset';
-                        resetBtn.style.padding = '4px 8px';
-                        resetBtn.style.background = '#3a1515';
-                        resetBtn.style.color = '#f88';
-                        resetBtn.style.border = '1px solid #5a2020';
-                        resetBtn.style.borderRadius = '3px';
-                        resetBtn.style.cursor = 'pointer';
-                        resetBtn.onclick = () => {
-                            const isActive = acc === active;
-                            const msg = isActive ? 'Clear all cookies and browser data? The app will restart.' : 'Clear all cookies and browser data for main profile?';
-                            customConfirm(msg).then(confirmed => {
-                                if (confirmed && window.__TAURI__ && window.__TAURI__.core) {
-                                    sendBridgeMsg(isActive ? 'clear_data_and_restart' : 'clear_data');
-                                }
-                            });
-                        };
-                        btnContainer.appendChild(resetBtn);
-                    }
-                    
-                    div.appendChild(nameSpan);
-                    div.appendChild(btnContainer);
-                    list.appendChild(div);
-                });
-            }).catch(e => customAlert("Active Account Error: " + e));
-        }).catch(e => customAlert("Get Accounts Error: " + e));
-    };
-    renderAccounts();
-    
-    overlay.querySelector('#sclient-add-account-btn').addEventListener('click', () => {
-        const input = overlay.querySelector('#sclient-new-account-name');
-        const val = input.value.trim().replace(/[^a-zA-Z0-9_-]/g, '');
-        if (val) {
-            if (true) {
-                sendBridgeMsg('create_account', { name: val }).then(() => {
-                    input.value = '';
-                    renderAccounts();
-                }).catch(e => customAlert("Create Account Error: " + e));
-            }
-        } else {
-            customAlert("Invalid account name. Only letters, numbers, hyphens, and underscores are allowed.");
-        }
-    });
-
-    overlay.querySelector('#sclient-close-btn').addEventListener('click', toggleOverlay);
-    
-    const publicBtn = overlay.querySelector('#sclient-proxyurl-public-btn');
-    if (publicBtn) {
-        publicBtn.addEventListener('click', () => {
-            overlay.querySelector('#sclient-proxyurl-input').value = 'https://scproxy.vercel.app/';
-        });
-    }
-
-    overlay.querySelector('#sclient-save-btn').addEventListener('click', () => {
-        const newCss = cssEditor.value;
-        const newJs = jsEditor.value;
-        const newLazyScroll = lazyScrollToggle.checked;
-        const newHideDecorations = decToggle.checked;
-        const newCustomAccent = accentToggle.checked;
-        const newAccentColor = accentText.value;
-        const newWideLayout = wideToggle.checked;
-        let newWideLayoutWidth = wideWidthInput.value.trim();
-        
-        if (newWideLayout) {
-            if (newWideLayoutWidth === '') {
-                newWideLayoutWidth = '1200';
-            } else if (newWideLayoutWidth.toLowerCase() === 'unlimited') {
-                newWideLayoutWidth = 'unlimited';
-            } else {
-                const parsed = parseInt(newWideLayoutWidth, 10);
-                if (isNaN(parsed) || parsed < 960) {
-                    customAlert('Wide Layout max width must be a number >= 960');
-                    return;
-                }
-                newWideLayoutWidth = parsed.toString();
-            }
-        }
-        const newCollapsibleSidebar = sidebarToggle.checked;
-        const newOledDarkMode = oledToggle.checked;
-        const newEnhancedHeader = ehToggle.checked;
-        const newAdblock = adblockToggle.checked;
-        const newDiscordRpc = rpcToggle.checked;
-        const newTrayIcon = trayToggle.checked;
-        const newHideUpsell = upsellToggle.checked;
-        const newHideArtists = artistsToggle.checked;
-        const newTrueShuffle = trueShuffleToggle.checked;
-        const newTrueShuffleMode = trueShuffleEngineSelect.value;
-        const newRegionBypass = document.querySelector('#sclient-regionbypass-toggle').checked;
-        const newProxyUrl = document.querySelector('#sclient-proxyurl-input').value;
-        const newListenbrainz = document.querySelector('#sclient-listenbrainz-toggle').checked;
-        const newListenbrainzToken = document.querySelector('#sclient-listenbrainz-token-input').value;
-        const newLastfm = document.querySelector('#sclient-lastfm-toggle').checked;
-        const newLastfmApiKey = document.getElementById('sclient-lastfm-apikey-input').value.trim();
-        const newLastfmSecret = document.getElementById('sclient-lastfm-secret-input').value.trim();
-        const newStatsApiSync = document.querySelector('#sclient-stats-api-toggle').checked;
-        const newStatsLocalTracking = document.querySelector('#sclient-stats-local-toggle').checked;
-        
-        if (true) {
-            sendBridgeMsg('save_custom_files', { css: newCss, js: newJs, lazyScroll: newLazyScroll, hideDecorations: newHideDecorations, customAccent: newCustomAccent, accentColor: newAccentColor, wideLayout: newWideLayout, wideLayoutWidth: newWideLayoutWidth, collapsibleSidebar: newCollapsibleSidebar, oledDarkMode: newOledDarkMode, adblock: newAdblock, discordRpc: newDiscordRpc, trayIcon: newTrayIcon, hideUpsell: newHideUpsell, hideArtists: newHideArtists, trueShuffle: newTrueShuffle, trueShuffleMode: newTrueShuffleMode, regionBypass: newRegionBypass, proxyUrl: newProxyUrl, enhancedHeader: newEnhancedHeader, listenbrainz: newListenbrainz, listenbrainzToken: newListenbrainzToken, lastfm: newLastfm, lastfmApiKey: newLastfmApiKey, lastfmSecret: newLastfmSecret, statsApiSync: newStatsApiSync, statsLocalTracking: newStatsLocalTracking })
-                .then(() => {
-                    window.location.reload();
-                })
-                .catch((err) => {
-                    customAlert('Failed to save to disk: ' + err);
-                });
-        } else {
-            window.location.reload();
-        }
-    });
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+      <button id="sclient-save-btn" style="flex: 1; padding: 12px; background: ${accent}; border: none; color: white; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.2s;">Save &amp; Apply</button>
+    </div>
+    <div style="margin-top: 10px; text-align: center; font-size: 11px; color: #666;">
+      Press <kbd style="background: #333; padding: 2px 5px; border-radius: 3px; color: #ccc;">Ctrl + I</kbd> to toggle this menu
+    </div>
+  `;
+
+	document.body.appendChild(overlay);
+	void overlay.offsetHeight; // force reflow
+
+	setupCodeEditors(overlay);
+
+	// --- wire toggles ---
+
+	// lazy scroll
+	setupToggle(overlay, {
+		toggleId: "sclient-lazy-scroll-toggle",
+		bgId: "sclient-toggle-bg-lazy-scroll",
+		sliderId: "sclient-toggle-slider-lazy-scroll",
+		initialValue: lazyScrollEnabled,
+	});
+
+	// decorations
+	setupToggle(overlay, {
+		toggleId: "sclient-decorations-toggle",
+		bgId: "sclient-toggle-bg-decorations",
+		sliderId: "sclient-toggle-slider-decorations",
+		initialValue: hideDecorationsEnabled,
+	});
+
+	// oled dark
+	setupToggle(overlay, {
+		toggleId: "sclient-oled-dark-mode-toggle",
+		bgId: "sclient-toggle-bg-oled-dark-mode",
+		sliderId: "sclient-toggle-slider-oled-dark-mode",
+		initialValue: oledDarkModeEnabled,
+	});
+
+	// enhanced header
+	setupToggle(overlay, {
+		toggleId: "sclient-enhanced-header-toggle",
+		bgId: "sclient-toggle-bg-enhanced-header",
+		sliderId: "sclient-toggle-slider-enhanced-header",
+		initialValue: enhancedHeaderEnabled,
+	});
+
+	// wide layout
+	setupToggle(overlay, {
+		toggleId: "sclient-wide-layout-toggle",
+		bgId: "sclient-toggle-bg-wide-layout",
+		sliderId: "sclient-toggle-slider-wide-layout",
+		initialValue: wideLayoutEnabled,
+	});
+	const wideWidthInput = overlay.querySelector("#sclient-wide-layout-width");
+	wideWidthInput.value =
+		wideLayoutWidth && wideLayoutWidth !== "1200" ? wideLayoutWidth : "";
+
+	// collapsible sidebar
+	setupToggle(overlay, {
+		toggleId: "sclient-collapsible-sidebar-toggle",
+		bgId: "sclient-toggle-bg-collapsible-sidebar",
+		sliderId: "sclient-toggle-slider-collapsible-sidebar",
+		initialValue: collapsibleSidebarEnabled,
+	});
+
+	// adblock
+	setupToggle(overlay, {
+		toggleId: "sclient-adblock-toggle",
+		bgId: "sclient-toggle-bg-adblock",
+		sliderId: "sclient-toggle-slider-adblock",
+		initialValue: adblockEnabled,
+	});
+
+	// rpc
+	setupToggle(overlay, {
+		toggleId: "sclient-rpc-toggle",
+		bgId: "sclient-toggle-bg-rpc",
+		sliderId: "sclient-toggle-slider-rpc",
+		initialValue: discordRpcEnabled,
+		onChange(checked) {
+			if (!checked) {
+				sendBridgeMsg("update_rpc", {
+					title: "",
+					artist: "",
+					isPlaying: false,
+					artwork: "",
+					timeStart: 0,
+					timeEnd: 0,
+				});
+			}
+		},
+	});
+
+	// tray
+	setupToggle(overlay, {
+		toggleId: "sclient-tray-toggle",
+		bgId: "sclient-toggle-bg-tray",
+		sliderId: "sclient-toggle-slider-tray",
+		initialValue: trayIconEnabled,
+	});
+
+	// upsell
+	setupToggle(overlay, {
+		toggleId: "sclient-upsell-toggle",
+		bgId: "sclient-toggle-bg-upsell",
+		sliderId: "sclient-toggle-slider-upsell",
+		initialValue: hideUpsellEnabled,
+	});
+
+	// artists
+	setupToggle(overlay, {
+		toggleId: "sclient-artists-toggle",
+		bgId: "sclient-toggle-bg-artists",
+		sliderId: "sclient-toggle-slider-artists",
+		initialValue: hideArtistsEnabled,
+	});
+
+	// true shuffle
+	setupToggle(overlay, {
+		toggleId: "sclient-trueshuffle-toggle",
+		bgId: "sclient-toggle-bg-trueshuffle",
+		sliderId: "sclient-toggle-slider-trueshuffle",
+		initialValue: trueShuffleEnabled,
+	});
+	overlay.querySelector("#sclient-trueshuffle-engine").value = trueShuffleMode;
+
+	// region bypass
+	setupToggle(overlay, {
+		toggleId: "sclient-regionbypass-toggle",
+		bgId: "sclient-toggle-bg-regionbypass",
+		sliderId: "sclient-toggle-slider-regionbypass",
+		initialValue: regionBypassEnabled,
+	});
+
+	// --- wire special elements ---
+
+	// accent
+	const accentToggle = overlay.querySelector("#sclient-accent-toggle");
+	const accentToggleBg = overlay.querySelector("#sclient-toggle-bg-accent");
+	const accentToggleSlider = overlay.querySelector(
+		"#sclient-toggle-slider-accent",
+	);
+	const accentPicker = overlay.querySelector("#sclient-accent-color-picker");
+	const accentText = overlay.querySelector("#sclient-accent-color-text");
+
+	accentToggle.checked = customAccentEnabled;
+	accentPicker.value = accentColor;
+	accentText.value = accentColor;
+
+	function updateAccentToggleUI(checked) {
+		if (checked) {
+			accentToggleBg.style.backgroundColor = getAccent();
+			accentToggleSlider.style.transform = "translateX(20px)";
+			accentPicker.style.opacity = "1";
+			accentText.style.opacity = "1";
+		} else {
+			accentToggleBg.style.backgroundColor = "#333";
+			accentToggleSlider.style.transform = "translateX(0)";
+			accentPicker.style.opacity = "0.5";
+			accentText.style.opacity = "0.5";
+		}
+	}
+	updateAccentToggleUI(customAccentEnabled);
+	accentToggle.addEventListener("change", (e) =>
+		updateAccentToggleUI(e.target.checked),
+	);
+	accentPicker.addEventListener("input", (e) => {
+		accentText.value = e.target.value;
+	});
+	accentText.addEventListener("input", (e) => {
+		if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+			accentPicker.value = e.target.value;
+		}
+	});
+
+	// listenbrainz
+	setupToggle(overlay, {
+		toggleId: "sclient-listenbrainz-toggle",
+		bgId: "sclient-toggle-bg-listenbrainz",
+		sliderId: "sclient-toggle-slider-listenbrainz",
+		initialValue: listenbrainzEnabled,
+	});
+	overlay.querySelector("#sclient-listenbrainz-token-input").value =
+		listenbrainzToken;
+
+	// last.fm
+	setupToggle(overlay, {
+		toggleId: "sclient-lastfm-toggle",
+		bgId: "sclient-toggle-bg-lastfm",
+		sliderId: "sclient-toggle-slider-lastfm",
+		initialValue: lastfmEnabled,
+	});
+	overlay.querySelector("#sclient-lastfm-apikey-input").value = lastfmApiKey;
+	overlay.querySelector("#sclient-lastfm-secret-input").value = lastfmSecret;
+
+	function updateLastfmConnectedUI(username) {
+		const connectBtn = overlay.querySelector("#sclient-lastfm-connect-btn");
+		const disconnectBtn = overlay.querySelector(
+			"#sclient-lastfm-disconnect-btn",
+		);
+		const connectedInfo = overlay.querySelector(
+			"#sclient-lastfm-connected-info",
+		);
+		const usernameEl = overlay.querySelector("#sclient-lastfm-username");
+		if (username) {
+			connectBtn.textContent = "Reconnect";
+			disconnectBtn.style.display = "";
+			connectedInfo.style.display = "";
+			usernameEl.textContent = username;
+		} else {
+			connectBtn.textContent = "Connect Last.fm Account";
+			disconnectBtn.style.display = "none";
+			connectedInfo.style.display = "none";
+		}
+	}
+	updateLastfmConnectedUI(lastfmUsername);
+
+	overlay
+		.querySelector("#sclient-lastfm-connect-btn")
+		.addEventListener("click", async () => {
+			const connectBtn = overlay.querySelector("#sclient-lastfm-connect-btn");
+			connectBtn.textContent = "Waiting for Last.fm...";
+			connectBtn.disabled = true;
+			await sendBridgeMsg("lastfm_save_credentials", {
+				apiKey: overlay
+					.querySelector("#sclient-lastfm-apikey-input")
+					.value.trim(),
+				secret: overlay
+					.querySelector("#sclient-lastfm-secret-input")
+					.value.trim(),
+			});
+			const result = await sendBridgeMsg("lastfm_authenticate", {});
+			connectBtn.disabled = false;
+			if (result && result.success) {
+				updateLastfmConnectedUI(result.username);
+			} else if (result && result.error && result.error !== "cancelled") {
+				customAlert("Last.fm auth failed: " + result.error);
+				connectBtn.textContent = "Connect Last.fm Account";
+			} else {
+				connectBtn.textContent = "Connect Last.fm Account";
+			}
+		});
+
+	overlay
+		.querySelector("#sclient-lastfm-disconnect-btn")
+		.addEventListener("click", async () => {
+			await sendBridgeMsg("lastfm_disconnect", {});
+			updateLastfmConnectedUI("");
+		});
+
+	// stats toggles
+	function setupStatsToggle(toggleId, bgId, sliderId, initial) {
+		setupToggle(overlay, { toggleId, bgId, sliderId, initialValue: initial });
+	}
+
+	setupStatsToggle(
+		"sclient-stats-api-toggle",
+		"sclient-toggle-bg-stats-api",
+		"sclient-toggle-slider-stats-api",
+		statsApiSyncEnabled,
+	);
+	setupStatsToggle(
+		"sclient-stats-local-toggle",
+		"sclient-toggle-bg-stats-local",
+		"sclient-toggle-slider-stats-local",
+		statsLocalTrackingEnabled,
+	);
+
+	overlay
+		.querySelector("#sclient-stats-analytics-btn")
+		.addEventListener("click", () => {
+			overlay.style.right = "-450px";
+			if (typeof toggleAnalyticsOverlay === "function") {
+				setTimeout(() => toggleAnalyticsOverlay(), 300);
+			}
+		});
+
+	overlay
+		.querySelector("#sclient-stats-wipe-btn")
+		.addEventListener("click", () => {
+			customConfirm("Delete all listening data? This cannot be undone.").then(
+				(confirmed) => {
+					if (confirmed) {
+						sendBridgeMsg("stats_wipe_db", {})
+							.then(() => customAlert("Stats data wiped."))
+							.catch((e) => customAlert("Wipe failed: " + e));
+					}
+				},
+			);
+		});
+
+	// proxy URL
+	overlay.querySelector("#sclient-proxyurl-input").value = proxyUrl;
+	overlay
+		.querySelector("#sclient-proxyurl-public-btn")
+		.addEventListener("click", () => {
+			overlay.querySelector("#sclient-proxyurl-input").value =
+				"https://scproxy.vercel.app/";
+		});
+
+	// close
+	overlay
+		.querySelector("#sclient-close-btn")
+		.addEventListener("click", toggleOverlay);
+
+	// save
+	overlay.querySelector("#sclient-save-btn").addEventListener("click", () => {
+		const collect = (sel) => overlay.querySelector(sel);
+		const newCss = collect("#sclient-css-editor").value;
+		const newJs = collect("#sclient-js-editor").value;
+		const newLazyScroll = collect("#sclient-lazy-scroll-toggle").checked;
+		const newHideDecorations = collect("#sclient-decorations-toggle").checked;
+		const newCustomAccent = accentToggle.checked;
+		const newAccentColor = accentText.value;
+		const newWideLayout = collect("#sclient-wide-layout-toggle").checked;
+		let newWideLayoutWidth = wideWidthInput.value.trim();
+		const newCollapsibleSidebar = collect(
+			"#sclient-collapsible-sidebar-toggle",
+		).checked;
+		const newOledDarkMode = collect("#sclient-oled-dark-mode-toggle").checked;
+		const newEnhancedHeader = collect(
+			"#sclient-enhanced-header-toggle",
+		).checked;
+		const newAdblock = collect("#sclient-adblock-toggle").checked;
+		const newDiscordRpc = collect("#sclient-rpc-toggle").checked;
+		const newTrayIcon = collect("#sclient-tray-toggle").checked;
+		const newHideUpsell = collect("#sclient-upsell-toggle").checked;
+		const newHideArtists = collect("#sclient-artists-toggle").checked;
+		const newTrueShuffle = collect("#sclient-trueshuffle-toggle").checked;
+		const newTrueShuffleMode = collect("#sclient-trueshuffle-engine").value;
+		const newRegionBypass = collect("#sclient-regionbypass-toggle").checked;
+		const newProxyUrl = collect("#sclient-proxyurl-input").value;
+		const newListenbrainz = collect("#sclient-listenbrainz-toggle").checked;
+		const newListenbrainzToken = collect(
+			"#sclient-listenbrainz-token-input",
+		).value;
+		const newLastfm = collect("#sclient-lastfm-toggle").checked;
+		const newLastfmApiKey = collect(
+			"#sclient-lastfm-apikey-input",
+		).value.trim();
+		const newLastfmSecret = collect(
+			"#sclient-lastfm-secret-input",
+		).value.trim();
+		const newStatsApiSync = collect("#sclient-stats-api-toggle").checked;
+		const newStatsLocalTracking = collect(
+			"#sclient-stats-local-toggle",
+		).checked;
+
+		// validate wide layout width
+		if (newWideLayout) {
+			if (newWideLayoutWidth === "") {
+				newWideLayoutWidth = "1200";
+			} else if (newWideLayoutWidth.toLowerCase() === "unlimited") {
+				newWideLayoutWidth = "unlimited";
+			} else {
+				const parsed = parseInt(newWideLayoutWidth, 10);
+				if (isNaN(parsed) || parsed < 960) {
+					customAlert("Wide Layout max width must be a number >= 960");
+					return;
+				}
+				newWideLayoutWidth = parsed.toString();
+			}
+		}
+
+		sendBridgeMsg("save_custom_files", {
+			css: newCss,
+			js: newJs,
+			lazyScroll: newLazyScroll,
+			hideDecorations: newHideDecorations,
+			customAccent: newCustomAccent,
+			accentColor: newAccentColor,
+			wideLayout: newWideLayout,
+			wideLayoutWidth: newWideLayoutWidth,
+			collapsibleSidebar: newCollapsibleSidebar,
+			oledDarkMode: newOledDarkMode,
+			adblock: newAdblock,
+			discordRpc: newDiscordRpc,
+			trayIcon: newTrayIcon,
+			hideUpsell: newHideUpsell,
+			hideArtists: newHideArtists,
+			trueShuffle: newTrueShuffle,
+			trueShuffleMode: newTrueShuffleMode,
+			regionBypass: newRegionBypass,
+			proxyUrl: newProxyUrl,
+			enhancedHeader: newEnhancedHeader,
+			listenbrainz: newListenbrainz,
+			listenbrainzToken: newListenbrainzToken,
+			lastfm: newLastfm,
+			lastfmApiKey: newLastfmApiKey,
+			lastfmSecret: newLastfmSecret,
+			statsApiSync: newStatsApiSync,
+			statsLocalTracking: newStatsLocalTracking,
+		})
+			.then(() => {
+				window.location.reload();
+			})
+			.catch((err) => {
+				customAlert("Failed to save: " + err);
+			});
+	});
+
+	renderAccounts(overlay);
 }
 
 function toggleOverlay() {
-    createOverlay();
-    const overlay = document.getElementById('sclient-settings-overlay');
-    if (overlay.style.right === '0px') {
-        overlay.style.right = '-450px';
-    } else {
-        const ce = document.getElementById('sclient-css-editor');
-        const je = document.getElementById('sclient-js-editor');
-        ce.value = currentCss;
-        je.value = currentJs;
-        
-        ce.dispatchEvent(new Event('input'));
-        je.dispatchEvent(new Event('input'));
+	createOverlay();
+	const overlay = document.getElementById("sclient-settings-overlay");
+	if (overlay.style.right === "0px") {
+		overlay.style.right = "-450px";
+	} else {
+		// re-sync editor contents on open
+		const ce = document.getElementById("sclient-css-editor");
+		const je = document.getElementById("sclient-js-editor");
+		if (ce) {
+			ce.value = currentCss;
+			ce.dispatchEvent(new Event("input"));
+		}
+		if (je) {
+			je.value = currentJs;
+			je.dispatchEvent(new Event("input"));
+		}
 
-        const lazyToggle = document.getElementById('sclient-lazy-scroll-toggle');
-        lazyToggle.checked = lazyScrollEnabled;
-        const lazyToggleBg = document.getElementById('sclient-toggle-bg');
-        const lazyToggleSlider = document.getElementById('sclient-toggle-slider');
-        if (lazyScrollEnabled) {
-            lazyToggleBg.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            lazyToggleSlider.style.transform = 'translateX(20px)';
-        } else {
-            lazyToggleBg.style.backgroundColor = '#333';
-            lazyToggleSlider.style.transform = 'translateX(0)';
-        }
-
-        const decToggleEl = document.getElementById('sclient-decorations-toggle');
-        decToggleEl.checked = hideDecorationsEnabled;
-        const decToggleBgEl = document.getElementById('sclient-toggle-bg-dec');
-        const decToggleSliderEl = document.getElementById('sclient-toggle-slider-dec');
-        if (hideDecorationsEnabled) {
-            decToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            decToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            decToggleBgEl.style.backgroundColor = '#333';
-            decToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const oledToggleEl = document.getElementById('sclient-oled-dark-mode-toggle');
-        oledToggleEl.checked = oledDarkModeEnabled;
-        const oledToggleBgEl = document.getElementById('sclient-toggle-bg-oled');
-        const oledToggleSliderEl = document.getElementById('sclient-toggle-slider-oled');
-        if (oledDarkModeEnabled) {
-            oledToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            oledToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            oledToggleBgEl.style.backgroundColor = '#333';
-            oledToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const ehToggleEl = document.getElementById('sclient-enhanced-header-toggle');
-        ehToggleEl.checked = enhancedHeaderEnabled;
-        const ehToggleBgEl = document.getElementById('sclient-toggle-bg-eh');
-        const ehToggleSliderEl = document.getElementById('sclient-toggle-slider-eh');
-        if (enhancedHeaderEnabled) {
-            ehToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            ehToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            ehToggleBgEl.style.backgroundColor = '#333';
-            ehToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const wideToggleEl = document.getElementById('sclient-wide-layout-toggle');
-        wideToggleEl.checked = wideLayoutEnabled;
-        const wideToggleBgEl = document.getElementById('sclient-toggle-bg-wide');
-        const wideToggleSliderEl = document.getElementById('sclient-toggle-slider-wide');
-        if (wideLayoutEnabled) {
-            wideToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            wideToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            wideToggleBgEl.style.backgroundColor = '#333';
-            wideToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const sidebarToggleEl = document.getElementById('sclient-collapsible-sidebar-toggle');
-        sidebarToggleEl.checked = collapsibleSidebarEnabled;
-        const sidebarToggleBgEl = document.getElementById('sclient-toggle-bg-sidebar');
-        const sidebarToggleSliderEl = document.getElementById('sclient-toggle-slider-sidebar');
-        if (collapsibleSidebarEnabled) {
-            sidebarToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            sidebarToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            sidebarToggleBgEl.style.backgroundColor = '#333';
-            sidebarToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const adblockToggleEl = document.getElementById('sclient-adblock-toggle');
-        adblockToggleEl.checked = adblockEnabled;
-        const adblockToggleBgEl = document.getElementById('sclient-toggle-bg-adblock');
-        const adblockToggleSliderEl = document.getElementById('sclient-toggle-slider-adblock');
-        if (adblockEnabled) {
-            adblockToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            adblockToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            adblockToggleBgEl.style.backgroundColor = '#333';
-            adblockToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const rpcToggleEl = document.getElementById('sclient-rpc-toggle');
-        rpcToggleEl.checked = discordRpcEnabled;
-        const rpcToggleBgEl = document.getElementById('sclient-toggle-bg-rpc');
-        const rpcToggleSliderEl = document.getElementById('sclient-toggle-slider-rpc');
-        if (discordRpcEnabled) {
-            rpcToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            rpcToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            rpcToggleBgEl.style.backgroundColor = '#333';
-            rpcToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const lbToggleEl = document.getElementById('sclient-listenbrainz-toggle');
-        lbToggleEl.checked = listenbrainzEnabled;
-        const lbToggleBgEl = document.getElementById('sclient-toggle-bg-listenbrainz');
-        const lbToggleSliderEl = document.getElementById('sclient-toggle-slider-listenbrainz');
-        if (listenbrainzEnabled) {
-            lbToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            lbToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            lbToggleBgEl.style.backgroundColor = '#333';
-            lbToggleSliderEl.style.transform = 'translateX(0)';
-        }
-        document.getElementById('sclient-listenbrainz-token-input').value = listenbrainzToken;
-
-        const statsApiToggleEl = document.getElementById('sclient-stats-api-toggle');
-        statsApiToggleEl.checked = typeof statsApiSyncEnabled !== 'undefined' ? statsApiSyncEnabled : false;
-        const statsApiToggleBgEl = document.getElementById('sclient-toggle-bg-stats-api');
-        const statsApiToggleSliderEl = document.getElementById('sclient-toggle-slider-stats-api');
-        if (statsApiSyncEnabled) {
-            statsApiToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            statsApiToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            statsApiToggleBgEl.style.backgroundColor = '#333';
-            statsApiToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const statsLocalToggleEl = document.getElementById('sclient-stats-local-toggle');
-        statsLocalToggleEl.checked = typeof statsLocalTrackingEnabled !== 'undefined' ? statsLocalTrackingEnabled : false;
-        const statsLocalToggleBgEl = document.getElementById('sclient-toggle-bg-stats-local');
-        const statsLocalToggleSliderEl = document.getElementById('sclient-toggle-slider-stats-local');
-        if (statsLocalTrackingEnabled) {
-            statsLocalToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            statsLocalToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            statsLocalToggleBgEl.style.backgroundColor = '#333';
-            statsLocalToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        const accentToggleEl = document.getElementById('sclient-accent-toggle');
-        accentToggleEl.checked = customAccentEnabled;
-        const accentToggleBgEl = document.getElementById('sclient-toggle-bg-accent');
-        const accentToggleSliderEl = document.getElementById('sclient-toggle-slider-accent');
-        if (customAccentEnabled) {
-            accentToggleBgEl.style.backgroundColor = customAccentEnabled ? accentColor : '#f50';
-            accentToggleSliderEl.style.transform = 'translateX(20px)';
-        } else {
-            accentToggleBgEl.style.backgroundColor = '#333';
-            accentToggleSliderEl.style.transform = 'translateX(0)';
-        }
-
-        document.getElementById('sclient-accent-color-picker').value = accentColor;
-        document.getElementById('sclient-accent-color-text').value = accentColor;
-
-        overlay.style.right = '0px';
-    }
+		overlay.style.right = "0px";
+	}
 }
 
 // toggle on ctrl+i
-document.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key.toLowerCase() === 'i') {
-        e.preventDefault();
-        toggleOverlay();
-    }
+document.addEventListener("keydown", (e) => {
+	if (e.ctrlKey && e.key.toLowerCase() === "i") {
+		e.preventDefault();
+		toggleOverlay();
+	}
 });
