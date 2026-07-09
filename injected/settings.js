@@ -1,6 +1,4 @@
-// settings overlay — uses consolidated core helpers
-
-function createToggleHtml({ label, toggleId, bgId, sliderId }) {
+function toggleHtml({ label, toggleId, bgId, sliderId }) {
 	return `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
       <span style="font-size: 14px; font-weight: 500;">${label}</span>
@@ -13,40 +11,35 @@ function createToggleHtml({ label, toggleId, bgId, sliderId }) {
     </div>`;
 }
 
-function updateToggleUI(bgEl, sliderEl, checked) {
+function updateToggle(bg, slider, checked) {
 	if (checked) {
-		bgEl.style.backgroundColor = getAccent();
-		sliderEl.style.transform = "translateX(20px)";
+		bg.style.backgroundColor = getAccent();
+		slider.style.transform = "translateX(20px)";
 	} else {
-		bgEl.style.backgroundColor = "#333";
-		sliderEl.style.transform = "translateX(0)";
+		bg.style.backgroundColor = "#333";
+		slider.style.transform = "translateX(0)";
 	}
 }
 
-function setupToggle(
-	overlay,
-	{ toggleId, bgId, sliderId, initialValue, onChange },
-) {
+function setupToggle(overlay, { toggleId, bgId, sliderId, initial, onChange }) {
 	const toggle = overlay.querySelector("#" + toggleId);
 	const bg = overlay.querySelector("#" + bgId);
 	const slider = overlay.querySelector("#" + sliderId);
-	toggle.checked = initialValue;
-	updateToggleUI(bg, slider, initialValue);
+	toggle.checked = initial;
+	updateToggle(bg, slider, initial);
 	toggle.addEventListener("change", (e) => {
-		updateToggleUI(bg, slider, e.target.checked);
+		updateToggle(bg, slider, e.target.checked);
 		if (onChange) onChange(e.target.checked);
 	});
 	return { toggle, bg, slider };
 }
 
-// --- syntax highlighting ---
-
 function highlightCss(text) {
-	const tokens = [];
 	let html = text
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;");
+	const tokens = [];
 
 	const patterns = [
 		[/(\/\*[\s\S]*?\*\/)/g, "#6a9955"],
@@ -56,28 +49,25 @@ function highlightCss(text) {
 	];
 
 	for (const [re, color] of patterns) {
-		html = html.replace(re, (match, ...groups) => {
-			const content = groups[0] ? groups[0] + groups[1] : match;
-			const wrapped = `<span style="color: ${color};">${content}</span>`;
-			const tokenIdx = tokens.length;
-			tokens.push(wrapped);
-			return `__TOKEN${tokenIdx}__`;
+		html = html.replace(re, (m, ...groups) => {
+			const content = groups[0] ? groups[0] + groups[1] : m;
+			const idx = tokens.length;
+			tokens.push(`<span style="color: ${color};">${content}</span>`);
+			return `__T${idx}__`;
 		});
 	}
 
-	// last pattern has positional groups
-	html = html.replace(/__TOKEN(\d+)__/g, (_, i) => tokens[parseInt(i)]);
-
+	html = html.replace(/__T(\d+)__/g, (_, i) => tokens[parseInt(i)]);
 	if (text[text.length - 1] === "\n") html += " ";
 	return html;
 }
 
 function highlightJs(text) {
-	const tokens = [];
 	let html = text
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;");
+	const tokens = [];
 
 	const patterns = [
 		[/(\/\/.*)/g, "#6a9955"],
@@ -90,79 +80,73 @@ function highlightJs(text) {
 	];
 
 	for (const [re, color] of patterns) {
-		html = html.replace(re, (match) => {
-			const wrapped = `<span style="color: ${color};">${match}</span>`;
-			const tokenIdx = tokens.length;
-			tokens.push(wrapped);
-			return `__TOKEN${tokenIdx}__`;
+		html = html.replace(re, (m) => {
+			const idx = tokens.length;
+			tokens.push(`<span style="color: ${color};">${m}</span>`);
+			return `__T${idx}__`;
 		});
 	}
 
-	html = html.replace(/__TOKEN(\d+)__/g, (_, i) => tokens[parseInt(i)]);
-
+	html = html.replace(/__T(\d+)__/g, (_, i) => tokens[parseInt(i)]);
 	if (text[text.length - 1] === "\n") html += " ";
 	return html;
 }
 
-// --- code editor setup ---
-
-function setupCodeEditors(overlay) {
+function setupEditors(overlay) {
 	const tabCss = overlay.querySelector("#tab-css");
 	const tabJs = overlay.querySelector("#tab-js");
-	const cssEditor = overlay.querySelector("#sclient-css-editor");
-	const jsEditor = overlay.querySelector("#sclient-js-editor");
-	const cssContainer = overlay.querySelector("#sclient-css-container");
-	const jsContainer = overlay.querySelector("#sclient-js-container");
-	const cssHighlight = overlay.querySelector("#sclient-css-highlight");
-	const jsHighlight = overlay.querySelector("#sclient-js-highlight");
+	const cssEd = overlay.querySelector("#sclient-css-editor");
+	const jsEd = overlay.querySelector("#sclient-js-editor");
+	const cssCon = overlay.querySelector("#sclient-css-container");
+	const jsCon = overlay.querySelector("#sclient-js-container");
+	const cssHl = overlay.querySelector("#sclient-css-highlight");
+	const jsHl = overlay.querySelector("#sclient-js-highlight");
 
-	function updateCssHighlight() {
-		cssHighlight.innerHTML = highlightCss(cssEditor.value);
-	}
-	function updateJsHighlight() {
-		jsHighlight.innerHTML = highlightJs(jsEditor.value);
-	}
+	const updateCss = () => {
+		cssHl.innerHTML = highlightCss(cssEd.value);
+	};
+	const updateJs = () => {
+		jsHl.innerHTML = highlightJs(jsEd.value);
+	};
 
-	cssEditor.addEventListener("input", updateCssHighlight);
-	jsEditor.addEventListener("input", updateJsHighlight);
+	cssEd.addEventListener("input", updateCss);
+	jsEd.addEventListener("input", updateJs);
 
-	cssEditor.addEventListener("scroll", () => {
-		cssHighlight.scrollTop = cssEditor.scrollTop;
-		cssHighlight.scrollLeft = cssEditor.scrollLeft;
+	cssEd.addEventListener("scroll", () => {
+		cssHl.scrollTop = cssEd.scrollTop;
+		cssHl.scrollLeft = cssEd.scrollLeft;
 	});
-	jsEditor.addEventListener("scroll", () => {
-		jsHighlight.scrollTop = jsEditor.scrollTop;
-		jsHighlight.scrollLeft = jsEditor.scrollLeft;
+	jsEd.addEventListener("scroll", () => {
+		jsHl.scrollTop = jsEd.scrollTop;
+		jsHl.scrollLeft = jsEd.scrollLeft;
 	});
 
-	const switchTab = (activeTab, inactiveTab, show, hide) => {
-		activeTab.style.background = getAccent();
-		activeTab.style.color = "white";
-		inactiveTab.style.background = "#333";
-		inactiveTab.style.color = "#ccc";
+	const switchTab = (active, inactive, show, hide) => {
+		active.style.background = getAccent();
+		active.style.color = "white";
+		inactive.style.background = "#333";
+		inactive.style.color = "#ccc";
 		show.style.display = "block";
 		hide.style.display = "none";
 	};
 
 	tabCss.addEventListener("click", () =>
-		switchTab(tabCss, tabJs, cssContainer, jsContainer),
+		switchTab(tabCss, tabJs, cssCon, jsCon),
 	);
 	tabJs.addEventListener("click", () =>
-		switchTab(tabJs, tabCss, jsContainer, cssContainer),
+		switchTab(tabJs, tabCss, jsCon, cssCon),
 	);
 
-	cssEditor.value = currentCss;
-	jsEditor.value = currentJs;
-	updateCssHighlight();
-	updateJsHighlight();
+	cssEd.value = currentCss;
+	jsEd.value = currentJs;
+	updateCss();
+	updateJs();
 }
 
-// --- account management ---
-
 function renderAccounts(overlay) {
-	sendBridgeMsg("get_accounts")
+	sendBridge("get_accounts")
 		.then((accounts) => {
-			sendBridgeMsg("get_active_account")
+			sendBridge("get_active_account")
 				.then((active) => {
 					const list = overlay.querySelector("#sclient-accounts-list");
 					list.replaceChildren();
@@ -171,98 +155,92 @@ function renderAccounts(overlay) {
 						div.style.cssText =
 							"display: flex; justify-content: space-between; align-items: center; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;";
 
-						const nameSpan = document.createElement("span");
-						nameSpan.textContent = acc;
+						const name = document.createElement("span");
+						name.textContent = acc;
 						if (acc === active) {
-							nameSpan.style.cssText = `color: ${getAccent()}; font-weight: bold;`;
-							nameSpan.textContent += " (Active)";
+							name.style.cssText = `color: ${getAccent()}; font-weight: bold;`;
+							name.textContent += " (Active)";
 						}
 
-						const btnContainer = document.createElement("div");
-						btnContainer.style.cssText = "display: flex; gap: 5px;";
+						const btns = document.createElement("div");
+						btns.style.cssText = "display: flex; gap: 5px;";
 
 						if (acc !== active) {
-							const switchBtn = document.createElement("button");
-							switchBtn.textContent = "Switch";
-							switchBtn.style.cssText =
+							const sw = document.createElement("button");
+							sw.textContent = "Switch";
+							sw.style.cssText =
 								"padding: 4px 8px; background: #333; color: white; border: none; border-radius: 3px; cursor: pointer;";
-							switchBtn.onclick = () => {
-								sendBridgeMsg("set_active_account", { name: acc })
-									.then(() => sendBridgeMsg("restart_app"))
+							sw.onclick = () => {
+								sendBridge("set_active_account", { name: acc })
+									.then(() => sendBridge("restart_app"))
 									.catch((e) => {
 										console.error("[SClient] Account switch failed:", e);
-										customAlert("Switch Error: " + e);
+										showToast("Switch Error: " + e);
 									});
 							};
-							btnContainer.appendChild(switchBtn);
+							btns.appendChild(sw);
 						}
 
 						if (acc !== "main" && acc !== active) {
-							const deleteBtn = document.createElement("button");
-							deleteBtn.textContent = "Delete";
-							deleteBtn.style.cssText =
+							const del = document.createElement("button");
+							del.textContent = "Delete";
+							del.style.cssText =
 								"padding: 4px 8px; background: #800; color: white; border: none; border-radius: 3px; cursor: pointer;";
-							deleteBtn.onclick = () => {
-								customConfirm("Delete account " + acc + "?").then(
-									(confirmed) => {
-										if (confirmed) {
-											sendBridgeMsg("delete_account", { name: acc })
-												.then(() => renderAccounts(overlay))
-												.catch((e) => {
-													console.error("[SClient] Account delete failed:", e);
-													customAlert("Delete Error: " + e);
-												});
-										}
-									},
-								);
-							};
-							btnContainer.appendChild(deleteBtn);
-						}
-
-						if (acc === "main") {
-							const resetBtn = document.createElement("button");
-							resetBtn.textContent = "Reset";
-							resetBtn.style.cssText =
-								"padding: 4px 8px; background: #3a1515; color: #f88; border: 1px solid #5a2020; border-radius: 3px; cursor: pointer;";
-							resetBtn.onclick = () => {
-								const isActive = acc === active;
-								const msg = isActive
-									? "Clear all cookies and browser data? The app will restart."
-									: "Clear all cookies and browser data for main profile?";
-								customConfirm(msg).then((confirmed) => {
-									if (confirmed) {
-										sendBridgeMsg(
-											isActive ? "clear_data_and_restart" : "clear_data",
-										);
+							del.onclick = () => {
+								showConfirm("Delete account " + acc + "?").then((ok) => {
+									if (ok) {
+										sendBridge("delete_account", { name: acc })
+											.then(() => renderAccounts(overlay))
+											.catch((e) => {
+												console.error("[SClient] Account delete failed:", e);
+												showToast("Delete Error: " + e);
+											});
 									}
 								});
 							};
-							btnContainer.appendChild(resetBtn);
+							btns.appendChild(del);
 						}
 
-						div.appendChild(nameSpan);
-						div.appendChild(btnContainer);
+						if (acc === "main") {
+							const rst = document.createElement("button");
+							rst.textContent = "Reset";
+							rst.style.cssText =
+								"padding: 4px 8px; background: #3a1515; color: #f88; border: 1px solid #5a2020; border-radius: 3px; cursor: pointer;";
+							rst.onclick = () => {
+								const msg =
+									acc === active
+										? "Clear all cookies and browser data? The app will restart."
+										: "Clear all cookies and browser data for main profile?";
+								showConfirm(msg).then((ok) => {
+									if (ok)
+										sendBridge(
+											acc === active ? "clear_data_and_restart" : "clear_data",
+										);
+								});
+							};
+							btns.appendChild(rst);
+						}
+
+						div.appendChild(name);
+						div.appendChild(btns);
 						list.appendChild(div);
 					}
 				})
 				.catch((e) => {
 					console.error("[SClient] Set active account failed:", e);
-					customAlert("Active Account Error: " + e);
+					showToast("Active Account Error: " + e);
 				});
 		})
 		.catch((e) => {
 			console.error("[SClient] Get accounts failed:", e);
-			customAlert("Get Accounts Error: " + e);
+			showToast("Get Accounts Error: " + e);
 		});
 }
-
-// --- main overlay ---
 
 function createOverlay() {
 	if (document.getElementById("sclient-settings-overlay")) return;
 
 	const accent = getAccent();
-
 	const overlay = document.createElement("div");
 	overlay.id = "sclient-settings-overlay";
 	overlay.style.cssText = `
@@ -275,7 +253,6 @@ function createOverlay() {
     padding: 20px; box-sizing: border-box;
   `;
 
-	// build toggle definitions (simple toggles only; accent & wide-layout have their own row)
 	const TOGGLES = [
 		{ label: "Enable OLED Dark Mode", id: "oled-dark-mode" },
 		{ label: "Enable Enhanced Header", id: "enhanced-header" },
@@ -289,8 +266,8 @@ function createOverlay() {
 		{ label: "Hide Artist Features", id: "artists" },
 	];
 
-	const toggleHtml = TOGGLES.map((t) =>
-		createToggleHtml({
+	const togglesHtml = TOGGLES.map((t) =>
+		toggleHtml({
 			label: t.label,
 			toggleId: `sclient-${t.id}-toggle`,
 			bgId: `sclient-toggle-bg-${t.id}`,
@@ -331,9 +308,8 @@ function createOverlay() {
         </div>
       </div>
 
-      ${toggleHtml}
+      ${togglesHtml}
 
-      <!-- Wide Layout toggle with width input -->
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
         <span style="font-size: 14px; font-weight: 500;">Enable Wide Layout</span>
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -347,7 +323,6 @@ function createOverlay() {
         </div>
       </div>
 
-      <!-- ListenBrainz -->
       <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <span style="font-size: 14px; font-weight: 500;">ListenBrainz Scrobbling</span>
@@ -365,7 +340,6 @@ function createOverlay() {
         <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your token from <a href="https://listenbrainz.org/profile/" target="_blank" style="color: #aaa; text-decoration: underline;">listenbrainz.org/profile</a></div>
       </div>
 
-      <!-- Last.fm -->
       <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <span style="font-size: 14px; font-weight: 500;">Last.fm Scrobbling</span>
@@ -389,7 +363,6 @@ function createOverlay() {
         <div style="margin-top: 5px; font-size: 11px; color: #888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color: #aaa; text-decoration: underline;">last.fm/api/account/create</a></div>
       </div>
 
-      <!-- Stats -->
       <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
         <span style="font-size: 14px; font-weight: 500; display: block; margin-bottom: 12px;">Listening Stats</span>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -422,7 +395,6 @@ function createOverlay() {
         </div>
       </div>
 
-      <!-- True Shuffle -->
       <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 14px; font-weight: 500;">Enable True Shuffle (Fix native shuffle)</span>
@@ -442,7 +414,6 @@ function createOverlay() {
         </div>
       </div>
 
-      <!-- Region Bypass -->
       <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 14px; font-weight: 500;">Bypass Song Region Blocks</span>
@@ -461,7 +432,6 @@ function createOverlay() {
         <div style="font-size: 10px; color: #666; margin-top: 2px;">Opening profile may geo-lock some songs</div>
       </div>
 
-      <!-- Code Editors -->
       <div style="display: flex; gap: 10px; margin-bottom: 15px;">
         <button id="tab-css" style="flex: 1; padding: 8px; background: ${accent}; border: none; color: white; border-radius: 4px; cursor: pointer; font-weight: 500;">Custom CSS</button>
         <button id="tab-js" style="flex: 1; padding: 8px; background: #333; border: none; color: #ccc; border-radius: 4px; cursor: pointer; font-weight: 500;">Custom JS</button>
@@ -478,7 +448,6 @@ function createOverlay() {
         </div>
       </div>
 
-      <!-- Accounts -->
       <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
         <span style="font-size: 16px; font-weight: bold; margin-bottom: 15px; display: block;">Accounts</span>
         <div id="sclient-accounts-list" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;"></div>
@@ -498,80 +467,65 @@ function createOverlay() {
   `;
 
 	document.body.appendChild(overlay);
-	void overlay.offsetHeight; // force reflow
 
-	setupCodeEditors(overlay);
+	setupEditors(overlay);
 
-	// --- wire toggles ---
-
-	// lazy scroll
 	setupToggle(overlay, {
 		toggleId: "sclient-lazy-scroll-toggle",
 		bgId: "sclient-toggle-bg-lazy-scroll",
 		sliderId: "sclient-toggle-slider-lazy-scroll",
-		initialValue: lazyScrollEnabled,
+		initial: lazyScrollOn,
 	});
-
-	// decorations
 	setupToggle(overlay, {
 		toggleId: "sclient-decorations-toggle",
 		bgId: "sclient-toggle-bg-decorations",
 		sliderId: "sclient-toggle-slider-decorations",
-		initialValue: hideDecorationsEnabled,
+		initial: hideDecorationsOn,
 	});
-
-	// oled dark
 	setupToggle(overlay, {
 		toggleId: "sclient-oled-dark-mode-toggle",
 		bgId: "sclient-toggle-bg-oled-dark-mode",
 		sliderId: "sclient-toggle-slider-oled-dark-mode",
-		initialValue: oledDarkModeEnabled,
+		initial: oledDarkOn,
 	});
-
-	// enhanced header
 	setupToggle(overlay, {
 		toggleId: "sclient-enhanced-header-toggle",
 		bgId: "sclient-toggle-bg-enhanced-header",
 		sliderId: "sclient-toggle-slider-enhanced-header",
-		initialValue: enhancedHeaderEnabled,
+		initial: enhancedHeaderOn,
 	});
 
-	// wide layout
 	setupToggle(overlay, {
 		toggleId: "sclient-wide-layout-toggle",
 		bgId: "sclient-toggle-bg-wide-layout",
 		sliderId: "sclient-toggle-slider-wide-layout",
-		initialValue: wideLayoutEnabled,
+		initial: wideLayoutOn,
 	});
-	const wideWidthInput = overlay.querySelector("#sclient-wide-layout-width");
-	wideWidthInput.value =
+	const widthInput = overlay.querySelector("#sclient-wide-layout-width");
+	widthInput.value =
 		wideLayoutWidth && wideLayoutWidth !== "1200" ? wideLayoutWidth : "";
 
-	// collapsible sidebar
 	setupToggle(overlay, {
 		toggleId: "sclient-collapsible-sidebar-toggle",
 		bgId: "sclient-toggle-bg-collapsible-sidebar",
 		sliderId: "sclient-toggle-slider-collapsible-sidebar",
-		initialValue: collapsibleSidebarEnabled,
+		initial: collapsibleSidebarOn,
 	});
-
-	// adblock
 	setupToggle(overlay, {
 		toggleId: "sclient-adblock-toggle",
 		bgId: "sclient-toggle-bg-adblock",
 		sliderId: "sclient-toggle-slider-adblock",
-		initialValue: adblockEnabled,
+		initial: adblockOn,
 	});
 
-	// rpc
 	setupToggle(overlay, {
 		toggleId: "sclient-rpc-toggle",
 		bgId: "sclient-toggle-bg-rpc",
 		sliderId: "sclient-toggle-slider-rpc",
-		initialValue: discordRpcEnabled,
+		initial: discordRpcOn,
 		onChange(checked) {
-			if (!checked) {
-				sendBridgeMsg("update_rpc", {
+			if (!checked)
+				sendBridge("update_rpc", {
 					title: "",
 					artist: "",
 					isPlaying: false,
@@ -579,143 +533,121 @@ function createOverlay() {
 					timeStart: 0,
 					timeEnd: 0,
 				});
-			}
 		},
 	});
 
-	// tray
 	setupToggle(overlay, {
 		toggleId: "sclient-tray-toggle",
 		bgId: "sclient-toggle-bg-tray",
 		sliderId: "sclient-toggle-slider-tray",
-		initialValue: cfg.tray_icon || false,
+		initial: cfg.tray_icon || false,
 	});
-
-	// upsell
 	setupToggle(overlay, {
 		toggleId: "sclient-upsell-toggle",
 		bgId: "sclient-toggle-bg-upsell",
 		sliderId: "sclient-toggle-slider-upsell",
-		initialValue: hideUpsellEnabled,
+		initial: hideUpsellOn,
 	});
-
-	// artists
 	setupToggle(overlay, {
 		toggleId: "sclient-artists-toggle",
 		bgId: "sclient-toggle-bg-artists",
 		sliderId: "sclient-toggle-slider-artists",
-		initialValue: hideArtistsEnabled,
+		initial: hideArtistsOn,
 	});
 
-	// true shuffle
 	setupToggle(overlay, {
 		toggleId: "sclient-trueshuffle-toggle",
 		bgId: "sclient-toggle-bg-trueshuffle",
 		sliderId: "sclient-toggle-slider-trueshuffle",
-		initialValue: trueShuffleEnabled,
+		initial: trueShuffleOn,
 	});
 	overlay.querySelector("#sclient-trueshuffle-engine").value = trueShuffleMode;
 
-	// region bypass
 	setupToggle(overlay, {
 		toggleId: "sclient-regionbypass-toggle",
 		bgId: "sclient-toggle-bg-regionbypass",
 		sliderId: "sclient-toggle-slider-regionbypass",
-		initialValue: regionBypassEnabled,
+		initial: regionBypassOn,
 	});
 
-	// --- wire special elements ---
-
-	// accent
 	const accentToggle = overlay.querySelector("#sclient-accent-toggle");
-	const accentToggleBg = overlay.querySelector("#sclient-toggle-bg-accent");
-	const accentToggleSlider = overlay.querySelector(
-		"#sclient-toggle-slider-accent",
-	);
+	const accentBg = overlay.querySelector("#sclient-toggle-bg-accent");
+	const accentSlider = overlay.querySelector("#sclient-toggle-slider-accent");
 	const accentPicker = overlay.querySelector("#sclient-accent-color-picker");
 	const accentText = overlay.querySelector("#sclient-accent-color-text");
 
-	accentToggle.checked = customAccentEnabled;
+	accentToggle.checked = customAccentOn;
 	accentPicker.value = accentColor;
 	accentText.value = accentColor;
 
-	function updateAccentToggleUI(checked) {
-		if (checked) {
-			accentToggleBg.style.backgroundColor = getAccent();
-			accentToggleSlider.style.transform = "translateX(20px)";
+	function setAccentUi(on) {
+		if (on) {
+			accentBg.style.backgroundColor = getAccent();
+			accentSlider.style.transform = "translateX(20px)";
 			accentPicker.style.opacity = "1";
 			accentText.style.opacity = "1";
 		} else {
-			accentToggleBg.style.backgroundColor = "#333";
-			accentToggleSlider.style.transform = "translateX(0)";
+			accentBg.style.backgroundColor = "#333";
+			accentSlider.style.transform = "translateX(0)";
 			accentPicker.style.opacity = "0.5";
 			accentText.style.opacity = "0.5";
 		}
 	}
-	updateAccentToggleUI(customAccentEnabled);
-	accentToggle.addEventListener("change", (e) =>
-		updateAccentToggleUI(e.target.checked),
-	);
+	setAccentUi(customAccentOn);
+	accentToggle.addEventListener("change", (e) => setAccentUi(e.target.checked));
 	accentPicker.addEventListener("input", (e) => {
 		accentText.value = e.target.value;
 	});
 	accentText.addEventListener("input", (e) => {
-		if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+		if (/^#[0-9A-F]{6}$/i.test(e.target.value))
 			accentPicker.value = e.target.value;
-		}
 	});
 
-	// listenbrainz
 	setupToggle(overlay, {
 		toggleId: "sclient-listenbrainz-toggle",
 		bgId: "sclient-toggle-bg-listenbrainz",
 		sliderId: "sclient-toggle-slider-listenbrainz",
-		initialValue: listenbrainzEnabled,
+		initial: listenbrainzOn,
 	});
 	overlay.querySelector("#sclient-listenbrainz-token-input").value =
 		listenbrainzToken;
 
-	// last.fm
 	setupToggle(overlay, {
 		toggleId: "sclient-lastfm-toggle",
 		bgId: "sclient-toggle-bg-lastfm",
 		sliderId: "sclient-toggle-slider-lastfm",
-		initialValue: lastfmEnabled,
+		initial: lastfmOn,
 	});
 	overlay.querySelector("#sclient-lastfm-apikey-input").value =
 		cfg.lastfm_api_key || "";
 	overlay.querySelector("#sclient-lastfm-secret-input").value =
 		cfg.lastfm_secret || "";
 
-	function updateLastfmConnectedUI(username) {
-		const connectBtn = overlay.querySelector("#sclient-lastfm-connect-btn");
-		const disconnectBtn = overlay.querySelector(
-			"#sclient-lastfm-disconnect-btn",
-		);
-		const connectedInfo = overlay.querySelector(
-			"#sclient-lastfm-connected-info",
-		);
-		const usernameEl = overlay.querySelector("#sclient-lastfm-username");
+	function setLastfmUi(username) {
+		const connect = overlay.querySelector("#sclient-lastfm-connect-btn");
+		const disconnect = overlay.querySelector("#sclient-lastfm-disconnect-btn");
+		const info = overlay.querySelector("#sclient-lastfm-connected-info");
+		const userEl = overlay.querySelector("#sclient-lastfm-username");
 		if (username) {
-			connectBtn.textContent = "Reconnect";
-			disconnectBtn.style.display = "";
-			connectedInfo.style.display = "";
-			usernameEl.textContent = username;
+			connect.textContent = "Reconnect";
+			disconnect.style.display = "";
+			info.style.display = "";
+			userEl.textContent = username;
 		} else {
-			connectBtn.textContent = "Connect Last.fm Account";
-			disconnectBtn.style.display = "none";
-			connectedInfo.style.display = "none";
+			connect.textContent = "Connect Last.fm Account";
+			disconnect.style.display = "none";
+			info.style.display = "none";
 		}
 	}
-	updateLastfmConnectedUI(lastfmUsername);
+	setLastfmUi(lastfmUsername);
 
 	overlay
 		.querySelector("#sclient-lastfm-connect-btn")
 		.addEventListener("click", async () => {
-			const connectBtn = overlay.querySelector("#sclient-lastfm-connect-btn");
-			connectBtn.textContent = "Waiting for Last.fm...";
-			connectBtn.disabled = true;
-			await sendBridgeMsg("lastfm_save_credentials", {
+			const btn = overlay.querySelector("#sclient-lastfm-connect-btn");
+			btn.textContent = "Waiting for Last.fm...";
+			btn.disabled = true;
+			await sendBridge("lastfm_save_credentials", {
 				apiKey: overlay
 					.querySelector("#sclient-lastfm-apikey-input")
 					.value.trim(),
@@ -723,70 +655,60 @@ function createOverlay() {
 					.querySelector("#sclient-lastfm-secret-input")
 					.value.trim(),
 			});
-			const result = await sendBridgeMsg("lastfm_authenticate", {});
-			connectBtn.disabled = false;
-			if (result && result.success) {
-				updateLastfmConnectedUI(result.username);
-			} else if (result && result.error && result.error !== "cancelled") {
-				customAlert("Last.fm auth failed: " + result.error);
-				connectBtn.textContent = "Connect Last.fm Account";
-			} else {
-				connectBtn.textContent = "Connect Last.fm Account";
-			}
+			const result = await sendBridge("lastfm_authenticate", {});
+			btn.disabled = false;
+			if (result && result.success) setLastfmUi(result.username);
+			else if (result && result.error && result.error !== "cancelled") {
+				showToast("Last.fm auth failed: " + result.error);
+				btn.textContent = "Connect Last.fm Account";
+			} else btn.textContent = "Connect Last.fm Account";
 		});
 
 	overlay
 		.querySelector("#sclient-lastfm-disconnect-btn")
 		.addEventListener("click", async () => {
-			await sendBridgeMsg("lastfm_disconnect", {});
-			updateLastfmConnectedUI("");
+			await sendBridge("lastfm_disconnect", {});
+			setLastfmUi("");
 		});
 
-	// stats toggles
-	function setupStatsToggle(toggleId, bgId, sliderId, initial) {
-		setupToggle(overlay, { toggleId, bgId, sliderId, initialValue: initial });
-	}
-
-	setupStatsToggle(
-		"sclient-stats-api-toggle",
-		"sclient-toggle-bg-stats-api",
-		"sclient-toggle-slider-stats-api",
-		statsApiSyncEnabled,
-	);
-	setupStatsToggle(
-		"sclient-stats-local-toggle",
-		"sclient-toggle-bg-stats-local",
-		"sclient-toggle-slider-stats-local",
-		statsLocalTrackingEnabled,
-	);
+	setupToggle(overlay, {
+		toggleId: "sclient-stats-api-toggle",
+		bgId: "sclient-toggle-bg-stats-api",
+		sliderId: "sclient-toggle-slider-stats-api",
+		initial: statsApiOn,
+	});
+	setupToggle(overlay, {
+		toggleId: "sclient-stats-local-toggle",
+		bgId: "sclient-toggle-bg-stats-local",
+		sliderId: "sclient-toggle-slider-stats-local",
+		initial: statsLocalOn,
+	});
 
 	overlay
 		.querySelector("#sclient-stats-analytics-btn")
 		.addEventListener("click", () => {
 			overlay.style.right = "-450px";
-			if (typeof toggleAnalyticsOverlay === "function") {
-				setTimeout(() => toggleAnalyticsOverlay(), 300);
-			}
+			if (typeof toggleAnalytics === "function")
+				setTimeout(() => toggleAnalytics(), 300);
 		});
 
 	overlay
 		.querySelector("#sclient-stats-wipe-btn")
 		.addEventListener("click", () => {
-			customConfirm("Delete all listening data? This cannot be undone.").then(
-				(confirmed) => {
-					if (confirmed) {
-						sendBridgeMsg("stats_wipe_db", {})
-							.then(() => customAlert("Stats data wiped."))
+			showConfirm("Delete all listening data? This cannot be undone.").then(
+				(ok) => {
+					if (ok) {
+						sendBridge("stats_wipe_db", {})
+							.then(() => showToast("Stats data wiped."))
 							.catch((e) => {
 								console.error("[SClient] Stats wipe failed:", e);
-								customAlert("Wipe failed: " + e);
+								showToast("Wipe failed: " + e);
 							});
 					}
 				},
 			);
 		});
 
-	// proxy URL
 	overlay.querySelector("#sclient-proxyurl-input").value = proxyUrl;
 	overlay
 		.querySelector("#sclient-proxyurl-public-btn")
@@ -795,105 +717,60 @@ function createOverlay() {
 				"https://scproxy.vercel.app/";
 		});
 
-	// close
 	overlay
 		.querySelector("#sclient-close-btn")
 		.addEventListener("click", toggleOverlay);
 
-	// save
 	overlay.querySelector("#sclient-save-btn").addEventListener("click", () => {
-		const collect = (sel) => overlay.querySelector(sel);
-		const newCss = collect("#sclient-css-editor").value;
-		const newJs = collect("#sclient-js-editor").value;
-		const newLazyScroll = collect("#sclient-lazy-scroll-toggle").checked;
-		const newHideDecorations = collect("#sclient-decorations-toggle").checked;
-		const newCustomAccent = accentToggle.checked;
-		const newAccentColor = accentText.value;
-		const newWideLayout = collect("#sclient-wide-layout-toggle").checked;
-		let newWideLayoutWidth = wideWidthInput.value.trim();
-		const newCollapsibleSidebar = collect(
-			"#sclient-collapsible-sidebar-toggle",
-		).checked;
-		const newOledDarkMode = collect("#sclient-oled-dark-mode-toggle").checked;
-		const newEnhancedHeader = collect(
-			"#sclient-enhanced-header-toggle",
-		).checked;
-		const newAdblock = collect("#sclient-adblock-toggle").checked;
-		const newDiscordRpc = collect("#sclient-rpc-toggle").checked;
-		const newTrayIcon = collect("#sclient-tray-toggle").checked;
-		const newHideUpsell = collect("#sclient-upsell-toggle").checked;
-		const newHideArtists = collect("#sclient-artists-toggle").checked;
-		const newTrueShuffle = collect("#sclient-trueshuffle-toggle").checked;
-		const newTrueShuffleMode = collect("#sclient-trueshuffle-engine").value;
-		const newRegionBypass = collect("#sclient-regionbypass-toggle").checked;
-		const newProxyUrl = collect("#sclient-proxyurl-input").value;
-		const newListenbrainz = collect("#sclient-listenbrainz-toggle").checked;
-		const newListenbrainzToken = collect(
-			"#sclient-listenbrainz-token-input",
-		).value;
-		const newLastfm = collect("#sclient-lastfm-toggle").checked;
-		const newLastfmApiKey = collect(
-			"#sclient-lastfm-apikey-input",
-		).value.trim();
-		const newLastfmSecret = collect(
-			"#sclient-lastfm-secret-input",
-		).value.trim();
-		const newStatsApiSync = collect("#sclient-stats-api-toggle").checked;
-		const newStatsLocalTracking = collect(
-			"#sclient-stats-local-toggle",
-		).checked;
+		const $ = (sel) => overlay.querySelector(sel);
+		let ww = widthInput.value.trim();
 
-		// validate wide layout width
-		if (newWideLayout) {
-			if (newWideLayoutWidth === "") {
-				newWideLayoutWidth = "1200";
-			} else if (newWideLayoutWidth.toLowerCase() === "unlimited") {
-				newWideLayoutWidth = "unlimited";
-			} else {
-				const parsed = parseInt(newWideLayoutWidth, 10);
-				if (isNaN(parsed) || parsed < 960) {
-					customAlert("Wide Layout max width must be a number >= 960");
+		if (wideLayoutOn) {
+			if (ww === "") ww = "1200";
+			else if (ww.toLowerCase() === "unlimited") ww = "unlimited";
+			else {
+				const p = parseInt(ww, 10);
+				if (isNaN(p) || p < 960) {
+					showToast("Wide Layout max width must be a number >= 960");
 					return;
 				}
-				newWideLayoutWidth = parsed.toString();
+				ww = p.toString();
 			}
 		}
 
-		sendBridgeMsg("save_custom_files", {
-			css: newCss,
-			js: newJs,
-			lazyScroll: newLazyScroll,
-			hideDecorations: newHideDecorations,
-			customAccent: newCustomAccent,
-			accentColor: newAccentColor,
-			wideLayout: newWideLayout,
-			wideLayoutWidth: newWideLayoutWidth,
-			collapsibleSidebar: newCollapsibleSidebar,
-			oledDarkMode: newOledDarkMode,
-			adblock: newAdblock,
-			discordRpc: newDiscordRpc,
-			trayIcon: newTrayIcon,
-			hideUpsell: newHideUpsell,
-			hideArtists: newHideArtists,
-			trueShuffle: newTrueShuffle,
-			trueShuffleMode: newTrueShuffleMode,
-			regionBypass: newRegionBypass,
-			proxyUrl: newProxyUrl,
-			enhancedHeader: newEnhancedHeader,
-			listenbrainz: newListenbrainz,
-			listenbrainzToken: newListenbrainzToken,
-			lastfm: newLastfm,
-			lastfmApiKey: newLastfmApiKey,
-			lastfmSecret: newLastfmSecret,
-			statsApiSync: newStatsApiSync,
-			statsLocalTracking: newStatsLocalTracking,
+		sendBridge("save_custom_files", {
+			css: $("#sclient-css-editor").value,
+			js: $("#sclient-js-editor").value,
+			lazyScroll: $("#sclient-lazy-scroll-toggle").checked,
+			hideDecorations: $("#sclient-decorations-toggle").checked,
+			customAccent: accentToggle.checked,
+			accentColor: accentText.value,
+			wideLayout: $("#sclient-wide-layout-toggle").checked,
+			wideLayoutWidth: ww,
+			collapsibleSidebar: $("#sclient-collapsible-sidebar-toggle").checked,
+			oledDarkMode: $("#sclient-oled-dark-mode-toggle").checked,
+			adblock: $("#sclient-adblock-toggle").checked,
+			discordRpc: $("#sclient-rpc-toggle").checked,
+			trayIcon: $("#sclient-tray-toggle").checked,
+			hideUpsell: $("#sclient-upsell-toggle").checked,
+			hideArtists: $("#sclient-artists-toggle").checked,
+			trueShuffle: $("#sclient-trueshuffle-toggle").checked,
+			trueShuffleMode: $("#sclient-trueshuffle-engine").value,
+			regionBypass: $("#sclient-regionbypass-toggle").checked,
+			proxyUrl: $("#sclient-proxyurl-input").value,
+			enhancedHeader: $("#sclient-enhanced-header-toggle").checked,
+			listenbrainz: $("#sclient-listenbrainz-toggle").checked,
+			listenbrainzToken: $("#sclient-listenbrainz-token-input").value,
+			lastfm: $("#sclient-lastfm-toggle").checked,
+			lastfmApiKey: $("#sclient-lastfm-apikey-input").value.trim(),
+			lastfmSecret: $("#sclient-lastfm-secret-input").value.trim(),
+			statsApiSync: $("#sclient-stats-api-toggle").checked,
+			statsLocalTracking: $("#sclient-stats-local-toggle").checked,
 		})
-			.then(() => {
-				window.location.reload();
-			})
+			.then(() => window.location.reload())
 			.catch((e) => {
 				console.error("[SClient] Settings save failed:", e);
-				customAlert("Failed to save: " + e);
+				showToast("Failed to save: " + e);
 			});
 	});
 
@@ -906,7 +783,6 @@ function toggleOverlay() {
 	if (overlay.style.right === "0px") {
 		overlay.style.right = "-450px";
 	} else {
-		// re-sync editor contents on open
 		const ce = document.getElementById("sclient-css-editor");
 		const je = document.getElementById("sclient-js-editor");
 		if (ce) {
@@ -917,12 +793,10 @@ function toggleOverlay() {
 			je.value = currentJs;
 			je.dispatchEvent(new Event("input"));
 		}
-
 		overlay.style.right = "0px";
 	}
 }
 
-// toggle on ctrl+i
 document.addEventListener("keydown", (e) => {
 	if (e.ctrlKey && e.key.toLowerCase() === "i") {
 		e.preventDefault();

@@ -7,9 +7,7 @@ const config = require("./config");
 const rpc = require("./discord-rpc");
 const stats = require("./stats");
 
-// --- Last.fm helpers ---
-
-function generateLastFmSig(params, secret) {
+function lastfmSig(params, secret) {
 	const str =
 		Object.keys(params)
 			.sort()
@@ -18,7 +16,7 @@ function generateLastFmSig(params, secret) {
 	return crypto.createHash("md5").update(str, "utf8").digest("hex");
 }
 
-function getLastFmCreds() {
+function lastfmCreds() {
 	return {
 		apiKey: config.getSecure("integrations.lastfm.api_key").trim(),
 		secret: config.getSecure("integrations.lastfm.secret").trim(),
@@ -26,16 +24,38 @@ function getLastFmCreds() {
 	};
 }
 
+async function lastfmCall(method, extra = {}) {
+	try {
+		const { apiKey, secret, sk } = lastfmCreds();
+		if (!apiKey || !secret || !sk) return { ok: false, code: 0 };
+		const params = { method, api_key: apiKey, sk, ...extra };
+		const api_sig = lastfmSig(params, secret);
+		const res = await fetch("https://ws.audioscrobbler.com/2.0/", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: new URLSearchParams({ ...params, api_sig, format: "json" }),
+		});
+		const data = await res.json();
+		if (data.error)
+			return { ok: false, code: data.error, message: data.message };
+		return { ok: true };
+	} catch (e) {
+		console.error("[SClient] Last.fm error:", method, e);
+		return { ok: false, code: 0, message: e.message };
+	}
+}
+
+function partitionName(active) {
+	return active === "main" ? "persist:main" : `persist:${active}`;
+}
+
 function register({ ipcMain, session, app }) {
-	// proxy config (sync)
 	ipcMain.on("get-proxy-config", (event) => {
 		event.returnValue = {
-			enabled: config.get("features.region_bypass") === "true",
+			enabled: config.isEnabled("features.region_bypass"),
 			url: config.get("features.proxy_url"),
 		};
 	});
-
-	// --- Settings ---
 
 	ipcMain.handle("get_custom_files", () => config.buildConfigPayload());
 
@@ -59,14 +79,12 @@ function register({ ipcMain, session, app }) {
 
 		if (
 			oldAdblock !== config.adblockEnabled &&
-			global._blockerInstance &&
-			global._activeSession
+			global._blocker &&
+			global._session
 		) {
-			if (config.adblockEnabled) {
-				global._blockerInstance.enableBlockingInSession(global._activeSession);
-			} else {
-				global._blockerInstance.disableBlockingInSession(global._activeSession);
-			}
+			if (config.adblockEnabled)
+				global._blocker.enableBlockingInSession(global._session);
+			else global._blocker.disableBlockingInSession(global._session);
 		}
 
 		config.set("features.discord_rpc", args.discordRpc ? "true" : "false");
@@ -106,8 +124,6 @@ function register({ ipcMain, session, app }) {
 		);
 	});
 
-	// --- ListenBrainz ---
-
 	ipcMain.handle("submit_listenbrainz", async (_e, args) => {
 		try {
 			const token = config.getSecure("integrations.listenbrainz.token").trim();
@@ -129,8 +145,6 @@ function register({ ipcMain, session, app }) {
 		}
 	});
 
-	// --- Last.fm ---
-
 	ipcMain.handle("lastfm_authenticate", async () => {
 		const apiKey = config.getSecure("integrations.lastfm.api_key").trim();
 		const secret = config.getSecure("integrations.lastfm.secret").trim();
@@ -138,29 +152,29 @@ function register({ ipcMain, session, app }) {
 
 		return new Promise((resolve) => {
 			let settled = false;
-			const settle = (value) => {
-				if (settled) return;
-				settled = true;
-				resolve(value);
+			const settle = (v) => {
+				if (!settled) {
+					settled = true;
+					resolve(v);
+				}
 			};
 
-			const authWin = new BrowserWindow({
+			const win = new BrowserWindow({
 				width: 850,
 				height: 650,
 				title: "Connect Last.fm",
 				webPreferences: { nodeIntegration: false, contextIsolation: true },
 			});
 
-			authWin.loadURL(
+			win.loadURL(
 				`https://www.last.fm/api/auth/?api_key=${apiKey}&cb=https://soundcloud.com/discover`,
 			);
 
-			const handleUrl = async (url) => {
+			const handle = async (url) => {
 				try {
-					const urlObj = new URL(url);
-					const token = urlObj.searchParams.get("token");
+					const token = new URL(url).searchParams.get("token");
 					if (!token) return;
-					const sig = generateLastFmSig(
+					const sig = lastfmSig(
 						{ method: "auth.getSession", api_key: apiKey, token },
 						secret,
 					);
@@ -168,7 +182,7 @@ function register({ ipcMain, session, app }) {
 						`https://ws.audioscrobbler.com/2.0/?method=auth.getSession&api_key=${apiKey}&token=${token}&api_sig=${sig}&format=json`,
 					);
 					const data = await res.json();
-					if (!authWin.isDestroyed()) authWin.close();
+					if (!win.isDestroyed()) win.close();
 					if (data.error) {
 						settle({ error: data.message });
 					} else {
@@ -185,9 +199,9 @@ function register({ ipcMain, session, app }) {
 				}
 			};
 
-			authWin.webContents.on("will-redirect", (_event, url) => handleUrl(url));
-			authWin.webContents.on("will-navigate", (_event, url) => handleUrl(url));
-			authWin.on("closed", () => settle({ error: "cancelled" }));
+			win.webContents.on("will-redirect", (_e, url) => handle(url));
+			win.webContents.on("will-navigate", (_e, url) => handle(url));
+			win.on("closed", () => settle({ error: "cancelled" }));
 		});
 	});
 
@@ -202,61 +216,19 @@ function register({ ipcMain, session, app }) {
 	});
 
 	ipcMain.handle("lastfm_now_playing", async (_e, args) => {
-		try {
-			const { apiKey, secret, sk } = getLastFmCreds();
-			if (!apiKey || !secret || !sk) return { ok: false, code: 0 };
-			const params = {
-				method: "track.updateNowPlaying",
-				api_key: apiKey,
-				sk,
-				artist: args.artist,
-				track: args.title,
-			};
-			const api_sig = generateLastFmSig(params, secret);
-			const res = await fetch("https://ws.audioscrobbler.com/2.0/", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: new URLSearchParams({ ...params, api_sig, format: "json" }),
-			});
-			const data = await res.json();
-			if (data.error)
-				return { ok: false, code: data.error, message: data.message };
-			return { ok: true };
-		} catch (e) {
-			console.error("[SClient] Last.fm now playing error:", e);
-			return { ok: false, code: 0, message: e.message };
-		}
+		return lastfmCall("track.updateNowPlaying", {
+			artist: args.artist,
+			track: args.title,
+		});
 	});
 
 	ipcMain.handle("lastfm_scrobble", async (_e, args) => {
-		try {
-			const { apiKey, secret, sk } = getLastFmCreds();
-			if (!apiKey || !secret || !sk) return { ok: false, code: 0 };
-			const params = {
-				method: "track.scrobble",
-				api_key: apiKey,
-				sk,
-				artist: args.artist,
-				track: args.title,
-				timestamp: args.timestamp.toString(),
-			};
-			const api_sig = generateLastFmSig(params, secret);
-			const res = await fetch("https://ws.audioscrobbler.com/2.0/", {
-				method: "POST",
-				headers: { "Content-Type": "application/x-www-form-urlencoded" },
-				body: new URLSearchParams({ ...params, api_sig, format: "json" }),
-			});
-			const data = await res.json();
-			if (data.error)
-				return { ok: false, code: data.error, message: data.message };
-			return { ok: true };
-		} catch (e) {
-			console.error("[SClient] Last.fm scrobble error:", e);
-			return { ok: false, code: 0, message: e.message };
-		}
+		return lastfmCall("track.scrobble", {
+			artist: args.artist,
+			track: args.title,
+			timestamp: args.timestamp.toString(),
+		});
 	});
-
-	// --- Stats ---
 
 	ipcMain.handle("stats_store_credentials", async (_e, args) => {
 		stats.storeCredentials(args.clientId, args.oauthToken);
@@ -274,23 +246,20 @@ function register({ ipcMain, session, app }) {
 		stats.wipeDb();
 	});
 
-	// --- Download ---
-
 	const ytdlexec = require("youtube-dl-exec");
 	let ytdlBin = ytdlexec.constants.YOUTUBE_DL_PATH;
 	if (ytdlBin.includes("app.asar"))
 		ytdlBin = ytdlBin.replace("app.asar", "app.asar.unpacked");
-	const ytdlExec = ytdlexec.create(ytdlBin);
+	const ytdl = ytdlexec.create(ytdlBin);
 
 	ipcMain.handle("download_song", async (_e, args) => {
-		const dlDir = app.getPath("downloads");
 		try {
-			await ytdlExec(args.url, {
+			await ytdl(args.url, {
 				extractAudio: true,
 				audioFormat: "best",
 				noProgress: true,
 				noWarnings: true,
-				paths: dlDir,
+				paths: app.getPath("downloads"),
 			});
 		} catch (e) {
 			console.error("[SClient] Download error:", e.message || e);
@@ -300,74 +269,65 @@ function register({ ipcMain, session, app }) {
 				);
 			}
 			if (e.stderr) {
-				const errorLines = e.stderr
-					.split("\n")
-					.filter((line) => line.includes("ERROR:"));
+				const lines = e.stderr.split("\n").filter((l) => l.includes("ERROR:"));
 				throw new Error(
-					errorLines.length > 0
-						? errorLines.join(" | ")
+					lines.length > 0
+						? lines.join(" | ")
 						: `Unknown youtube-dl error. (${e.stderr})`,
 				);
 			}
-			throw new Error(
-				`Unknown download error occurred: ${e.message || e.toString()}`,
-			);
+			throw new Error(`Unknown download error: ${e.message || e.toString()}`);
 		}
 	});
-
-	// --- RPC ---
 
 	ipcMain.handle("update_rpc", async (_e, args) => {
 		await rpc.updateRpc(args);
 	});
 
-	// --- Accounts ---
-
 	ipcMain.handle("get_active_account", () => config.getActiveAccount());
 	ipcMain.handle("set_active_account", (_e, args) =>
 		config.setActiveAccount(args.name),
 	);
+
 	ipcMain.handle("get_accounts", () => {
-		const partitionsDir = path.join(app.getPath("userData"), "Partitions");
-		if (!fs.existsSync(partitionsDir)) return ["main"];
+		const dir = path.join(app.getPath("userData"), "Partitions");
+		if (!fs.existsSync(dir)) return ["main"];
 		const accs = [
 			"main",
 			...fs
-				.readdirSync(partitionsDir)
-				.filter((f) => fs.statSync(path.join(partitionsDir, f)).isDirectory()),
+				.readdirSync(dir)
+				.filter((f) => fs.statSync(path.join(dir, f)).isDirectory()),
 		];
 		return [...new Set(accs)];
 	});
+
 	ipcMain.handle("create_account", (_e, args) => {
 		fs.mkdirSync(path.join(app.getPath("userData"), "Partitions", args.name), {
 			recursive: true,
 		});
 	});
+
 	ipcMain.handle("delete_account", (_e, args) => {
-		const partitionDir = path.join(
-			app.getPath("userData"),
-			"Partitions",
-			args.name,
-		);
-		if (fs.existsSync(partitionDir))
-			fs.rmSync(partitionDir, { recursive: true, force: true });
+		const d = path.join(app.getPath("userData"), "Partitions", args.name);
+		if (fs.existsSync(d)) fs.rmSync(d, { recursive: true, force: true });
 	});
+
 	ipcMain.handle("restart_app", () => {
 		app.relaunch({ args: [path.join(__dirname, "..")] });
 		app.exit(0);
 	});
+
 	ipcMain.handle("clear_data", async () => {
-		const activeAccount = config.getActiveAccount();
-		const part =
-			activeAccount === "main" ? `persist:main` : `persist:${activeAccount}`;
-		await session.fromPartition(part).clearStorageData();
+		await session
+			.fromPartition(partitionName(config.getActiveAccount()))
+			.clearStorageData();
 		return "done";
 	});
+
 	ipcMain.handle("clear_data_and_restart", async () => {
-		const activeAccount = config.getActiveAccount();
-		const part =
-			activeAccount === "main" ? `persist:main` : `persist:${activeAccount}`;
-		await session.fromPartition(part).clearStorageData();
+		await session
+			.fromPartition(partitionName(config.getActiveAccount()))
+			.clearStorageData();
 		app.relaunch({ args: [path.join(__dirname, "..")] });
 		app.exit(0);
 	});

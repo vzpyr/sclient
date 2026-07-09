@@ -2,29 +2,24 @@ function applyAdblock() {
 	if (window.__sc_adblock_installed) return;
 	window.__sc_adblock_installed = true;
 
-	const adDomains = ["adswizz.com", "doubleclick.net", "/ads"];
+	const domains = ["adswizz.com", "doubleclick.net", "/ads"];
 
-	const originalFetch = window.fetch;
+	const origFetch = window.fetch;
 	window.fetch = async function (...args) {
 		const url = typeof args[0] === "string" ? args[0] : args[0]?.url || "";
-		if (adDomains.some((domain) => url.includes(domain))) {
-			console.debug("[SClient] Blocked ad request (fetch):", url);
+		if (domains.some((d) => url.includes(d))) {
 			return new Response(JSON.stringify({}), {
 				status: 200,
 				statusText: "OK",
 				headers: new Headers({ "Content-Type": "application/json" }),
 			});
 		}
-		return originalFetch.apply(this, args);
+		return origFetch.apply(this, args);
 	};
 
-	const originalXhrOpen = XMLHttpRequest.prototype.open;
+	const origOpen = XMLHttpRequest.prototype.open;
 	XMLHttpRequest.prototype.open = function (method, url, ...rest) {
-		if (
-			typeof url === "string" &&
-			adDomains.some((domain) => url.includes(domain))
-		) {
-			console.debug("[SClient] Blocked ad request (xhr):", url);
+		if (typeof url === "string" && domains.some((d) => url.includes(d))) {
 			this.send = function () {
 				Object.defineProperty(this, "readyState", {
 					value: 4,
@@ -39,6 +34,6 @@ function applyAdblock() {
 				this.dispatchEvent(new Event("load"));
 			};
 		}
-		return originalXhrOpen.call(this, method, url, ...rest);
+		return origOpen.call(this, method, url, ...rest);
 	};
 }

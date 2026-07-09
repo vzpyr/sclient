@@ -1,6 +1,3 @@
-// unified scrobbling — subscribes to shared playback observer in core.js
-// handles both Last.fm and ListenBrainz from a single state machine.
-
 function updateStatus(elId, text, color) {
 	const el = document.getElementById(elId);
 	if (el) {
@@ -10,19 +7,14 @@ function updateStatus(elId, text, color) {
 }
 
 function setupScrobbling() {
-	// --- collect enabled backends ---
 	const backends = [];
 
-	if (
-		listenbrainzEnabled &&
-		listenbrainzToken &&
-		listenbrainzToken.length >= 10
-	) {
+	if (listenbrainzOn && listenbrainzToken && listenbrainzToken.length >= 10) {
 		backends.push({
-			statusElId: "sclient-listenbrainz-status",
-			authErrorCodes: new Set([401]),
+			elId: "sclient-listenbrainz-status",
+			authCodes: new Set([401]),
 			nowPlaying(artist, title) {
-				return sendBridgeMsg("submit_listenbrainz", {
+				return sendBridge("submit_listenbrainz", {
 					listen_type: "playing_now",
 					payload: [
 						{ track_metadata: { artist_name: artist, track_name: title } },
@@ -30,7 +22,7 @@ function setupScrobbling() {
 				});
 			},
 			scrobble(artist, title, timestamp) {
-				return sendBridgeMsg("submit_listenbrainz", {
+				return sendBridge("submit_listenbrainz", {
 					listen_type: "single",
 					payload: [
 						{
@@ -43,44 +35,35 @@ function setupScrobbling() {
 		});
 	}
 
-	if (lastfmEnabled && lastfmSessionKey) {
+	if (lastfmOn && lastfmSessionKey) {
 		backends.push({
-			statusElId: "sclient-lastfm-status",
-			authErrorCodes: new Set([4, 9, 14]),
+			elId: "sclient-lastfm-status",
+			authCodes: new Set([4, 9, 14]),
 			nowPlaying(artist, title) {
-				return sendBridgeMsg("lastfm_now_playing", { artist, title });
+				return sendBridge("lastfm_now_playing", { artist, title });
 			},
 			scrobble(artist, title, timestamp) {
-				return sendBridgeMsg("lastfm_scrobble", {
-					artist,
-					title,
-					timestamp,
-				});
+				return sendBridge("lastfm_scrobble", { artist, title, timestamp });
 			},
 		});
 	}
 
 	if (backends.length === 0) return;
 
-	// --- scrobbling state (shared across all backends) ---
 	let hasScrobbled = false;
 	let startTime = 0;
-	let scrobbleThreshold = 0;
-	let prevIsPlaying = false;
+	let threshold = 0;
+	let prevPlaying = false;
 
-	for (const b of backends) updateStatus(b.statusElId, "Waiting...", "#ccc");
+	for (const b of backends) updateStatus(b.elId, "Waiting...", "#ccc");
 
 	function broadcast(cmd, artist, title, timestamp) {
 		const method = cmd === "nowPlaying" ? "nowPlaying" : "scrobble";
 		for (const b of backends) {
 			b[method](artist, title, timestamp).then((result) => {
 				if (!result || !result.ok) {
-					if (result && b.authErrorCodes.has(result.code)) {
-						updateStatus(b.statusElId, "Auth Error", "#f55");
-					} else if (!result || result.code === 0) {
-						/* network error, keep current status */
-					} else {
-						updateStatus(b.statusElId, "Error", "#f55");
+					if (result && b.authCodes.has(result.code)) {
+						updateStatus(b.elId, "Auth Error", "#f55");
 					}
 				}
 			});
@@ -89,9 +72,8 @@ function setupScrobbling() {
 
 	onPlaybackChange((evt) => {
 		if (evt.type === "none") {
-			for (const b of backends)
-				updateStatus(b.statusElId, "Waiting...", "#ccc");
-			prevIsPlaying = false;
+			for (const b of backends) updateStatus(b.elId, "Waiting...", "#ccc");
+			prevPlaying = false;
 			return;
 		}
 
@@ -101,38 +83,33 @@ function setupScrobbling() {
 		if (evt.type === "track_start") {
 			hasScrobbled = false;
 			startTime = Math.floor(evt.timestamp / 1000);
-			scrobbleThreshold = evt.trackData
+			threshold = evt.trackData
 				? Math.min(evt.trackData.duration / 1000 / 2, 240)
 				: 0;
-
-			if (evt.isPlaying && artist && title) {
+			if (evt.isPlaying && artist && title)
 				broadcast("nowPlaying", artist, title);
-			}
-			prevIsPlaying = evt.isPlaying;
+			prevPlaying = evt.isPlaying;
 			return;
 		}
 
-		// tick — same track
-		if (evt.isPlaying && !prevIsPlaying && !hasScrobbled && artist && title) {
-			// resumed after pause
+		if (evt.isPlaying && !prevPlaying && !hasScrobbled && artist && title) {
 			broadcast("nowPlaying", artist, title);
 		}
 
 		if (evt.trackData && evt.isPlaying) {
 			const elapsed = Math.floor((evt.timestamp - startTime * 1000) / 1000);
-			if (!hasScrobbled && elapsed >= scrobbleThreshold) {
+			if (!hasScrobbled && elapsed >= threshold) {
 				broadcast("scrobble", artist, title, startTime);
 				hasScrobbled = true;
-				for (const b of backends)
-					updateStatus(b.statusElId, "Scrobbled!", "#5f5");
+				for (const b of backends) updateStatus(b.elId, "Scrobbled!", "#5f5");
 			}
 		} else if (!evt.isPlaying && evt.trackData) {
 			const status = hasScrobbled ? "Scrobbled!" : "Paused";
 			const color = hasScrobbled ? "#5f5" : "#f9a826";
-			for (const b of backends) updateStatus(b.statusElId, status, color);
+			for (const b of backends) updateStatus(b.elId, status, color);
 		}
 
-		prevIsPlaying = evt.isPlaying;
+		prevPlaying = evt.isPlaying;
 	});
 }
 

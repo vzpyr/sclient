@@ -6,8 +6,7 @@
   <name>SClient</name>
   <summary>Customizable cross-platform desktop client for SoundCloud</summary>
   <description>
-    <p>SClient is a beautiful, highly customizable, and feature-rich desktop client for SoundCloud. It bridges the gap between the web player and native desktop experiences by providing seamless integration with MPRIS, hardware media keys, and Discord Rich Presence.</p>
-    <p>Enjoy true ad-blocking, custom theming, and an untethered listening experience designed exclusively for SoundCloud enthusiasts.</p>
+    <p>Customizable cross-platform desktop client for SoundCloud</p>
   </description>
   <url type="homepage">https://github.com/</url>
   <developer id="com.vzpyr">

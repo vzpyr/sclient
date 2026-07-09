@@ -15,7 +15,7 @@ const config = require("./config");
 const ipc = require("./ipc");
 
 let tray = null;
-let mainWindow = null;
+let win = null;
 let isQuitting = false;
 
 app.name = "sclient";
@@ -24,41 +24,35 @@ app.on("before-quit", () => {
 });
 
 function createWindow() {
-	const hideDecorations = config.get("features.hide_decorations") === "true";
-	const activeAccount = config.getActiveAccount();
-
-	const partition =
-		activeAccount === "main" ? "persist:main" : `persist:${activeAccount}`;
+	const hideFrame = config.isEnabled("features.hide_decorations");
+	const account = config.getActiveAccount();
+	const partition = account === "main" ? "persist:main" : `persist:${account}`;
 	const ses = session.fromPartition(partition);
 
-	// expose for adblock toggle in ipc handlers
-	global._activeSession = ses;
-	global._blockerInstance = null;
+	global._session = ses;
+	global._blocker = null;
 
 	ElectronBlocker.fromPrebuiltAdsAndTracking(fetch)
 		.then((blocker) => {
-			global._blockerInstance = blocker;
-			if (config.adblockEnabled) {
-				blocker.enableBlockingInSession(ses);
-			}
+			global._blocker = blocker;
+			if (config.adblockEnabled) blocker.enableBlockingInSession(ses);
 		})
-		.catch((e) => {
-			console.error("[SClient] Failed to initialize adblocker:", e);
-		});
+		.catch((e) =>
+			console.error("[SClient] Failed to initialize adblocker:", e),
+		);
 
-	// strip electron/chromium from UA
-	const defaultUA = ses.getUserAgent();
-	const cleanUA = defaultUA
+	const cleanUA = ses
+		.getUserAgent()
 		.replace(/Electron\/\S+\s?/, "")
 		.replace(/sclient\/\S+\s?/, "")
 		.replace(/SClient\/\S+\s?/, "");
 	ses.setUserAgent(cleanUA);
 	app.userAgentFallback = cleanUA;
 
-	mainWindow = new BrowserWindow({
+	win = new BrowserWindow({
 		width: 1280,
 		height: 800,
-		frame: !hideDecorations,
+		frame: !hideFrame,
 		title: "SClient",
 		icon: path.join(__dirname, "..", "assets", "tray.png"),
 		webPreferences: {
@@ -68,21 +62,20 @@ function createWindow() {
 		},
 	});
 
-	mainWindow.setMenu(null);
+	win.setMenu(null);
+	win.on("page-title-updated", (e) => e.preventDefault());
 
-	mainWindow.on("page-title-updated", (e) => e.preventDefault());
-
-	mainWindow.webContents.on("before-input-event", (event, input) => {
+	win.webContents.on("before-input-event", (event, input) => {
 		if (input.key === "F12" && input.type === "keyDown") {
-			mainWindow.webContents.toggleDevTools();
+			win.webContents.toggleDevTools();
 			event.preventDefault();
 		}
 	});
 
-	mainWindow.loadURL("https://soundcloud.com");
+	win.loadURL("https://soundcloud.com");
 
-	mainWindow.webContents.on("dom-ready", () => {
-		const INJECT_FILES = [
+	win.webContents.on("dom-ready", () => {
+		const files = [
 			"core.js",
 			"accent.js",
 			"adblock.js",
@@ -97,11 +90,10 @@ function createWindow() {
 		];
 
 		const injectedDir = path.join(__dirname, "..", "injected");
-		let injectedJs = INJECT_FILES.map((file) =>
-			fs.readFileSync(path.join(injectedDir, file), "utf8"),
-		).join("\n");
+		const injectedJs = files
+			.map((f) => fs.readFileSync(path.join(injectedDir, f), "utf8"))
+			.join("\n");
 
-		// prepend Chart.js UMD
 		const chartPath = path.join(
 			__dirname,
 			"..",
@@ -110,24 +102,22 @@ function createWindow() {
 			"dist",
 			"chart.umd.js",
 		);
-		injectedJs = fs.readFileSync(chartPath, "utf8") + "\n" + injectedJs;
+		const chartJs = fs.readFileSync(chartPath, "utf8");
 
-		const configPayload = config.buildConfigPayload();
+		const payload = config.buildConfigPayload();
 
-		const wrapperJs = `
+		win.webContents.executeJavaScript(`
 (function() {
-    window.__SCLIENT_CONFIG__ = ${JSON.stringify(configPayload)};
-    ${injectedJs}
-})();`;
-
-		mainWindow.webContents.executeJavaScript(wrapperJs);
+  window.__SCLIENT_CONFIG__ = ${JSON.stringify(payload)};
+  ${chartJs}
+  ${injectedJs}
+})()`);
 	});
 
-	mainWindow.on("close", (e) => {
-		const trayEnabled = config.get("features.tray_icon") === "true";
-		if (!isQuitting && trayEnabled && tray) {
+	win.on("close", (e) => {
+		if (!isQuitting && config.isEnabled("features.tray_icon") && tray) {
 			e.preventDefault();
-			mainWindow.hide();
+			win.hide();
 		}
 	});
 }
@@ -135,56 +125,50 @@ function createWindow() {
 app.whenReady().then(async () => {
 	await components.whenReady();
 
-	// register IPC handlers
 	ipc.register({ ipcMain, session, app });
 
 	createWindow();
 
-	const trayEnabled = config.get("features.tray_icon") === "true";
-	if (trayEnabled) {
+	if (config.isEnabled("features.tray_icon")) {
 		try {
 			tray = new Tray(path.join(__dirname, "..", "assets", "tray.png"));
-			const contextMenu = Menu.buildFromTemplate([
-				{
-					label: "Show",
-					click: () => {
-						mainWindow.show();
-						mainWindow.focus();
-					},
-				},
-				{
-					label: "Previous",
-					click: () =>
-						mainWindow.webContents.executeJavaScript(
-							"document.querySelector('.skipControl__previous').click();",
-						),
-				},
-				{
-					label: "Pause/Resume",
-					click: () =>
-						mainWindow.webContents.executeJavaScript(
-							"document.querySelector('.playControl').click();",
-						),
-				},
-				{
-					label: "Next",
-					click: () =>
-						mainWindow.webContents.executeJavaScript(
-							"document.querySelector('.skipControl__next').click();",
-						),
-				},
-				{
-					label: "Exit",
-					click: () => {
-						app.quit();
-					},
-				},
-			]);
 			tray.setToolTip("SClient");
-			tray.setContextMenu(contextMenu);
+			tray.setContextMenu(
+				Menu.buildFromTemplate([
+					{
+						label: "Show",
+						click: () => {
+							win.show();
+							win.focus();
+						},
+					},
+					{
+						label: "Previous",
+						click: () =>
+							win.webContents.executeJavaScript(
+								"document.querySelector('.skipControl__previous').click()",
+							),
+					},
+					{
+						label: "Pause/Resume",
+						click: () =>
+							win.webContents.executeJavaScript(
+								"document.querySelector('.playControl').click()",
+							),
+					},
+					{
+						label: "Next",
+						click: () =>
+							win.webContents.executeJavaScript(
+								"document.querySelector('.skipControl__next').click()",
+							),
+					},
+					{ label: "Exit", click: () => app.quit() },
+				]),
+			);
 			tray.on("click", () => {
-				mainWindow.show();
-				mainWindow.focus();
+				win.show();
+				win.focus();
 			});
 		} catch (e) {
 			console.error("[SClient] Failed to create tray:", e);

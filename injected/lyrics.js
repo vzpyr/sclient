@@ -1,6 +1,6 @@
-let lyricsSidebarOpen = false;
-let currentLyricsTrack = "";
-let lastMediaSessionTrack = "";
+let lyricsOpen = false;
+let lyricsTrack = "";
+let lastTrack = "";
 
 function createLyricsSidebar() {
 	if (document.getElementById("sclient-lyrics-sidebar")) return;
@@ -29,26 +29,25 @@ function createLyricsSidebar() {
   `;
 
 	document.body.appendChild(sidebar);
-	void sidebar.offsetHeight;
 
 	document
 		.getElementById("sclient-lyrics-close-btn")
-		.addEventListener("click", toggleLyricsSidebar);
+		.addEventListener("click", toggleLyrics);
 }
 
-function toggleLyricsSidebar() {
+function toggleLyrics() {
 	createLyricsSidebar();
 	const sidebar = document.getElementById("sclient-lyrics-sidebar");
-	lyricsSidebarOpen = !lyricsSidebarOpen;
-	if (lyricsSidebarOpen) {
+	lyricsOpen = !lyricsOpen;
+	if (lyricsOpen) {
 		sidebar.style.left = "20px";
-		fetchAndUpdateLyrics();
+		fetchLyrics();
 	} else {
 		sidebar.style.left = "-400px";
 	}
 }
 
-function escapeHtml(str) {
+function esc(str) {
 	return String(str)
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
@@ -57,15 +56,14 @@ function escapeHtml(str) {
 }
 
 async function doFetch(artist, title) {
-	currentLyricsTrack = artist + " - " + title;
-	const trackKey = currentLyricsTrack;
+	lyricsTrack = artist + " - " + title;
+	const key = lyricsTrack;
 	const accent = getAccent();
-	const safeTitle = escapeHtml(title);
+	const safe = esc(title);
 
-	const contentDiv = document.getElementById("sclient-lyrics-content");
-	if (contentDiv) {
-		contentDiv.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safeTitle}</b>...</div>`;
-	}
+	const content = document.getElementById("sclient-lyrics-content");
+	if (content)
+		content.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safe}</b>...</div>`;
 
 	try {
 		const res = await fetch(
@@ -74,30 +72,28 @@ async function doFetch(artist, title) {
 		if (!res.ok) throw new Error("Not found");
 		const data = await res.json();
 
-		if (contentDiv && currentLyricsTrack === trackKey) {
+		if (content && lyricsTrack === key) {
 			if (data.plainLyrics) {
-				contentDiv.innerHTML = `<div style="font-weight:bold; margin-bottom: 15px; color:${accent};">${safeTitle}<br><span style="font-size:12px; font-weight:normal; color:#aaa;">${escapeHtml(artist)}</span></div>${escapeHtml(data.plainLyrics)}`;
+				content.innerHTML = `<div style="font-weight:bold; margin-bottom: 15px; color:${accent};">${safe}<br><span style="font-size:12px; font-weight:normal; color:#aaa;">${esc(artist)}</span></div>${esc(data.plainLyrics)}`;
 			} else {
-				renderManualSearch(artist, title);
+				renderManual(artist, title);
 			}
 		}
 	} catch (e) {
-		if (contentDiv && currentLyricsTrack === trackKey) {
-			renderManualSearch(artist, title);
-		}
+		if (content && lyricsTrack === key) renderManual(artist, title);
 	}
 }
 
-function renderManualSearch(artist, title) {
-	const contentDiv = document.getElementById("sclient-lyrics-content");
-	if (!contentDiv) return;
+function renderManual(artist, title) {
+	const content = document.getElementById("sclient-lyrics-content");
+	if (!content) return;
 
-	contentDiv.innerHTML = `
+	content.innerHTML = `
     <div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>
     <div style="margin-top: 15px; text-align: center;">
       <div style="margin-bottom: 8px; font-size: 12px; color: #aaa;">Try manually:</div>
-      <input type="text" id="sclient-lyrics-manual-artist" placeholder="Artist" value="${escapeHtml(artist)}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
-      <input type="text" id="sclient-lyrics-manual-title" placeholder="Title" value="${escapeHtml(title)}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
+      <input type="text" id="sclient-lyrics-manual-artist" placeholder="Artist" value="${esc(artist)}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
+      <input type="text" id="sclient-lyrics-manual-title" placeholder="Title" value="${esc(title)}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
       <button id="sclient-lyrics-manual-search" style="width: 90%; padding: 6px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; cursor: pointer; transition: background 0.2s;">Search</button>
     </div>
   `;
@@ -105,18 +101,14 @@ function renderManualSearch(artist, title) {
 	document
 		.getElementById("sclient-lyrics-manual-search")
 		.addEventListener("click", () => {
-			const newArtist = document.getElementById(
-				"sclient-lyrics-manual-artist",
-			).value;
-			const newTitle = document.getElementById(
-				"sclient-lyrics-manual-title",
-			).value;
-			if (newArtist && newTitle) doFetch(newArtist, newTitle);
+			const a = document.getElementById("sclient-lyrics-manual-artist").value;
+			const t = document.getElementById("sclient-lyrics-manual-title").value;
+			if (a && t) doFetch(a, t);
 		});
 }
 
-async function fetchAndUpdateLyrics() {
-	if (!lyricsSidebarOpen) return;
+async function fetchLyrics() {
+	if (!lyricsOpen) return;
 
 	let title = "";
 	let artist = "";
@@ -127,14 +119,14 @@ async function fetchAndUpdateLyrics() {
 
 	if (!title || !artist) return;
 
-	const trackKey = artist + " - " + title;
-	if (lastMediaSessionTrack === trackKey) return;
-	lastMediaSessionTrack = trackKey;
+	const key = artist + " - " + title;
+	if (lastTrack === key) return;
+	lastTrack = key;
 	doFetch(artist, title);
 }
 
 setInterval(() => {
-	if (lyricsSidebarOpen) fetchAndUpdateLyrics();
+	if (lyricsOpen) fetchLyrics();
 }, 2000);
 
 function injectLyricsButton() {
@@ -143,17 +135,18 @@ function injectLyricsButton() {
 	const dlBtn = document.getElementById("sclient-download-btn");
 	if (!dlBtn || !dlBtn.parentNode) return;
 
-	const lyricsBtn = document.createElement("button");
-	lyricsBtn.id = "sclient-lyrics-btn";
-	lyricsBtn.className =
+	const btn = document.createElement("button");
+	btn.id = "sclient-lyrics-btn";
+	btn.className =
 		"sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
-	lyricsBtn.title = "Lyrics";
-	lyricsBtn.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg></div>`;
+	btn.title = "Lyrics";
+	btn.innerHTML =
+		'<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg></div>';
 
-	lyricsBtn.addEventListener("click", (e) => {
+	btn.addEventListener("click", (e) => {
 		e.preventDefault();
-		toggleLyricsSidebar();
+		toggleLyrics();
 	});
 
-	dlBtn.parentNode.insertBefore(lyricsBtn, dlBtn);
+	dlBtn.parentNode.insertBefore(btn, dlBtn);
 }

@@ -1,9 +1,6 @@
-// accent color engine — replaces #f50 / #ff5500 in SC stylesheets
-// extracted from core.js so it's only loaded/run when the feature is enabled.
-
 function applyCustomAccentColor(newColor) {
-	const targetColors = ["#f50", "#ff5500"];
-	const processedNodes = new Set();
+	const targetHex = ["#f50", "#ff5500"];
+	const processed = new Set();
 
 	function hexToRgb(hex) {
 		let c = hex.substring(1).split("");
@@ -13,35 +10,36 @@ function applyCustomAccentColor(newColor) {
 	}
 	const rgbVal = hexToRgb(newColor);
 
-	async function processCssText(cssText, originalNode) {
+	async function processCss(cssText, originalNode) {
 		if (!cssText) return;
 		let modified = false;
-		let newCssText = cssText;
+		let newText = cssText;
 
-		for (const color of targetColors) {
+		for (const color of targetHex) {
 			const escaped = color.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-			const regex = new RegExp(escaped + "(?![a-fA-F0-9])", "gi");
-			if (regex.test(newCssText)) {
-				newCssText = newCssText.replace(regex, newColor);
+			const re = new RegExp(escaped + "(?![a-fA-F0-9])", "gi");
+			if (re.test(newText)) {
+				newText = newText.replace(re, newColor);
 				modified = true;
 			}
 		}
 
-		const rgbRegex = /rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi;
-		if (rgbRegex.test(newCssText)) {
-			newCssText = newCssText.replace(rgbRegex, `rgb(${rgbVal})`);
+		if (/rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi.test(newText)) {
+			newText = newText.replace(
+				/rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi,
+				`rgb(${rgbVal})`,
+			);
 			modified = true;
 		}
-		const rawRgbRegex = /255\s*,\s*85\s*,\s*0/gi;
-		if (rawRgbRegex.test(newCssText)) {
-			newCssText = newCssText.replace(rawRgbRegex, rgbVal);
+		if (/255\s*,\s*85\s*,\s*0/gi.test(newText)) {
+			newText = newText.replace(/255\s*,\s*85\s*,\s*0/gi, rgbVal);
 			modified = true;
 		}
 
 		if (modified) {
 			const style = document.createElement("style");
 			style.setAttribute("data-sc-custom-accent", "true");
-			style.textContent = newCssText;
+			style.textContent = newText;
 			if (originalNode && originalNode.parentNode) {
 				originalNode.parentNode.insertBefore(style, originalNode.nextSibling);
 			} else {
@@ -51,9 +49,9 @@ function applyCustomAccentColor(newColor) {
 	}
 
 	async function processNode(node) {
-		if (node.hasAttribute("data-sc-custom-accent") || processedNodes.has(node))
+		if (node.hasAttribute("data-sc-custom-accent") || processed.has(node))
 			return;
-		processedNodes.add(node);
+		processed.add(node);
 		try {
 			if (
 				node.tagName === "LINK" &&
@@ -61,41 +59,37 @@ function applyCustomAccentColor(newColor) {
 				node.href &&
 				node.href.includes("sndcdn.com")
 			) {
-				const cssText = await fetch(node.href).then((r) => r.text());
-				await processCssText(cssText, node);
+				const text = await fetch(node.href).then((r) => r.text());
+				await processCss(text, node);
 			} else if (node.tagName === "STYLE") {
-				await processCssText(node.textContent, node);
+				await processCss(node.textContent, node);
 			}
-		} catch (e) {
-			/* skip cross-origin or fetch failures */
-		}
+		} catch (e) {}
 	}
 
-	const processStyles = () => {
+	const run = () => {
 		document
 			.querySelectorAll('link[rel="stylesheet"], style')
 			.forEach(processNode);
 	};
 
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", processStyles);
-	} else {
-		processStyles();
-	}
+	if (document.readyState === "loading")
+		document.addEventListener("DOMContentLoaded", run);
+	else run();
 
 	const observer = new MutationObserver((mutations) => {
-		let shouldProcess = false;
+		let should = false;
 		for (const m of mutations) {
 			for (const node of m.addedNodes) {
 				if (
 					(node.tagName === "LINK" && node.rel === "stylesheet") ||
 					node.tagName === "STYLE"
 				) {
-					shouldProcess = true;
+					should = true;
 				}
 			}
 		}
-		if (shouldProcess) setTimeout(processStyles, 50);
+		if (should) setTimeout(run, 50);
 	});
 	observer.observe(document.documentElement, {
 		childList: true,

@@ -1,6 +1,3 @@
-// --- shared utils for all injected scripts ---
-
-// scrollbar + global overlay theme styles (always-on, not toggles)
 function injectStyle(id, css) {
 	if (document.getElementById(id)) return;
 	const style = document.createElement("style");
@@ -75,46 +72,44 @@ injectStyle(
 `,
 );
 
-// --- config from main process (flat payload — see main/config.js) ---
 const cfg = window.__SCLIENT_CONFIG__ || {};
-const customAccentEnabled = cfg.custom_accent || false;
+const customAccentOn = cfg.custom_accent || false;
 const accentColor = cfg.accent_color || "#FF0000";
-const lazyScrollEnabled = cfg.lazy_scroll || false;
-const hideDecorationsEnabled = cfg.hide_decorations || false;
-const wideLayoutEnabled = cfg.wide_layout || false;
+const lazyScrollOn = cfg.lazy_scroll || false;
+const hideDecorationsOn = cfg.hide_decorations || false;
+const wideLayoutOn = cfg.wide_layout || false;
 const wideLayoutWidth = cfg.wide_layout_width || "1200";
-const collapsibleSidebarEnabled = cfg.collapsible_sidebar || false;
-const oledDarkModeEnabled = cfg.oled_dark_mode || false;
+const collapsibleSidebarOn = cfg.collapsible_sidebar || false;
+const oledDarkOn = cfg.oled_dark_mode || false;
 const currentCss = cfg.css || "";
 const currentJs = cfg.js || "";
-const adblockEnabled = cfg.adblock || false;
-const trueShuffleEnabled = cfg.true_shuffle || false;
+const adblockOn = cfg.adblock || false;
+const trueShuffleOn = cfg.true_shuffle || false;
 const trueShuffleMode = cfg.true_shuffle_mode || "native";
-const discordRpcEnabled = cfg.discord_rpc || false;
-const hideUpsellEnabled = cfg.hide_upsell || false;
-const hideArtistsEnabled = cfg.hide_artists || false;
-const regionBypassEnabled = cfg.region_bypass || false;
+const discordRpcOn = cfg.discord_rpc || false;
+const hideUpsellOn = cfg.hide_upsell || false;
+const hideArtistsOn = cfg.hide_artists || false;
+const regionBypassOn = cfg.region_bypass || false;
 const proxyUrl = cfg.proxy_url || "";
-const enhancedHeaderEnabled = cfg.enhanced_header || false;
-const listenbrainzEnabled = cfg.listenbrainz || false;
+const enhancedHeaderOn = cfg.enhanced_header || false;
+const listenbrainzOn = cfg.listenbrainz || false;
 const listenbrainzToken = cfg.listenbrainz_token || "";
-const lastfmEnabled = cfg.lastfm || false;
+const lastfmOn = cfg.lastfm || false;
 const lastfmSessionKey = cfg.lastfm_session_key || "";
 const lastfmUsername = cfg.lastfm_username || "";
-const statsApiSyncEnabled = cfg.stats_api_sync || false;
-const statsLocalTrackingEnabled = cfg.stats_local_tracking || false;
-
-// --- helpers ---
+const statsApiOn = cfg.stats_api_sync || false;
+const statsLocalOn = cfg.stats_local_tracking || false;
 
 function getAccent() {
-	return customAccentEnabled ? accentColor : "#f50";
+	return customAccentOn ? accentColor : "#f50";
 }
 
-let _bridgeCid = 0;
+let bridgeIdCounter = 0;
 
-function sendBridgeMsg(cmd, args = {}) {
+function sendBridge(cmd, args = {}) {
 	return new Promise((resolve, reject) => {
-		const callbackId = cmd + "_" + ++_bridgeCid + "_" + Date.now();
+		const cid = cmd + "_" + ++bridgeIdCounter + "_" + Date.now();
+		let timeout;
 		const handler = (event) => {
 			if (
 				event.source !== window ||
@@ -122,7 +117,7 @@ function sendBridgeMsg(cmd, args = {}) {
 				event.data.source !== "sclient-bridge-reply"
 			)
 				return;
-			if (event.data.callbackId === callbackId) {
+			if (event.data.callbackId === cid) {
 				clearTimeout(timeout);
 				window.removeEventListener("message", handler);
 				if (event.data.success) resolve(event.data.result);
@@ -130,7 +125,7 @@ function sendBridgeMsg(cmd, args = {}) {
 			}
 		};
 		window.addEventListener("message", handler);
-		const timeout = setTimeout(() => {
+		timeout = setTimeout(() => {
 			window.removeEventListener("message", handler);
 			reject(new Error("Bridge timeout"));
 		}, 10000);
@@ -140,7 +135,7 @@ function sendBridgeMsg(cmd, args = {}) {
 				action: "invoke",
 				cmd,
 				args,
-				callbackId,
+				callbackId: cid,
 			},
 			"*",
 		);
@@ -160,77 +155,67 @@ function getArtistFromTrack(track) {
 }
 
 function extractClientId() {
-	const resources = performance.getEntriesByType("resource");
-	for (const r of resources) {
+	for (const r of performance.getEntriesByType("resource")) {
 		if (r.name.includes("client_id=")) {
 			try {
-				const url = new URL(r.name);
-				const cid = url.searchParams.get("client_id");
+				const cid = new URL(r.name).searchParams.get("client_id");
 				if (cid) return cid;
-			} catch (e) {
-				/* skip malformed URLs */
-			}
+			} catch (e) {}
 		}
 	}
 	return null;
 }
 
-// --- track data cache ---
+const trackCache = new Map();
 
-const _trackDataCache = new Map();
-
-async function fetchGodModeData(songUrl) {
-	if (_trackDataCache.has(songUrl)) return _trackDataCache.get(songUrl);
+async function fetchTrackData(songUrl) {
+	if (trackCache.has(songUrl)) return trackCache.get(songUrl);
 	const clientId = extractClientId();
 	if (!clientId) return null;
 	try {
-		const resolveUrl = `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`;
-		const res = await fetch(resolveUrl);
+		const res = await fetch(
+			`https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`,
+		);
 		if (!res.ok) return null;
 		const data = await res.json();
-		_trackDataCache.set(songUrl, data);
+		trackCache.set(songUrl, data);
 		return data;
 	} catch (e) {
 		return null;
 	}
 }
 
-// --- shared playback observer ---
-// single poll loop — scrobbler, stats, and rpc-bridge subscribe instead of
-// running their own independent setInterval loops.
+const playbackListeners = [];
+let playbackTimer = null;
+const PLAYBACK_SEL = ".playbackSoundBadge__titleLink";
+let currentSongUrl = null;
+let currentTrackData = null;
 
-const _playbackListeners = [];
-let _playbackTimer = null;
-const PLAYBACK_SELECTOR = ".playbackSoundBadge__titleLink";
-
-let _currentSongUrl = null;
-let _currentTrackData = null;
-
-function _parseTimeStr(str) {
+function parseTime(str) {
 	if (!str) return 0;
-	const match = str.match(/\d+:\d+(?::\d+)?/);
-	if (!match) return 0;
-	const parts = match[0].split(":").map(Number);
+	const m = str.match(/\d+:\d+(?::\d+)?/);
+	if (!m) return 0;
+	const parts = m[0].split(":").map(Number);
 	if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
 	if (parts.length === 2) return parts[0] * 60 + parts[1];
 	return 0;
 }
 
 function onPlaybackChange(cb) {
-	_playbackListeners.push(cb);
-	if (_playbackListeners.length === 1) {
-		_playbackTimer = setInterval(_pollPlayback, 2000);
+	playbackListeners.push(cb);
+	if (playbackListeners.length === 1) {
+		playbackTimer = setInterval(pollPlayback, 2000);
 	}
 }
 
-async function _pollPlayback() {
-	const titleLink = document.querySelector(PLAYBACK_SELECTOR);
+async function pollPlayback() {
+	const titleLink = document.querySelector(PLAYBACK_SEL);
 
 	if (!titleLink) {
-		if (_currentSongUrl !== null) {
-			_currentSongUrl = null;
-			_currentTrackData = null;
-			for (const cb of _playbackListeners) cb({ type: "none" });
+		if (currentSongUrl !== null) {
+			currentSongUrl = null;
+			currentTrackData = null;
+			for (const cb of playbackListeners) cb({ type: "none" });
 		}
 		return;
 	}
@@ -241,23 +226,23 @@ async function _pollPlayback() {
 		navigator.mediaSession.playbackState === "playing";
 	const now = Date.now();
 
-	const passedEl = document.querySelector(".playbackTimeline__timePassed");
-	const durationEl = document.querySelector(".playbackTimeline__duration");
-	const position = passedEl ? _parseTimeStr(passedEl.textContent) : 0;
-	const duration = durationEl ? _parseTimeStr(durationEl.textContent) : 0;
+	const passed = document.querySelector(".playbackTimeline__timePassed");
+	const dur = document.querySelector(".playbackTimeline__duration");
+	const position = passed ? parseTime(passed.textContent) : 0;
+	const duration = dur ? parseTime(dur.textContent) : 0;
 
 	let type = "tick";
-	if (songUrl !== _currentSongUrl) {
-		_currentSongUrl = songUrl;
-		_currentTrackData = await fetchGodModeData(songUrl);
+	if (songUrl !== currentSongUrl) {
+		currentSongUrl = songUrl;
+		currentTrackData = await fetchTrackData(songUrl);
 		type = "track_start";
 	}
 
-	for (const cb of _playbackListeners) {
+	for (const cb of playbackListeners) {
 		cb({
 			type,
 			songUrl,
-			trackData: _currentTrackData,
+			trackData: currentTrackData,
 			isPlaying,
 			timestamp: now,
 			position,
@@ -266,9 +251,7 @@ async function _pollPlayback() {
 	}
 }
 
-// --- ui helpers ---
-
-function customAlert(message) {
+function showToast(message) {
 	const toast = document.createElement("div");
 	toast.textContent = message;
 	const isLight = document.body.classList.contains("theme-light");
@@ -294,47 +277,53 @@ function customAlert(message) {
 	}, 3500);
 }
 
-function customConfirm(message) {
+function showConfirm(message) {
 	return new Promise((resolve) => {
-		const overlay = document.createElement("div");
-		overlay.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);`;
 		const isLight = document.body.classList.contains("theme-light");
 		const bg = isLight ? "#fff" : "#1e1e1e";
 		const textColor = isLight ? "#111" : "#fff";
 		const borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)";
+
+		const backdrop = document.createElement("div");
+		backdrop.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);`;
+
 		const modal = document.createElement("div");
 		modal.style.cssText = `background: ${bg}; color: ${textColor}; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid ${borderColor}; transform: scale(0.9); transition: transform 0.2s;`;
-		const msgDiv = document.createElement("div");
-		msgDiv.textContent = message;
-		msgDiv.style.cssText =
+
+		const msg = document.createElement("div");
+		msg.textContent = message;
+		msg.style.cssText =
 			"font-size: 16px; font-weight: 500; margin-bottom: 24px;";
-		modal.appendChild(msgDiv);
+		modal.appendChild(msg);
 
 		const btnRow = document.createElement("div");
 		btnRow.style.cssText = "display: flex; gap: 12px; justify-content: center;";
+
 		const cancelBtn = document.createElement("button");
-		cancelBtn.id = "sc-confirm-cancel";
 		cancelBtn.textContent = "Cancel";
 		cancelBtn.style.cssText = `padding: 8px 16px; background: transparent; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 6px; cursor: pointer; font-weight: 500;`;
+
 		const okBtn = document.createElement("button");
-		okBtn.id = "sc-confirm-ok";
 		okBtn.textContent = "Confirm";
 		okBtn.style.cssText =
 			"padding: 8px 16px; background: #d32f2f; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;";
+
 		btnRow.appendChild(cancelBtn);
 		btnRow.appendChild(okBtn);
 		modal.appendChild(btnRow);
-		overlay.appendChild(modal);
-		document.body.appendChild(overlay);
+		backdrop.appendChild(modal);
+		document.body.appendChild(backdrop);
+
 		requestAnimationFrame(() => {
-			overlay.style.opacity = "1";
+			backdrop.style.opacity = "1";
 			modal.style.transform = "scale(1)";
 		});
+
 		const cleanup = (res) => {
-			overlay.style.opacity = "0";
+			backdrop.style.opacity = "0";
 			modal.style.transform = "scale(0.9)";
 			setTimeout(() => {
-				overlay.remove();
+				backdrop.remove();
 				resolve(res);
 			}, 200);
 		};
@@ -342,8 +331,6 @@ function customConfirm(message) {
 		okBtn.onclick = () => cleanup(true);
 	});
 }
-
-// --- feature appliers ---
 
 function applyWideLayout() {
 	const width = wideLayoutWidth || "1200";
@@ -459,28 +446,27 @@ function setupLazyScroll() {
 	btn.id = "sclient-lazy-scroll";
 	btn.className = "sclient-floating-btn";
 	btn.style.bottom = "68px";
-	btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg>`;
+	btn.innerHTML =
+		'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg>';
 
 	let scrolling = false;
-	let scrollInterval = null;
+	let interval = null;
 
 	btn.addEventListener("click", () => {
 		scrolling = !scrolling;
 		if (scrolling) {
 			btn.classList.add("active");
-			scrollInterval = setInterval(
+			interval = setInterval(
 				() => window.scrollBy({ top: 300, behavior: "auto" }),
 				16,
 			);
 		} else {
 			btn.classList.remove("active");
-			clearInterval(scrollInterval);
+			clearInterval(interval);
 		}
 	});
 	document.body.appendChild(btn);
 }
-
-// --- keyboard shortcuts ---
 
 document.addEventListener("keydown", (e) => {
 	if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {

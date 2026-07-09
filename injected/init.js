@@ -1,40 +1,33 @@
-// ui bootstrap — injects buttons, icons, toggles, and sets up observer
-
-// --- settings button in nav menu ---
-
-function injectSClientMenuButton() {
+function injectMenuButton() {
 	if (document.getElementById("sclient-settings-btn")) return;
 
-	const targetMenu = document.querySelector(".header__right .header__navMenu");
-	if (!targetMenu || !targetMenu.parentNode) return;
+	const menu = document.querySelector(".header__right .header__navMenu");
+	if (!menu || !menu.parentNode) return;
 
-	const customNavMenu = document.createElement("ul");
-	customNavMenu.className = "header__navMenu sc-clearfix sc-list-nostyle left";
-	customNavMenu.style.marginRight = "10px";
+	const ul = document.createElement("ul");
+	ul.className = "header__navMenu sc-clearfix sc-list-nostyle left";
+	ul.style.marginRight = "10px";
 
-	const listItem = document.createElement("li");
-	const button = document.createElement("a");
-	button.id = "sclient-settings-btn";
-	button.href = "#";
-	button.className = "header__moreButton";
-	button.style.cssText =
+	const li = document.createElement("li");
+	const btn = document.createElement("a");
+	btn.id = "sclient-settings-btn";
+	btn.href = "#";
+	btn.className = "header__moreButton";
+	btn.style.cssText =
 		"display: flex; align-items: center; justify-content: center;";
-	button.title = "SClient Settings";
-	button.innerHTML = `<div class="header__moreButtonIcon" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;">
-    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
-  </div>`;
+	btn.title = "SClient Settings";
+	btn.innerHTML =
+		'<div class="header__moreButtonIcon" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></div>';
 
-	button.addEventListener("click", (e) => {
+	btn.addEventListener("click", (e) => {
 		e.preventDefault();
 		toggleOverlay();
 	});
 
-	listItem.appendChild(button);
-	customNavMenu.appendChild(listItem);
-	targetMenu.parentNode.insertBefore(customNavMenu, targetMenu);
+	li.appendChild(btn);
+	ul.appendChild(li);
+	menu.parentNode.insertBefore(ul, menu);
 }
-
-// --- sidebar toggle button ---
 
 function injectSidebarToggle() {
 	if (document.getElementById("sclient-sidebar-toggle")) return;
@@ -43,194 +36,173 @@ function injectSidebarToggle() {
 	btn.id = "sclient-sidebar-toggle";
 	btn.className = "sclient-floating-btn";
 	btn.title = "Toggle Sidebar";
-	btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
+
+	const openIcon =
+		'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>';
+	const closeIcon =
+		'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>';
+
+	btn.innerHTML = closeIcon;
 
 	btn.addEventListener("click", (e) => {
 		e.preventDefault();
 		document.body.classList.toggle("sclient-sidebar-open");
-		const isOpen = document.body.classList.contains("sclient-sidebar-open");
-		btn.classList.toggle("active", isOpen);
-		btn.style.right = isOpen ? "360px" : "20px";
-		btn.innerHTML = isOpen
-			? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>`
-			: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>`;
+		const open = document.body.classList.contains("sclient-sidebar-open");
+		btn.classList.toggle("active", open);
+		btn.style.right = open ? "360px" : "20px";
+		btn.innerHTML = open ? openIcon : closeIcon;
 	});
 
 	document.body.appendChild(btn);
 }
 
-// --- icon replacement helper ---
-
-const NAV_ICON_MAP = {
-	home: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
-	stream:
-		'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>',
-	library:
-		'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>',
-};
-
 function safeReplaceSvg(container, svgHtml) {
 	if (!container || container.querySelector(".sclient-svg-container")) return;
-	const nativeSvgs = container.querySelectorAll("svg");
-	nativeSvgs.forEach((svg) => {
-		svg.style.display = "none";
+	container.querySelectorAll("svg").forEach((s) => {
+		s.style.display = "none";
 	});
 	container.style.cssText =
 		"font-size: 0; line-height: 0; display: flex; align-items: center; justify-content: center;";
-	const customIcon = document.createElement("div");
-	customIcon.className = "sclient-svg-container";
-	customIcon.style.cssText =
+	const icon = document.createElement("div");
+	icon.className = "sclient-svg-container";
+	icon.style.cssText =
 		"display: flex; align-items: center; justify-content: center;";
-	customIcon.innerHTML = svgHtml;
-	container.appendChild(customIcon);
+	icon.innerHTML = svgHtml;
+	container.appendChild(icon);
 }
 
-function replaceNavTabsWithIcons() {
-	for (const [menuName, svg] of Object.entries(NAV_ICON_MAP)) {
-		const tab = document.querySelector(`a[data-menu-name="${menuName}"]`);
+function replaceNavIcons() {
+	const navIcons = {
+		home: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+		stream:
+			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1"/></svg>',
+		library:
+			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></svg>',
+	};
+
+	for (const [name, svg] of Object.entries(navIcons)) {
+		const tab = document.querySelector(`a[data-menu-name="${name}"]`);
 		if (tab) safeReplaceSvg(tab, svg);
 	}
 
-	// notification bell
-	const notifBtn = document.querySelector(
+	const notif = document.querySelector(
 		".header__userNavActivitiesButton .notificationIcon > div:first-child",
 	);
-	if (notifBtn) {
+	if (notif) {
 		safeReplaceSvg(
-			notifBtn,
+			notif,
 			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
 		);
-		notifBtn.title = "Notifications";
+		notif.title = "Notifications";
 	}
 
-	// messages
-	const msgBtn = document.querySelector(
+	const msg = document.querySelector(
 		".header__userNavMessagesButton .notificationIcon > div:first-child",
 	);
-	if (msgBtn) {
+	if (msg) {
 		safeReplaceSvg(
-			msgBtn,
+			msg,
 			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>',
 		);
-		msgBtn.title = "Messages";
+		msg.title = "Messages";
 	}
 
-	// user chevron
-	const userChevron = document.querySelector(
+	const chevron = document.querySelector(
 		".header__userNavUsernameButtonIcon > div:first-child",
 	);
-	if (userChevron) {
+	if (chevron)
 		safeReplaceSvg(
-			userChevron,
+			chevron,
 			'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
 		);
-	}
 
-	// more menu
-	const moreContainer = document.querySelector(
+	const more = document.querySelector(
 		"a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child",
 	);
-	if (moreContainer) {
+	if (more)
 		safeReplaceSvg(
-			moreContainer,
+			more,
 			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
 		);
-	}
 
-	// upload
-	const uploadTitle = document.querySelector(".uploadButton__title");
-	if (uploadTitle) {
+	const upload = document.querySelector(".uploadButton__title");
+	if (upload) {
 		safeReplaceSvg(
-			uploadTitle,
+			upload,
 			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>',
 		);
-		const uploadBtn = document.querySelector(".uploadButton");
-		if (uploadBtn) uploadBtn.title = "Upload";
+		const upBtn = document.querySelector(".uploadButton");
+		if (upBtn) upBtn.title = "Upload";
 	}
 
-	// artist studio
-	const artistBtn = document.querySelector(".header__forArtistsButton");
-	if (artistBtn) {
+	const artist = document.querySelector(".header__forArtistsButton");
+	if (artist) {
 		safeReplaceSvg(
-			artistBtn,
+			artist,
 			'<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>',
 		);
-		artistBtn.title = "Artist Studio";
+		artist.title = "Artist Studio";
 	}
 }
 
-// --- nav buttons (back/forward) ---
-
-function injectNavigationButtons() {
+function injectNavButtons() {
 	if (document.getElementById("sclient-nav-back-btn")) return;
 
-	const navMenu = document.querySelector(".header__navMenu");
-	if (!navMenu || !navMenu.firstChild) return;
+	const nav = document.querySelector(".header__navMenu");
+	if (!nav || !nav.firstChild) return;
 
-	function makeNavBtn(id, title, marginRight, svgPath, handler) {
+	function makeBtn(id, title, mr, path, handler) {
 		const li = document.createElement("li");
-		const btn = document.createElement("a");
-		btn.id = id;
-		btn.className = "header__navMenuItem";
-		if (id === "sclient-nav-back-btn") btn.classList.add("sc-mr-1x");
-		btn.title = title;
-		btn.style.cssText = `font-size: 0px; line-height: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; height: 46px; width: 30px; padding: 0; ${marginRight ? "margin-right: 10px;" : ""}`;
-		btn.innerHTML = `<div class="sclient-svg-container" style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${svgPath}"/></svg></div>`;
-		btn.addEventListener("click", (e) => {
+		const a = document.createElement("a");
+		a.id = id;
+		a.className = "header__navMenuItem";
+		if (id === "sclient-nav-back-btn") a.classList.add("sc-mr-1x");
+		a.title = title;
+		a.style.cssText = `font-size: 0px; line-height: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; height: 46px; width: 30px; padding: 0; ${mr ? "margin-right: 10px;" : ""}`;
+		a.innerHTML = `<div class="sclient-svg-container" style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></div>`;
+		a.addEventListener("click", (e) => {
 			e.preventDefault();
 			handler();
 		});
-		li.appendChild(btn);
+		li.appendChild(a);
 		return li;
 	}
 
-	const fwdLi = makeNavBtn(
-		"sclient-nav-fwd-btn",
-		"Forward",
-		true,
-		"m9 18 6-6-6-6",
-		() => window.history.forward(),
+	nav.insertBefore(
+		makeBtn("sclient-nav-fwd-btn", "Forward", true, "m9 18 6-6-6-6", () =>
+			window.history.forward(),
+		),
+		nav.firstChild,
 	);
-	const backLi = makeNavBtn(
-		"sclient-nav-back-btn",
-		"Back",
-		false,
-		"m15 18-6-6 6-6",
-		() => window.history.back(),
+	nav.insertBefore(
+		makeBtn("sclient-nav-back-btn", "Back", false, "m15 18-6-6 6-6", () =>
+			window.history.back(),
+		),
+		nav.firstChild,
 	);
-
-	navMenu.insertBefore(fwdLi, navMenu.firstChild);
-	navMenu.insertBefore(backLi, navMenu.firstChild);
 }
 
-// --- apply all features ---
-
-// baseline (always applied — not toggles)
 applyLayoutFixes();
 injectFloatingButtonStyles();
 injectStyle(
 	"sclient-player-fix",
 	`
-    .playControls__soundBadge { width: 40vw !important; min-width: 350px !important; max-width: 550px !important; flex: none !important; }
-    .playbackSoundBadge__titleContextContainer { max-width: none !important; flex: 1 !important; overflow: hidden !important; }
-    .playbackSoundBadge__actions { flex-shrink: 0 !important; }
-  `,
+  .playControls__soundBadge { width: 40vw !important; min-width: 350px !important; max-width: 550px !important; flex: none !important; }
+  .playbackSoundBadge__titleContextContainer { max-width: none !important; flex: 1 !important; overflow: hidden !important; }
+  .playbackSoundBadge__actions { flex-shrink: 0 !important; }
+`,
 );
 
-// features (toggle-gated)
 function applyFeatureStyles() {
-	if (lazyScrollEnabled) setupLazyScroll();
-
-	if (customAccentEnabled) applyCustomAccentColor(accentColor);
-
-	if (wideLayoutEnabled) applyWideLayout();
-
-	if (collapsibleSidebarEnabled) applyCollapsibleSidebar();
+	if (lazyScrollOn) setupLazyScroll();
+	if (customAccentOn) applyCustomAccentColor(accentColor);
+	if (wideLayoutOn) applyWideLayout();
+	if (collapsibleSidebarOn) applyCollapsibleSidebar();
 
 	applyLayoutFixes();
 	injectFloatingButtonStyles();
 
-	if (oledDarkModeEnabled) {
+	if (oledDarkOn) {
 		injectStyle(
 			"sclient-oled-dark-mode",
 			`
@@ -248,7 +220,6 @@ function applyFeatureStyles() {
     `,
 		);
 
-		// inject into iframes
 		setInterval(() => {
 			document.querySelectorAll("iframe").forEach((iframe) => {
 				try {
@@ -262,13 +233,13 @@ function applyFeatureStyles() {
 									.cloneNode(true),
 							);
 						}
-						let forceStyle = iframe.contentDocument.getElementById(
+						let fs = iframe.contentDocument.getElementById(
 							"sclient-oled-iframe-force",
 						);
-						if (!forceStyle) {
-							forceStyle = document.createElement("style");
-							forceStyle.id = "sclient-oled-iframe-force";
-							forceStyle.textContent = `
+						if (!fs) {
+							fs = document.createElement("style");
+							fs.id = "sclient-oled-iframe-force";
+							fs.textContent = `
                 :root, html, body {
                   --mui-palette-background-default: #000000 !important;
                   --background-surface-color: #000000 !important;
@@ -278,38 +249,32 @@ function applyFeatureStyles() {
                   --surface-color: #000000 !important;
                 }
               `;
-							iframe.contentDocument.head.appendChild(forceStyle);
+							iframe.contentDocument.head.appendChild(fs);
 						}
-						const isDark =
-							document.body && document.body.classList.contains("theme-dark");
-						forceStyle.disabled = !isDark;
+						fs.disabled = !(
+							document.body && document.body.classList.contains("theme-dark")
+						);
 					}
-				} catch (e) {
-					/* cross-origin iframe */
-				}
+				} catch (e) {}
 			});
 		}, 1000);
 	}
 
-	if (adblockEnabled) applyAdblock();
+	if (adblockOn) applyAdblock();
 
-	if (hideUpsellEnabled) {
+	if (hideUpsellOn)
 		injectStyle(
 			"sclient-hide-upsell",
 			".header__upsellWrapper { display: none !important; }",
 		);
-	}
 
-	if (hideArtistsEnabled) {
+	if (hideArtistsOn)
 		injectStyle(
 			"sclient-hide-artists",
 			".header__forArtistsButton, .sidebarModule:has(.sidebarModule__webiEmbeddedModule) { display: none !important; }",
 		);
-	}
 
-	// player fix
-
-	if (enhancedHeaderEnabled) {
+	if (enhancedHeaderOn) {
 		injectStyle(
 			"sclient-header-reorder",
 			`
@@ -330,56 +295,47 @@ function applyFeatureStyles() {
 		);
 	}
 
-	if (currentCss) {
-		injectStyle("sclient-custom-css", currentCss);
-	}
+	if (currentCss) injectStyle("sclient-custom-css", currentCss);
 
 	try {
 		if (currentJs) {
-			const runJs = () => {
-				const script = document.createElement("script");
-				script.textContent = currentJs;
-				document.body.appendChild(script);
+			const run = () => {
+				const s = document.createElement("script");
+				s.textContent = currentJs;
+				document.body.appendChild(s);
 			};
-			if (document.readyState === "loading") {
-				document.addEventListener("DOMContentLoaded", runJs);
-			} else {
-				runJs();
-			}
+			if (document.readyState === "loading")
+				document.addEventListener("DOMContentLoaded", run);
+			else run();
 		}
 	} catch (e) {
 		console.error("[SClient] Error executing custom JS:", e);
 	}
 }
 
-// --- mutation observer (debounced to avoid hammering DOM on every mutation) ---
-
-let _obsTimer = null;
-const _obsRun = () => {
-	injectSClientMenuButton();
+let obsTimer = null;
+const obsRun = () => {
+	injectMenuButton();
 	injectDownloadButton();
 	injectLyricsButton();
-	if (enhancedHeaderEnabled) {
-		replaceNavTabsWithIcons();
-		injectNavigationButtons();
+	if (enhancedHeaderOn) {
+		replaceNavIcons();
+		injectNavButtons();
 	}
-	if (collapsibleSidebarEnabled) {
-		injectSidebarToggle();
-	}
+	if (collapsibleSidebarOn) injectSidebarToggle();
 };
 
-const settingsObserver = new MutationObserver(() => {
-	clearTimeout(_obsTimer);
-	_obsTimer = setTimeout(_obsRun, 100);
+const observer = new MutationObserver(() => {
+	clearTimeout(obsTimer);
+	obsTimer = setTimeout(obsRun, 100);
 });
 
 if (document.readyState === "loading") {
-	document.addEventListener("DOMContentLoaded", () => {
-		settingsObserver.observe(document.body, { childList: true, subtree: true });
-	});
+	document.addEventListener("DOMContentLoaded", () =>
+		observer.observe(document.body, { childList: true, subtree: true }),
+	);
 } else {
-	settingsObserver.observe(document.body, { childList: true, subtree: true });
+	observer.observe(document.body, { childList: true, subtree: true });
 }
 
-// apply styles immediately (features that don't need observer)
 applyFeatureStyles();

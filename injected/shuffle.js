@@ -1,142 +1,108 @@
-// hydrate fetch
-const originalFetch = window.fetch;
+function resolveUrl(arg) {
+	if (typeof arg === "string") return arg;
+	if (arg instanceof URL) return arg.href;
+	if (arg && arg.url) return arg.url;
+	return "";
+}
+
+const origFetch = window.fetch;
 window.fetch = async function (...args) {
-	let url = "";
-	if (typeof args[0] === "string") {
-		url = args[0];
-	} else if (args[0] instanceof URL) {
-		url = args[0].href;
-	} else if (args[0] && args[0].url) {
-		url = args[0].url;
-	}
+	const url = resolveUrl(args[0]);
 
 	if (
-		trueShuffleEnabled &&
+		trueShuffleOn &&
 		url &&
-		typeof url === "string" &&
 		url.includes("api-v2.soundcloud.com/playlists/") &&
 		url.includes("representation=full")
 	) {
 		try {
-			const response = await originalFetch.apply(this, args);
+			const response = await origFetch.apply(this, args);
 			const clone = response.clone();
 			const data = await clone.json();
 
 			if (data && data.tracks && Array.isArray(data.tracks)) {
-				const stubIds = [];
-				data.tracks.forEach((track, index) => {
-					if (!track.title && track.id) {
-						stubIds.push(track.id);
-					}
-				});
+				const stubIds = data.tracks
+					.filter((t) => !t.title && t.id)
+					.map((t) => t.id);
 
 				if (stubIds.length > 0) {
-					const urlObj = new URL(url);
-					const clientId = urlObj.searchParams.get("client_id");
-
+					const clientId = new URL(url).searchParams.get("client_id");
 					if (clientId) {
-						const chunkSize = 50;
-						const hydrationPromises = [];
-
-						for (let i = 0; i < stubIds.length; i += chunkSize) {
-							const chunk = stubIds.slice(i, i + chunkSize);
-							const hydrateUrl = `https://api-v2.soundcloud.com/tracks?ids=${chunk.join(",")}&client_id=${clientId}`;
-							hydrationPromises.push(
+						const chunks = [];
+						for (let i = 0; i < stubIds.length; i += 50) {
+							chunks.push(
 								window
-									.fetch(hydrateUrl)
-									.then((res) => res.json())
-									.catch((e) => {
-										console.error("[SClient] Hydration chunk failed:", e);
-										return [];
-									}),
+									.fetch(
+										`https://api-v2.soundcloud.com/tracks?ids=${stubIds.slice(i, i + 50).join(",")}&client_id=${clientId}`,
+									)
+									.then((r) => r.json())
+									.catch(() => []),
 							);
 						}
-
-						const hydratedChunks = await Promise.all(hydrationPromises);
-						const hydratedTracksMap = {};
-						hydratedChunks.forEach((chunkTracks) => {
-							if (Array.isArray(chunkTracks)) {
-								chunkTracks.forEach((t) => {
-									hydratedTracksMap[t.id] = t;
+						const results = await Promise.all(chunks);
+						const map = {};
+						results.forEach((arr) => {
+							if (Array.isArray(arr))
+								arr.forEach((t) => {
+									map[t.id] = t;
 								});
-							}
 						});
 
-						data.tracks = data.tracks.map((track) => {
-							if (!track.title && hydratedTracksMap[track.id]) {
-								return hydratedTracksMap[track.id];
-							}
-							return track;
-						});
-
-						console.log("[SClient] Playlist hydration complete.");
-						return new Response(JSON.stringify(data), {
-							status: response.status,
-							statusText: response.statusText,
-							headers: response.headers,
-						});
+						data.tracks = data.tracks.map((t) =>
+							!t.title && map[t.id] ? map[t.id] : t,
+						);
 					}
 				}
 			}
-			return response;
+			return new Response(JSON.stringify(data), {
+				status: response.status,
+				statusText: response.statusText,
+				headers: response.headers,
+			});
 		} catch (e) {
 			console.error("[SClient] Fetch interception error:", e);
-			return originalFetch.apply(this, args);
+			return origFetch.apply(this, args);
 		}
 	}
 
-	return originalFetch.apply(this, args);
+	return origFetch.apply(this, args);
 };
 
-// hydrate xhr
 const origOpen = XMLHttpRequest.prototype.open;
 const origSend = XMLHttpRequest.prototype.send;
-const origSetReqHeader = XMLHttpRequest.prototype.setRequestHeader;
+const origSetHeader = XMLHttpRequest.prototype.setRequestHeader;
 
 XMLHttpRequest.prototype.open = function (method, url) {
-	let finalUrl = "";
-	if (typeof url === "string") {
-		finalUrl = url;
-	} else if (url instanceof URL) {
-		finalUrl = url.href;
-	}
-
+	const finalUrl = resolveUrl(url);
 	this._scMethod = method;
 	this._scUrl = finalUrl;
 	this._scHeaders = {};
-
-	const newArgs = Array.prototype.slice.call(arguments);
-	newArgs[1] = finalUrl;
-	return origOpen.apply(this, newArgs);
+	return origOpen.call(this, method, finalUrl);
 };
 
 XMLHttpRequest.prototype.setRequestHeader = function (header, value) {
 	this._scHeaders[header] = value;
-	return origSetReqHeader.apply(this, arguments);
+	return origSetHeader.call(this, header, value);
 };
 
 XMLHttpRequest.prototype.send = function (body) {
 	if (
-		trueShuffleEnabled &&
+		trueShuffleOn &&
 		this._scUrl &&
-		typeof this._scUrl === "string" &&
 		this._scUrl.includes("api-v2.soundcloud.com/playlists/") &&
 		this._scUrl.includes("representation=full")
 	) {
-		console.log("[SClient] Intercepting XHR playlist request.");
-
 		fetch(this._scUrl, {
 			method: this._scMethod,
 			headers: this._scHeaders,
-			body: body,
+			body,
 		})
-			.then((res) => res.json())
+			.then((r) => r.json())
 			.then(async (data) => {
 				if (data && data.tracks && Array.isArray(data.tracks)) {
-					const stubIds = [];
-					data.tracks.forEach((t) => {
-						if (!t.title && t.id) stubIds.push(t.id);
-					});
+					const stubIds = data.tracks
+						.filter((t) => !t.title && t.id)
+						.map((t) => t.id);
 
 					if (stubIds.length > 0) {
 						const clientId = new URL(
@@ -144,61 +110,50 @@ XMLHttpRequest.prototype.send = function (body) {
 							window.location.origin,
 						).searchParams.get("client_id");
 						if (clientId) {
-							const chunkSize = 50;
-							const promises = [];
-							for (let i = 0; i < stubIds.length; i += chunkSize) {
-								const chunk = stubIds.slice(i, i + chunkSize);
-								promises.push(
+							const chunks = [];
+							for (let i = 0; i < stubIds.length; i += 50) {
+								chunks.push(
 									fetch(
-										`https://api-v2.soundcloud.com/tracks?ids=${chunk.join(",")}&client_id=${clientId}`,
+										`https://api-v2.soundcloud.com/tracks?ids=${stubIds.slice(i, i + 50).join(",")}&client_id=${clientId}`,
 									)
 										.then((r) => r.json())
-										.catch((e) => {
-											console.error("[SClient] XHR hydration chunk failed:", e);
-											return [];
-										}),
+										.catch(() => []),
 								);
 							}
-
-							const hydratedChunks = await Promise.all(promises);
+							const results = await Promise.all(chunks);
 							const map = {};
-							hydratedChunks.forEach(
-								(c) => Array.isArray(c) && c.forEach((t) => (map[t.id] = t)),
-							);
-
+							results.forEach((arr) => {
+								if (Array.isArray(arr))
+									arr.forEach((t) => {
+										map[t.id] = t;
+									});
+							});
 							data.tracks = data.tracks.map((t) =>
 								!t.title && map[t.id] ? map[t.id] : t,
 							);
-							console.log("[SClient] XHR Playlist hydration complete.");
 						}
 					}
 				}
 
-				// shuffle memory
 				if (
-					trueShuffleEnabled &&
+					trueShuffleOn &&
 					trueShuffleMode === "api" &&
+					data.tracks &&
 					data.tracks.length > 1
 				) {
 					for (let i = data.tracks.length - 1; i > 0; i--) {
 						const j = Math.floor(Math.random() * (i + 1));
 						[data.tracks[i], data.tracks[j]] = [data.tracks[j], data.tracks[i]];
 					}
-					console.log(
-						`[SClient] True Shuffle randomized ${data.tracks.length} tracks in memory.`,
-					);
 				}
 
-				const hydratedText = JSON.stringify(data);
+				const text = JSON.stringify(data);
 
-				Object.defineProperty(this, "responseText", {
-					get: () => hydratedText,
-				});
-				Object.defineProperty(this, "response", { get: () => hydratedText });
+				Object.defineProperty(this, "responseText", { get: () => text });
+				Object.defineProperty(this, "response", { get: () => text });
 				Object.defineProperty(this, "readyState", { get: () => 4 });
 				Object.defineProperty(this, "status", { get: () => 200 });
 				Object.defineProperty(this, "statusText", { get: () => "OK" });
-
 				Object.defineProperty(this, "getAllResponseHeaders", {
 					value: () => "content-type: application/json; charset=utf-8\r\n",
 				});
@@ -211,40 +166,33 @@ XMLHttpRequest.prototype.send = function (body) {
 
 				if (this.onreadystatechange) this.onreadystatechange();
 				this.dispatchEvent(new Event("readystatechange"));
-
 				if (this.onload) this.onload();
 				this.dispatchEvent(new Event("load"));
-
 				if (this.onloadend) this.onloadend();
 				this.dispatchEvent(new Event("loadend"));
 			})
 			.catch((err) => {
-				console.error("[SClient] XHR Hydration failed, falling back:", err);
+				console.error("[SClient] XHR Hydration failed:", err);
 				origSend.call(this, body);
 			});
-
 		return;
 	}
-
-	return origSend.apply(this, arguments);
+	return origSend.call(this, body);
 };
 
-// load queue
 async function forceLoadQueue() {
 	const queueBtn = document.querySelector(".playbackSoundBadge__showQueue");
 	if (!queueBtn) return;
 
-	const queueContainer = document.querySelector(
+	const queueOpen = !!document.querySelector(
 		".playControls__queue .queue.m-visible",
 	);
-	const wasOpen = !!queueContainer;
 
-	// stop auto radio
-	const styleNode = document.createElement("style");
-	styleNode.textContent = `.queue__fallback { display: none !important; }`;
-	document.head.appendChild(styleNode);
+	const hideFallback = document.createElement("style");
+	hideFallback.textContent = ".queue__fallback { display: none !important; }";
+	document.head.appendChild(hideFallback);
 
-	if (!wasOpen) {
+	if (!queueOpen) {
 		queueBtn.click();
 		await new Promise((r) => setTimeout(r, 250));
 	}
@@ -257,12 +205,11 @@ async function forceLoadQueue() {
 	}
 
 	if (scrollable) {
-		let sameCount = 0;
-		let blankCount = 0;
+		let same = 0;
+		let blank = 0;
 		let lastTransform = "";
 
-		while (true) {
-			// bypass bot check
+		for (;;) {
 			const rect = scrollable.getBoundingClientRect();
 			scrollable.dispatchEvent(
 				new WheelEvent("wheel", {
@@ -276,61 +223,47 @@ async function forceLoadQueue() {
 
 			await new Promise((r) => setTimeout(r, 80));
 
-			const newItems = document.querySelectorAll(
+			const items = document.querySelectorAll(
 				".queue__itemWrapper:not(.queue__fallback)",
 			);
-			if (newItems.length === 0) {
-				blankCount++;
-				if (blankCount > 10) break;
+			if (items.length === 0) {
+				blank++;
+				if (blank > 10) break;
 				await new Promise((r) => setTimeout(r, 100));
 				continue;
 			}
-			blankCount = 0;
+			blank = 0;
 
-			const newLastItem = newItems[newItems.length - 1];
-			const currentTransform = newLastItem.style.transform;
-
-			if (currentTransform === lastTransform) {
-				sameCount++;
-				if (sameCount === 4) await new Promise((r) => setTimeout(r, 400));
-				if (sameCount > 8) break;
+			const transform = items[items.length - 1].style.transform;
+			if (transform === lastTransform) {
+				same++;
+				if (same === 4) await new Promise((r) => setTimeout(r, 400));
+				if (same > 8) break;
 			} else {
-				sameCount = 0;
+				same = 0;
 			}
-			lastTransform = currentTransform;
+			lastTransform = transform;
 		}
 	}
 
 	await new Promise((r) => setTimeout(r, 400));
-
-	if (!wasOpen) {
-		queueBtn.click();
-	}
-	if (styleNode.parentNode) styleNode.remove();
+	if (!queueOpen) queueBtn.click();
+	if (hideFallback.parentNode) hideFallback.remove();
 }
 
-// catch shuffle click
 window.addEventListener(
 	"click",
 	async (e) => {
-		if (!trueShuffleEnabled || trueShuffleMode !== "native" || !e.isTrusted)
-			return;
+		if (!trueShuffleOn || trueShuffleMode !== "native" || !e.isTrusted) return;
 
 		const shuffleBtn = e.target.closest(".shuffleControl");
-		if (shuffleBtn) {
-			const isTurningOn = !shuffleBtn.classList.contains("m-shuffling");
-
-			if (isTurningOn) {
-				e.preventDefault();
-				e.stopPropagation();
-				e.stopImmediatePropagation();
-
-				customAlert("True Shuffle (Native Mode): Loading full playlist...");
-
-				await forceLoadQueue();
-
-				shuffleBtn.click();
-			}
+		if (shuffleBtn && !shuffleBtn.classList.contains("m-shuffling")) {
+			e.preventDefault();
+			e.stopPropagation();
+			e.stopImmediatePropagation();
+			showToast("True Shuffle (Native Mode): Loading full playlist...");
+			await forceLoadQueue();
+			shuffleBtn.click();
 		}
 	},
 	true,

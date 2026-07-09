@@ -12,9 +12,9 @@ try {
 const DB_PATH = path.join(config.CONFIG_DIR, "stats.db");
 
 let db = null;
-let syncInterval = null;
+let syncTimer = null;
 let syncing = false;
-let recordStmt = null;
+let insertStmt = null;
 const credentials = { clientId: null, oauthToken: null };
 
 function getDb() {
@@ -35,11 +35,11 @@ function getDb() {
 		const cols = db.pragma("table_info(listens)");
 		if (!cols.some((c) => c.name === "source")) {
 			db.exec(
-				`ALTER TABLE listens ADD COLUMN source TEXT NOT NULL DEFAULT 'api'`,
+				"ALTER TABLE listens ADD COLUMN source TEXT NOT NULL DEFAULT 'api'",
 			);
 		}
 		db.exec(
-			`CREATE INDEX IF NOT EXISTS idx_listens_played_at ON listens(played_at)`,
+			"CREATE INDEX IF NOT EXISTS idx_listens_played_at ON listens(played_at)",
 		);
 		return db;
 	} catch (e) {
@@ -49,10 +49,12 @@ function getDb() {
 }
 
 async function syncPlayHistory() {
-	if (!config.statsApiSyncEnabled) return;
-	if (!credentials.clientId || !credentials.oauthToken) return;
-	if (!Database) return;
-
+	if (
+		!config.statsApiSyncEnabled ||
+		!credentials.clientId ||
+		!credentials.oauthToken
+	)
+		return;
 	const database = getDb();
 	if (!database || syncing) return;
 	syncing = true;
@@ -62,18 +64,12 @@ async function syncPlayHistory() {
 			"INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)",
 		);
 		const insertMany = database.transaction((entries) => {
-			for (const entry of entries) {
-				insert.run(
-					entry.played_at,
-					entry.track_id,
-					JSON.stringify(entry.track),
-					"api",
-				);
-			}
+			for (const e of entries)
+				insert.run(e.played_at, e.track_id, JSON.stringify(e.track), "api");
 		});
 
 		let url = `https://api-v2.soundcloud.com/me/play-history/tracks?client_id=${credentials.clientId}&limit=50&linked_partitioning=1&app_version=1782999645&app_locale=en`;
-		let totalInserted = 0;
+		let total = 0;
 
 		while (url) {
 			const res = await fetch(url, {
@@ -81,10 +77,7 @@ async function syncPlayHistory() {
 			});
 			if (!res.ok) {
 				const body = await res.text();
-				console.error(
-					"[SClient] Stats sync HTTP error body:",
-					body.slice(0, 200),
-				);
+				console.error("[SClient] Stats sync HTTP error:", body.slice(0, 200));
 				break;
 			}
 			const data = await res.json();
@@ -95,13 +88,12 @@ async function syncPlayHistory() {
 					track: e.track,
 				}));
 				insertMany(entries);
-				totalInserted += entries.length;
+				total += entries.length;
 			}
 			url = data.next_href || null;
 		}
-		if (totalInserted > 0) {
-			console.log(`[SClient] Stats sync done — ${totalInserted} new entries.`);
-		}
+		if (total > 0)
+			console.log(`[SClient] Stats sync done — ${total} new entries.`);
 	} catch (e) {
 		console.error("[SClient] Stats sync error:", e);
 	} finally {
@@ -113,33 +105,28 @@ function storeCredentials(clientId, oauthToken) {
 	credentials.clientId = clientId;
 	credentials.oauthToken = oauthToken;
 	syncPlayHistory();
-	if (syncInterval) clearInterval(syncInterval);
-	syncInterval = setInterval(
-		() => {
-			if (config.statsApiSyncEnabled) syncPlayHistory();
-		},
-		2 * 60 * 60 * 1000,
-	);
+	if (syncTimer) clearInterval(syncTimer);
+	syncTimer = setInterval(() => {
+		if (config.statsApiSyncEnabled) syncPlayHistory();
+	}, 7200000);
 }
 
 function recordListen(playedAt, trackId, track) {
-	if (!Database) return;
 	const database = getDb();
 	if (!database) return;
 	try {
-		if (!recordStmt) {
-			recordStmt = database.prepare(
+		if (!insertStmt) {
+			insertStmt = database.prepare(
 				"INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)",
 			);
 		}
-		recordStmt.run(playedAt, trackId, JSON.stringify(track), "local");
+		insertStmt.run(playedAt, trackId, JSON.stringify(track), "local");
 	} catch (e) {
 		console.error("[SClient] Stats record error:", e);
 	}
 }
 
 function getData(source) {
-	if (!Database) return [];
 	const database = getDb();
 	if (!database) return [];
 	try {
@@ -158,7 +145,6 @@ function getData(source) {
 }
 
 function wipeDb() {
-	if (!Database) return;
 	const database = getDb();
 	if (!database) return;
 	try {

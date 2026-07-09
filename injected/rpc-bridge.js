@@ -1,13 +1,13 @@
-// Discord RPC bridge — subscribes to shared playback observer in core.js
-
 function setupDiscordRpc() {
-	if (!discordRpcEnabled) return;
+	if (!discordRpcOn) return;
 
-	let lastTitle = "";
-	let lastArtist = "";
-	let lastIsPlaying = false;
-	let lastArtwork = "";
-	let lastTimeStart = 0;
+	let last = {
+		title: "",
+		artist: "",
+		playing: false,
+		artwork: "",
+		timeStart: 0,
+	};
 
 	onPlaybackChange((evt) => {
 		if (evt.type === "none") return;
@@ -20,41 +20,34 @@ function setupDiscordRpc() {
 			const artist = evt.trackData
 				? getArtistFromTrack(evt.trackData)
 				: meta.artist || "";
-			const isPlaying = evt.isPlaying;
+			const playing = evt.isPlaying;
 
-			const artworkArr = meta.artwork;
 			let artwork = "";
-			if (artworkArr && artworkArr.length > 0) {
-				artwork = artworkArr[artworkArr.length - 1].src;
-			}
+			const art = meta.artwork;
+			if (art && art.length > 0) artwork = art[art.length - 1].src;
 
 			let timeStart = 0;
 			let timeEnd = 0;
-			if (isPlaying) {
+			if (playing) {
 				timeStart = Math.floor(evt.timestamp - evt.position * 1000);
 				if (evt.duration > 0)
 					timeEnd = Math.floor(timeStart + evt.duration * 1000);
 			}
 
-			const timeDrift = Math.abs(timeStart - lastTimeStart);
-
+			const drift = Math.abs(timeStart - last.timeStart);
 			const changed =
-				title !== lastTitle ||
-				artist !== lastArtist ||
-				isPlaying !== lastIsPlaying ||
-				artwork !== lastArtwork ||
-				(isPlaying && timeDrift > 2000);
+				title !== last.title ||
+				artist !== last.artist ||
+				playing !== last.playing ||
+				artwork !== last.artwork ||
+				(playing && drift > 2000);
 
 			if (changed) {
-				lastTitle = title;
-				lastArtist = artist;
-				lastIsPlaying = isPlaying;
-				lastArtwork = artwork;
-				lastTimeStart = timeStart;
-				sendBridgeMsg("update_rpc", {
+				last = { title, artist, playing, artwork, timeStart };
+				sendBridge("update_rpc", {
 					title,
 					artist,
-					isPlaying,
+					isPlaying: playing,
 					artwork,
 					timeStart,
 					timeEnd,

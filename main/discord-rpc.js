@@ -2,8 +2,8 @@ const { Client, StatusDisplayType } = require("@xhayper/discord-rpc");
 
 const CLIENT_ID = "1520494903954637072";
 
-let rpcClient = null;
-let loginPromise = null;
+let rpc = null;
+let login = null;
 
 async function updateRpc({
 	title,
@@ -14,22 +14,22 @@ async function updateRpc({
 	timeEnd,
 	songUrl,
 }) {
-	if (!rpcClient) {
-		rpcClient = new Client({ clientId: CLIENT_ID, transport: { type: "ipc" } });
-		loginPromise = rpcClient.login().catch((e) => {
+	if (!rpc) {
+		rpc = new Client({ clientId: CLIENT_ID, transport: { type: "ipc" } });
+		login = rpc.login().catch((e) => {
 			console.error("[SClient] RPC Login failed:", e);
-			rpcClient = null;
-			loginPromise = null;
+			rpc = null;
+			login = null;
 		});
 	}
 
-	if (loginPromise) await loginPromise;
+	if (login) await login;
 
 	if (!isPlaying || !title) {
-		if (rpcClient && rpcClient.user) {
-			rpcClient.user.clearActivity().catch((e) => {
-				console.error("[SClient] RPC clear activity failed:", e);
-			});
+		if (rpc && rpc.user) {
+			rpc.user
+				.clearActivity()
+				.catch((e) => console.error("[SClient] RPC clear activity failed:", e));
 		}
 		return;
 	}
@@ -54,10 +54,10 @@ async function updateRpc({
 		activity.endTimestamp = Math.floor(timeEnd / 1000) * 1000;
 	}
 
-	if (rpcClient && rpcClient.user) {
-		rpcClient.user.setActivity(activity).catch((e) => {
-			console.error("[SClient] RPC set activity failed:", e);
-		});
+	if (rpc && rpc.user) {
+		rpc.user
+			.setActivity(activity)
+			.catch((e) => console.error("[SClient] RPC set activity failed:", e));
 	}
 }
 
