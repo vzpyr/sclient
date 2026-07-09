@@ -1,25 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2026 vzpyr -->
+<!-- https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines -->
 <component type="desktop-application">
   <id>com.vzpyr.sclient</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>SClient</name>
   <summary>Customizable cross-platform desktop client for SoundCloud</summary>
-  <description>
-    <p>Customizable cross-platform desktop client for SoundCloud</p>
-  </description>
-  <url type="homepage">https://github.com/</url>
   <developer id="com.vzpyr">
     <name>vzpyr</name>
   </developer>
+  <description>
+    <p>Customizable cross-platform desktop client for SoundCloud</p>
+  </description>
+  <launchable type="desktop-id">com.vzpyr.sclient.desktop</launchable>
   <categories>
     <category>AudioVideo</category>
     <category>Audio</category>
-    <category>Player</category>
   </categories>
-  <launchable type="desktop-id">com.vzpyr.sclient.desktop</launchable>
-  <releases>
-    <release version="0.1.2" date="2026-07-04"/>
-  </releases>
+  <branding>
+    <color type="primary" scheme_preference="light">#ff5500</color>
+    <color type="primary" scheme_preference="dark">#ff5500</color>
+  </branding>
   <content_rating type="oars-1.1"/>
+  <url type="vcs-browser">https://github.com/vzpyr/sclient</url>
+  <releases>
+    <release version="0.1.0" date="2026-07-09"/>
+  </releases>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
 </component>
