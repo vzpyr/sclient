@@ -7,7 +7,8 @@
   "scripts": {
     "start": "electron .",
     "build:linux": "electron-builder --linux",
-    "build:win": "electron-builder --windows"
+    "build:win": "electron-builder --windows",
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.vzpyr.sclient",
