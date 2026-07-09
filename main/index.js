@@ -24,7 +24,7 @@ app.on("before-quit", () => {
 });
 
 function createWindow() {
-	const hideDecorations = config.get("hide_decorations") === "true";
+	const hideDecorations = config.get("features.hide_decorations") === "true";
 	const activeAccount = config.getActiveAccount();
 
 	const partition =
@@ -80,6 +80,7 @@ function createWindow() {
 	mainWindow.webContents.on("dom-ready", () => {
 		const INJECT_FILES = [
 			"core.js",
+			"accent.js",
 			"adblock.js",
 			"shuffle.js",
 			"rpc-bridge.js",
@@ -119,7 +120,7 @@ function createWindow() {
 	});
 
 	mainWindow.on("close", (e) => {
-		const trayEnabled = config.get("tray_icon") === "true";
+		const trayEnabled = config.get("features.tray_icon") === "true";
 		if (!isQuitting && trayEnabled && tray) {
 			e.preventDefault();
 			mainWindow.hide();
@@ -135,8 +136,8 @@ app.whenReady().then(async () => {
 
 	createWindow();
 
-	const trayEnabled2 = config.get("tray_icon") === "true";
-	if (trayEnabled2) {
+	const trayEnabled = config.get("features.tray_icon") === "true";
+	if (trayEnabled) {
 		try {
 			tray = new Tray(path.join(__dirname, "..", "assets", "tray.png"));
 			const contextMenu = Menu.buildFromTemplate([

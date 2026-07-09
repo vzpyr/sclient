@@ -1,6 +1,5 @@
-// unified scrobbling engine — handles both Last.fm and ListenBrainz
-
-const BACKENDS = [];
+// unified scrobbling — subscribes to shared playback observer in core.js
+// handles both Last.fm and ListenBrainz from a single state machine.
 
 function updateStatus(elId, text, color) {
 	const el = document.getElementById(elId);
@@ -10,184 +9,131 @@ function updateStatus(elId, text, color) {
 	}
 }
 
-// common scrobbling state machine
-function createScrobbler({
-	enabled,
-	statusElId,
-	validate,
-	sendNowPlaying,
-	sendScrobble,
-	authErrorCodes,
-}) {
-	if (!enabled) return;
+function setupScrobbling() {
+	// --- collect enabled backends ---
+	const backends = [];
 
-	let currentTrackId = null;
-	let currentTrackData = null;
-	let elapsedTime = 0;
+	if (
+		listenbrainzEnabled &&
+		listenbrainzToken &&
+		listenbrainzToken.length >= 10
+	) {
+		backends.push({
+			statusElId: "sclient-listenbrainz-status",
+			authErrorCodes: new Set([401]),
+			nowPlaying(artist, title) {
+				return sendBridgeMsg("submit_listenbrainz", {
+					listen_type: "playing_now",
+					payload: [
+						{ track_metadata: { artist_name: artist, track_name: title } },
+					],
+				});
+			},
+			scrobble(artist, title, timestamp) {
+				return sendBridgeMsg("submit_listenbrainz", {
+					listen_type: "single",
+					payload: [
+						{
+							listened_at: timestamp,
+							track_metadata: { artist_name: artist, track_name: title },
+						},
+					],
+				});
+			},
+		});
+	}
+
+	if (lastfmEnabled && lastfmSessionKey) {
+		backends.push({
+			statusElId: "sclient-lastfm-status",
+			authErrorCodes: new Set([4, 9, 14]),
+			nowPlaying(artist, title) {
+				return sendBridgeMsg("lastfm_now_playing", { artist, title });
+			},
+			scrobble(artist, title, timestamp) {
+				return sendBridgeMsg("lastfm_scrobble", {
+					artist,
+					title,
+					timestamp,
+				});
+			},
+		});
+	}
+
+	if (backends.length === 0) return;
+
+	// --- scrobbling state (shared across all backends) ---
 	let hasScrobbled = false;
 	let startTime = 0;
 	let scrobbleThreshold = 0;
 	let prevIsPlaying = false;
 
-	const validation = validate();
-	if (!validation.ok) {
-		updateStatus(statusElId, validation.reason || "Not Connected", "#f55");
-		return;
-	}
+	for (const b of backends) updateStatus(b.statusElId, "Waiting...", "#ccc");
 
-	updateStatus(statusElId, "Waiting...", "#ccc");
-
-	function handleResult(result, text, color) {
-		if (!result || !result.ok) {
-			if (result && authErrorCodes && authErrorCodes.has(result.code)) {
-				updateStatus(statusElId, "Auth Error", "#f55");
-			} else if (!result || result.code === 0) {
-				// network error or no credentials, keep current status
-			} else {
-				updateStatus(statusElId, "Error", "#f55");
-			}
-			return false;
+	function broadcast(cmd, artist, title, timestamp) {
+		const method = cmd === "nowPlaying" ? "nowPlaying" : "scrobble";
+		for (const b of backends) {
+			b[method](artist, title, timestamp).then((result) => {
+				if (!result || !result.ok) {
+					if (result && b.authErrorCodes.has(result.code)) {
+						updateStatus(b.statusElId, "Auth Error", "#f55");
+					} else if (!result || result.code === 0) {
+						/* network error, keep current status */
+					} else {
+						updateStatus(b.statusElId, "Error", "#f55");
+					}
+				}
+			});
 		}
-		updateStatus(statusElId, text, color);
-		return true;
 	}
 
-	async function nowPlaying(artist, title) {
-		const result = await sendNowPlaying(artist, title);
-		handleResult(result, "Now Playing", "#789cff");
-	}
-
-	async function doScrobble(artist, title, timestamp) {
-		const result = await sendScrobble(artist, title, timestamp);
-		handleResult(result, "Scrobbled!", "#5f5");
-	}
-
-	setInterval(async () => {
-		const isPlaying =
-			navigator.mediaSession &&
-			navigator.mediaSession.playbackState === "playing";
-
-		const titleLink = document.querySelector(".playbackSoundBadge__titleLink");
-		if (!titleLink) {
-			updateStatus(statusElId, "Waiting...", "#ccc");
-			currentTrackId = null;
+	onPlaybackChange((evt) => {
+		if (evt.type === "none") {
+			for (const b of backends)
+				updateStatus(b.statusElId, "Waiting...", "#ccc");
 			prevIsPlaying = false;
 			return;
 		}
 
-		const songUrl = titleLink.href.split("?")[0];
+		const artist = evt.trackData ? getArtistFromTrack(evt.trackData) : "";
+		const title = evt.trackData ? evt.trackData.title : "";
 
-		// track changed
-		if (songUrl !== currentTrackId) {
-			currentTrackId = songUrl;
-			elapsedTime = 0;
+		if (evt.type === "track_start") {
 			hasScrobbled = false;
-			startTime = Math.floor(Date.now() / 1000);
+			startTime = Math.floor(evt.timestamp / 1000);
+			scrobbleThreshold = evt.trackData
+				? Math.min(evt.trackData.duration / 1000 / 2, 240)
+				: 0;
 
-			const trackData = await fetchGodModeData(songUrl);
-			if (trackData) {
-				currentTrackData = trackData;
-				scrobbleThreshold = Math.min(trackData.duration / 1000 / 2, 240);
-
-				if (isPlaying) {
-					const artist = getArtistFromTrack(trackData);
-					nowPlaying(artist, trackData.title);
-				}
-			} else {
-				currentTrackData = null;
+			if (evt.isPlaying && artist && title) {
+				broadcast("nowPlaying", artist, title);
 			}
-			prevIsPlaying = isPlaying;
+			prevIsPlaying = evt.isPlaying;
 			return;
 		}
 
-		// resume: was paused, now playing, same track, not yet scrobbled
-		if (currentTrackData && isPlaying && !prevIsPlaying && !hasScrobbled) {
-			const artist = getArtistFromTrack(currentTrackData);
-			nowPlaying(artist, currentTrackData.title);
+		// tick — same track
+		if (evt.isPlaying && !prevIsPlaying && !hasScrobbled && artist && title) {
+			// resumed after pause
+			broadcast("nowPlaying", artist, title);
 		}
 
-		// active playback
-		if (currentTrackData && isPlaying) {
-			elapsedTime += 2;
-
-			if (!hasScrobbled && elapsedTime >= scrobbleThreshold) {
-				const artist = getArtistFromTrack(currentTrackData);
-				doScrobble(artist, currentTrackData.title, startTime);
+		if (evt.trackData && evt.isPlaying) {
+			const elapsed = Math.floor((evt.timestamp - startTime * 1000) / 1000);
+			if (!hasScrobbled && elapsed >= scrobbleThreshold) {
+				broadcast("scrobble", artist, title, startTime);
 				hasScrobbled = true;
+				for (const b of backends)
+					updateStatus(b.statusElId, "Scrobbled!", "#5f5");
 			}
-		} else if (!isPlaying && currentTrackId) {
-			if (hasScrobbled) updateStatus(statusElId, "Scrobbled!", "#5f5");
-			else updateStatus(statusElId, "Paused", "#f9a826");
+		} else if (!evt.isPlaying && evt.trackData) {
+			const status = hasScrobbled ? "Scrobbled!" : "Paused";
+			const color = hasScrobbled ? "#5f5" : "#f9a826";
+			for (const b of backends) updateStatus(b.statusElId, status, color);
 		}
 
-		prevIsPlaying = isPlaying;
-	}, 2000);
-}
-
-// --- ListenBrainz backend ---
-
-const LB_AUTH_ERRORS = new Set([401]);
-
-function setupListenbrainz() {
-	createScrobbler({
-		enabled: listenbrainzEnabled,
-		statusElId: "sclient-listenbrainz-status",
-		validate() {
-			if (!listenbrainzToken || listenbrainzToken.length < 10) {
-				return { ok: false, reason: "Invalid Key" };
-			}
-			return { ok: true };
-		},
-		async sendNowPlaying(artist, title) {
-			return await sendBridgeMsg("submit_listenbrainz", {
-				listen_type: "playing_now",
-				payload: [
-					{ track_metadata: { artist_name: artist, track_name: title } },
-				],
-			});
-		},
-		async sendScrobble(artist, title, timestamp) {
-			return await sendBridgeMsg("submit_listenbrainz", {
-				listen_type: "single",
-				payload: [
-					{
-						listened_at: timestamp,
-						track_metadata: { artist_name: artist, track_name: title },
-					},
-				],
-			});
-		},
-		authErrorCodes: LB_AUTH_ERRORS,
+		prevIsPlaying = evt.isPlaying;
 	});
 }
 
-// --- Last.fm backend ---
-
-const LASTFM_AUTH_ERRORS = new Set([4, 9, 14]);
-
-function setupLastfm() {
-	createScrobbler({
-		enabled: lastfmEnabled,
-		statusElId: "sclient-lastfm-status",
-		validate() {
-			if (!lastfmSessionKey) {
-				return { ok: false, reason: "Not Connected" };
-			}
-			return { ok: true };
-		},
-		async sendNowPlaying(artist, title) {
-			return await sendBridgeMsg("lastfm_now_playing", { artist, title });
-		},
-		async sendScrobble(artist, title, timestamp) {
-			return await sendBridgeMsg("lastfm_scrobble", {
-				artist,
-				title,
-				timestamp,
-			});
-		},
-		authErrorCodes: LASTFM_AUTH_ERRORS,
-	});
-}
-
-setupListenbrainz();
-setupLastfm();
+setupScrobbling();

@@ -20,9 +20,9 @@ function generateLastFmSig(params, secret) {
 
 function getLastFmCreds() {
 	return {
-		apiKey: config.getSecure("lastfm_api_key").trim(),
-		secret: config.getSecure("lastfm_secret").trim(),
-		sk: config.getSecure("lastfm_session_key").trim(),
+		apiKey: config.getSecure("integrations.lastfm.api_key").trim(),
+		secret: config.getSecure("integrations.lastfm.secret").trim(),
+		sk: config.getSecure("integrations.lastfm.session_key").trim(),
 	};
 }
 
@@ -30,8 +30,8 @@ function register({ ipcMain, session, app }) {
 	// proxy config (sync)
 	ipcMain.on("get-proxy-config", (event) => {
 		event.returnValue = {
-			enabled: config.get("region_bypass") === "true",
-			url: config.get("proxy_url"),
+			enabled: config.get("features.region_bypass") === "true",
+			url: config.get("features.proxy_url"),
 		};
 	});
 
@@ -42,17 +42,20 @@ function register({ ipcMain, session, app }) {
 	ipcMain.handle("save_custom_files", (_e, args) => {
 		config.setFile("custom.css", args.css);
 		config.setFile("custom.js", args.js);
-		config.set("lazy_scroll", args.lazyScroll ? "true" : "false");
-		config.set("hide_decorations", args.hideDecorations ? "true" : "false");
-		config.set("custom_accent", args.customAccent ? "true" : "false");
-		config.set("accent_color", args.accentColor || "#f50");
-		config.set("wide_layout", args.wideLayout ? "true" : "false");
-		config.set("wide_layout_width", args.wideLayoutWidth || "1200");
-		config.set("oled_dark_mode", args.oledDarkMode ? "true" : "false");
+		config.set("features.lazy_scroll", args.lazyScroll ? "true" : "false");
+		config.set(
+			"features.hide_decorations",
+			args.hideDecorations ? "true" : "false",
+		);
+		config.set("features.custom_accent", args.customAccent ? "true" : "false");
+		config.set("features.accent_color", args.accentColor || "#f50");
+		config.set("features.wide_layout", args.wideLayout ? "true" : "false");
+		config.set("features.wide_layout_width", args.wideLayoutWidth || "1200");
+		config.set("features.oled_dark_mode", args.oledDarkMode ? "true" : "false");
 
 		const oldAdblock = config.adblockEnabled;
 		config.adblockEnabled = !!args.adblock;
-		config.set("adblock", args.adblock ? "true" : "false");
+		config.set("features.adblock", args.adblock ? "true" : "false");
 
 		if (
 			oldAdblock !== config.adblockEnabled &&
@@ -66,36 +69,39 @@ function register({ ipcMain, session, app }) {
 			}
 		}
 
-		config.set("discord_rpc", args.discordRpc ? "true" : "false");
-		config.set("tray_icon", args.trayIcon ? "true" : "false");
-		config.set("hide_upsell", args.hideUpsell ? "true" : "false");
-		config.set("hide_artists", args.hideArtists ? "true" : "false");
+		config.set("features.discord_rpc", args.discordRpc ? "true" : "false");
+		config.set("features.tray_icon", args.trayIcon ? "true" : "false");
+		config.set("features.hide_upsell", args.hideUpsell ? "true" : "false");
+		config.set("features.hide_artists", args.hideArtists ? "true" : "false");
+		config.set("features.true_shuffle", args.trueShuffle ? "true" : "false");
+		config.set("features.true_shuffle_mode", args.trueShuffleMode || "native");
+		config.set("features.region_bypass", args.regionBypass ? "true" : "false");
+		config.set("features.proxy_url", args.proxyUrl || "");
 		config.set(
-			"true_shuffle",
-			args.true_shuffle || args.trueShuffle ? "true" : "false",
+			"features.enhanced_header",
+			args.enhancedHeader ? "true" : "false",
 		);
 		config.set(
-			"true_shuffle_mode",
-			args.true_shuffle_mode || args.trueShuffleMode || "native",
-		);
-		config.set("region_bypass", args.regionBypass ? "true" : "false");
-		config.set("proxy_url", args.proxyUrl || "");
-		config.set("enhanced_header", args.enhancedHeader ? "true" : "false");
-		config.set(
-			"collapsible_sidebar",
+			"features.collapsible_sidebar",
 			args.collapsibleSidebar ? "true" : "false",
 		);
-		config.set("listenbrainz", args.listenbrainz ? "true" : "false");
-		config.setSecure("listenbrainz_token", args.listenbrainzToken || "");
-		config.set("lastfm", args.lastfm ? "true" : "false");
-		config.setSecure("lastfm_api_key", args.lastfmApiKey || "");
-		config.setSecure("lastfm_secret", args.lastfmSecret || "");
+		config.set(
+			"integrations.listenbrainz.enabled",
+			args.listenbrainz ? "true" : "false",
+		);
+		config.setSecure(
+			"integrations.listenbrainz.token",
+			args.listenbrainzToken || "",
+		);
+		config.set("integrations.lastfm.enabled", args.lastfm ? "true" : "false");
+		config.setSecure("integrations.lastfm.api_key", args.lastfmApiKey || "");
+		config.setSecure("integrations.lastfm.secret", args.lastfmSecret || "");
 
 		config.statsApiSyncEnabled = args.statsApiSync || false;
-		config.set("stats_api_sync", args.statsApiSync ? "true" : "false");
+		config.set("stats.api_sync", args.statsApiSync ? "true" : "false");
 		config.statsLocalTrackingEnabled = args.statsLocalTracking || false;
 		config.set(
-			"stats_local_tracking",
+			"stats.local_tracking",
 			args.statsLocalTracking ? "true" : "false",
 		);
 	});
@@ -104,7 +110,7 @@ function register({ ipcMain, session, app }) {
 
 	ipcMain.handle("submit_listenbrainz", async (_e, args) => {
 		try {
-			const token = config.getSecure("listenbrainz_token").trim();
+			const token = config.getSecure("integrations.listenbrainz.token").trim();
 			if (!token) return { ok: false, code: 0 };
 			const res = await fetch("https://api.listenbrainz.org/1/submit-listens", {
 				method: "POST",
@@ -126,8 +132,8 @@ function register({ ipcMain, session, app }) {
 	// --- Last.fm ---
 
 	ipcMain.handle("lastfm_authenticate", async () => {
-		const apiKey = config.getSecure("lastfm_api_key").trim();
-		const secret = config.getSecure("lastfm_secret").trim();
+		const apiKey = config.getSecure("integrations.lastfm.api_key").trim();
+		const secret = config.getSecure("integrations.lastfm.secret").trim();
 		if (!apiKey || !secret) return { error: "Missing API key or secret" };
 
 		return new Promise((resolve) => {
@@ -166,8 +172,11 @@ function register({ ipcMain, session, app }) {
 					if (data.error) {
 						settle({ error: data.message });
 					} else {
-						config.setSecure("lastfm_session_key", data.session.key);
-						config.set("lastfm_username", data.session.name);
+						config.setSecure(
+							"integrations.lastfm.session_key",
+							data.session.key,
+						);
+						config.set("integrations.lastfm.username", data.session.name);
 						settle({ success: true, username: data.session.name });
 					}
 				} catch (err) {
@@ -182,13 +191,13 @@ function register({ ipcMain, session, app }) {
 	});
 
 	ipcMain.handle("lastfm_save_credentials", (_e, args) => {
-		config.setSecure("lastfm_api_key", args.apiKey || "");
-		config.setSecure("lastfm_secret", args.secret || "");
+		config.setSecure("integrations.lastfm.api_key", args.apiKey || "");
+		config.setSecure("integrations.lastfm.secret", args.secret || "");
 	});
 
 	ipcMain.handle("lastfm_disconnect", () => {
-		config.setSecure("lastfm_session_key", "");
-		config.set("lastfm_username", "");
+		config.setSecure("integrations.lastfm.session_key", "");
+		config.set("integrations.lastfm.username", "");
 	});
 
 	ipcMain.handle("lastfm_now_playing", async (_e, args) => {

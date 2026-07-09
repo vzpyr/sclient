@@ -76,10 +76,7 @@ async function doFetch(artist, title) {
 
 		if (contentDiv && currentLyricsTrack === trackKey) {
 			if (data.plainLyrics) {
-				const escapedLyrics = data.plainLyrics
-					.replace(/</g, "&lt;")
-					.replace(/>/g, "&gt;");
-				contentDiv.innerHTML = `<div style="font-weight:bold; margin-bottom: 15px; color:${accent};">${safeTitle}<br><span style="font-size:12px; font-weight:normal; color:#aaa;">${escapeHtml(artist)}</span></div>${escapedLyrics}`;
+				contentDiv.innerHTML = `<div style="font-weight:bold; margin-bottom: 15px; color:${accent};">${safeTitle}<br><span style="font-size:12px; font-weight:normal; color:#aaa;">${escapeHtml(artist)}</span></div>${escapeHtml(data.plainLyrics)}`;
 			} else {
 				renderManualSearch(artist, title);
 			}

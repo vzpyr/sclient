@@ -9,7 +9,7 @@ if (!fs.existsSync(CONFIG_DIR)) {
 	fs.mkdirSync(CONFIG_DIR, { recursive: true });
 }
 
-// --- JSON config store ---
+// --- JSON config store (nested, dot-notation access) ---
 
 let _store = {};
 
@@ -25,23 +25,47 @@ function _save() {
 	fs.writeFileSync(CONFIG_FILE, JSON.stringify(_store, null, 2));
 }
 
+function _resolve(key) {
+	const parts = key.split(".");
+	let val = _store;
+	for (const part of parts) {
+		if (val == null || typeof val !== "object") return undefined;
+		val = val[part];
+	}
+	return val;
+}
+
+function _assign(key, val) {
+	const parts = key.split(".");
+	let obj = _store;
+	for (let i = 0; i < parts.length - 1; i++) {
+		if (!obj[parts[i]] || typeof obj[parts[i]] !== "object") {
+			obj[parts[i]] = {};
+		}
+		obj = obj[parts[i]];
+	}
+	obj[parts[parts.length - 1]] = val;
+}
+
 function get(key, defaultVal = "") {
-	return key in _store ? _store[key] : defaultVal;
+	const val = _resolve(key);
+	return val !== undefined && val !== null ? val : defaultVal;
 }
 
 function set(key, val) {
-	_store[key] = val;
+	_assign(key, val);
 	_save();
 }
 
 function getSecure(key, defaultVal = "") {
-	if (!(key in _store)) return defaultVal;
+	const raw = _resolve(key);
+	if (raw === undefined || raw === null) return defaultVal;
 	try {
 		if (safeStorage.isEncryptionAvailable()) {
-			const buf = Buffer.from(_store[key], "base64");
+			const buf = Buffer.from(raw, "base64");
 			return safeStorage.decryptString(buf);
 		}
-		return _store[key];
+		return raw;
 	} catch (e) {
 		console.error("[SClient] Failed to decrypt", key, e);
 		return defaultVal;
@@ -51,9 +75,9 @@ function getSecure(key, defaultVal = "") {
 function setSecure(key, val) {
 	try {
 		if (safeStorage.isEncryptionAvailable()) {
-			_store[key] = safeStorage.encryptString(val).toString("base64");
+			_assign(key, safeStorage.encryptString(val).toString("base64"));
 		} else {
-			_store[key] = val;
+			_assign(key, val);
 		}
 		_save();
 	} catch (e) {
@@ -81,54 +105,57 @@ if (!fs.existsSync(path.join(CONFIG_DIR, "custom.js"))) {
 
 // --- runtime state (synced to disk but also held in memory for performance) ---
 
-let adblockEnabled = get("adblock") === "true";
-let statsApiSyncEnabled = get("stats_api_sync") === "true";
-let statsLocalTrackingEnabled = get("stats_local_tracking") === "true";
+let adblockEnabled = get("features.adblock") === "true";
+let statsApiSyncEnabled = get("stats.api_sync") === "true";
+let statsLocalTrackingEnabled = get("stats.local_tracking") === "true";
 
-// --- config payload sent to renderer ---
+// --- config payload sent to renderer (flat for injected code compatibility) ---
 
 function buildConfigPayload() {
 	return {
 		css: getFile("custom.css"),
 		js: getFile("custom.js"),
-		lazy_scroll: get("lazy_scroll") === "true",
-		hide_decorations: get("hide_decorations") === "true",
-		custom_accent: get("custom_accent") === "true",
-		accent_color: get("accent_color", "#FF0000"),
-		wide_layout: get("wide_layout") === "true",
-		wide_layout_width: get("wide_layout_width", "1200"),
-		oled_dark_mode: get("oled_dark_mode") === "true",
-		adblock: get("adblock") === "true",
-		discord_rpc: get("discord_rpc") === "true",
-		tray_icon: get("tray_icon") === "true",
-		hide_upsell: get("hide_upsell") === "true",
-		hide_artists: get("hide_artists") === "true",
-		true_shuffle: get("true_shuffle") === "true",
-		true_shuffle_mode: get("true_shuffle_mode", "native"),
-		region_bypass: get("region_bypass") === "true",
-		proxy_url: get("proxy_url"),
-		enhanced_header: get("enhanced_header", "false") === "true",
-		collapsible_sidebar: get("collapsible_sidebar") === "true",
-		listenbrainz: get("listenbrainz") === "true",
-		listenbrainz_token: getSecure("listenbrainz_token"),
-		lastfm: get("lastfm") === "true",
-		lastfm_api_key: getSecure("lastfm_api_key"),
-		lastfm_secret: getSecure("lastfm_secret"),
-		lastfm_session_key: getSecure("lastfm_session_key"),
-		lastfm_username: get("lastfm_username"),
+		// features
+		lazy_scroll: get("features.lazy_scroll") === "true",
+		hide_decorations: get("features.hide_decorations") === "true",
+		custom_accent: get("features.custom_accent") === "true",
+		accent_color: get("features.accent_color", "#FF0000"),
+		wide_layout: get("features.wide_layout") === "true",
+		wide_layout_width: get("features.wide_layout_width", "1200"),
+		oled_dark_mode: get("features.oled_dark_mode") === "true",
+		adblock: get("features.adblock") === "true",
+		discord_rpc: get("features.discord_rpc") === "true",
+		tray_icon: get("features.tray_icon") === "true",
+		hide_upsell: get("features.hide_upsell") === "true",
+		hide_artists: get("features.hide_artists") === "true",
+		true_shuffle: get("features.true_shuffle") === "true",
+		true_shuffle_mode: get("features.true_shuffle_mode", "native"),
+		region_bypass: get("features.region_bypass") === "true",
+		proxy_url: get("features.proxy_url"),
+		enhanced_header: get("features.enhanced_header", "false") === "true",
+		collapsible_sidebar: get("features.collapsible_sidebar") === "true",
+		// integrations
+		listenbrainz: get("integrations.listenbrainz.enabled") === "true",
+		listenbrainz_token: getSecure("integrations.listenbrainz.token"),
+		lastfm: get("integrations.lastfm.enabled") === "true",
+		lastfm_api_key: getSecure("integrations.lastfm.api_key"),
+		lastfm_secret: getSecure("integrations.lastfm.secret"),
+		lastfm_session_key: getSecure("integrations.lastfm.session_key"),
+		lastfm_username: get("integrations.lastfm.username"),
+		// stats
 		stats_api_sync: statsApiSyncEnabled,
 		stats_local_tracking: statsLocalTrackingEnabled,
 	};
 }
 
-// --- accounts (uses separate files for partition dirs — legit use case) ---
+// --- accounts ---
 
 function getActiveAccount() {
-	return get("active_account", "main");
+	return get("accounts.active", "main");
 }
 
 function setActiveAccount(name) {
-	set("active_account", name);
+	set("accounts.active", name);
 }
 
 module.exports = {

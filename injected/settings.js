@@ -576,7 +576,7 @@ function createOverlay() {
 		toggleId: "sclient-tray-toggle",
 		bgId: "sclient-toggle-bg-tray",
 		sliderId: "sclient-toggle-slider-tray",
-		initialValue: trayIconEnabled,
+		initialValue: cfg.tray_icon || false,
 	});
 
 	// upsell
@@ -670,8 +670,10 @@ function createOverlay() {
 		sliderId: "sclient-toggle-slider-lastfm",
 		initialValue: lastfmEnabled,
 	});
-	overlay.querySelector("#sclient-lastfm-apikey-input").value = lastfmApiKey;
-	overlay.querySelector("#sclient-lastfm-secret-input").value = lastfmSecret;
+	overlay.querySelector("#sclient-lastfm-apikey-input").value =
+		cfg.lastfm_api_key || "";
+	overlay.querySelector("#sclient-lastfm-secret-input").value =
+		cfg.lastfm_secret || "";
 
 	function updateLastfmConnectedUI(username) {
 		const connectBtn = overlay.querySelector("#sclient-lastfm-connect-btn");

@@ -1,67 +1,81 @@
 // --- shared utils for all injected scripts ---
 
-const scrollStyle = document.createElement("style");
-scrollStyle.textContent = `
-    ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
-    * { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
+// scrollbar + global overlay theme styles (always-on, not toggles)
+function injectStyle(id, css) {
+	if (document.getElementById(id)) return;
+	const style = document.createElement("style");
+	style.id = id;
+	style.textContent = css;
+	if (document.head) {
+		document.head.appendChild(style);
+	} else {
+		document.addEventListener("DOMContentLoaded", () => {
+			if (!document.getElementById(id)) document.head.appendChild(style);
+		});
+	}
+}
 
-    body.theme-light #sclient-settings-overlay,
-    body.theme-light #sclient-lyrics-sidebar {
-        background: rgba(250, 250, 250, 0.95) !important;
-        color: #222 !important;
-        border-left: 1px solid rgba(0,0,0,0.1) !important;
-    }
-    body.theme-light #sclient-lyrics-content { color: #444 !important; }
-    body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"] {
-        background: rgba(0,0,0,0.05) !important;
-        border-color: rgba(0,0,0,0.1) !important;
-    }
-    body.theme-light #sclient-accounts-list > div {
-        background: rgba(0,0,0,0.05) !important;
-        border: 1px solid rgba(0,0,0,0.1) !important;
-    }
-    body.theme-light #sclient-add-account-btn,
-    body.theme-light #sclient-accounts-list button {
-        background: #eee !important; color: #333 !important;
-        border: 1px solid #ddd !important;
-    }
-    body.theme-light button#tab-css[style*="rgb(51, 51, 51)"],
-    body.theme-light button#tab-css[style*="#333"],
-    body.theme-light button#tab-js[style*="rgb(51, 51, 51)"],
-    body.theme-light button#tab-js[style*="#333"] {
-        background: #eee !important; color: #111 !important;
-    }
-    body.theme-light input[type="text"],
-    body.theme-light textarea:not(#sclient-css-editor):not(#sclient-js-editor) {
-        background: #fff !important; color: #333 !important;
-        border: 1px solid #ccc !important;
-    }
-    body.theme-light #sclient-css-container,
-    body.theme-light #sclient-js-container {
-        border-top: 1px solid rgba(0,0,0,0.1) !important;
-    }
-    body.theme-light #sclient-trueshuffle-engine,
-    body.theme-light #sclient-proxyurl-input {
-        background: #fff !important; color: #333 !important;
-        border: 1px solid #ccc !important;
-    }
-    body.theme-light #sclient-trueshuffle-engine option {
-        background: #fff; color: #333;
-    }
-`;
-const appendScrollStyle = () => {
-	if (document.head) document.head.appendChild(scrollStyle);
-	else
-		document.addEventListener("DOMContentLoaded", () =>
-			document.head.appendChild(scrollStyle),
-		);
-};
-appendScrollStyle();
+injectStyle(
+	"sclient-scrollbar",
+	`
+  ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
+`,
+);
 
-// --- config from main process ---
+injectStyle(
+	"sclient-light-theme-overlays",
+	`
+  body.theme-light #sclient-settings-overlay,
+  body.theme-light #sclient-lyrics-sidebar {
+    background: rgba(250, 250, 250, 0.95) !important;
+    color: #222 !important;
+    border-left: 1px solid rgba(0,0,0,0.1) !important;
+  }
+  body.theme-light #sclient-lyrics-content { color: #444 !important; }
+  body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"] {
+    background: rgba(0,0,0,0.05) !important;
+    border-color: rgba(0,0,0,0.1) !important;
+  }
+  body.theme-light #sclient-accounts-list > div {
+    background: rgba(0,0,0,0.05) !important;
+    border: 1px solid rgba(0,0,0,0.1) !important;
+  }
+  body.theme-light #sclient-add-account-btn,
+  body.theme-light #sclient-accounts-list button {
+    background: #eee !important; color: #333 !important;
+    border: 1px solid #ddd !important;
+  }
+  body.theme-light button#tab-css[style*="rgb(51, 51, 51)"],
+  body.theme-light button#tab-css[style*="#333"],
+  body.theme-light button#tab-js[style*="rgb(51, 51, 51)"],
+  body.theme-light button#tab-js[style*="#333"] {
+    background: #eee !important; color: #111 !important;
+  }
+  body.theme-light input[type="text"],
+  body.theme-light textarea:not(#sclient-css-editor):not(#sclient-js-editor) {
+    background: #fff !important; color: #333 !important;
+    border: 1px solid #ccc !important;
+  }
+  body.theme-light #sclient-css-container,
+  body.theme-light #sclient-js-container {
+    border-top: 1px solid rgba(0,0,0,0.1) !important;
+  }
+  body.theme-light #sclient-trueshuffle-engine,
+  body.theme-light #sclient-proxyurl-input {
+    background: #fff !important; color: #333 !important;
+    border: 1px solid #ccc !important;
+  }
+  body.theme-light #sclient-trueshuffle-engine option {
+    background: #fff; color: #333;
+  }
+`,
+);
+
+// --- config from main process (flat payload — see main/config.js) ---
 const cfg = window.__SCLIENT_CONFIG__ || {};
 const customAccentEnabled = cfg.custom_accent || false;
 const accentColor = cfg.accent_color || "#FF0000";
@@ -77,17 +91,14 @@ const adblockEnabled = cfg.adblock || false;
 const trueShuffleEnabled = cfg.true_shuffle || false;
 const trueShuffleMode = cfg.true_shuffle_mode || "native";
 const discordRpcEnabled = cfg.discord_rpc || false;
-const trayIconEnabled = cfg.tray_icon || false;
 const hideUpsellEnabled = cfg.hide_upsell || false;
 const hideArtistsEnabled = cfg.hide_artists || false;
 const regionBypassEnabled = cfg.region_bypass || false;
 const proxyUrl = cfg.proxy_url || "";
-const enhancedHeaderEnabled = cfg.enhanced_header !== false;
+const enhancedHeaderEnabled = cfg.enhanced_header || false;
 const listenbrainzEnabled = cfg.listenbrainz || false;
 const listenbrainzToken = cfg.listenbrainz_token || "";
 const lastfmEnabled = cfg.lastfm || false;
-const lastfmApiKey = cfg.lastfm_api_key || "";
-const lastfmSecret = cfg.lastfm_secret || "";
 const lastfmSessionKey = cfg.lastfm_session_key || "";
 const lastfmUsername = cfg.lastfm_username || "";
 const statsApiSyncEnabled = cfg.stats_api_sync || false;
@@ -99,10 +110,11 @@ function getAccent() {
 	return customAccentEnabled ? accentColor : "#f50";
 }
 
+let _bridgeCid = 0;
+
 function sendBridgeMsg(cmd, args = {}) {
 	return new Promise((resolve, reject) => {
-		const callbackId =
-			cmd + "_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+		const callbackId = cmd + "_" + ++_bridgeCid + "_" + Date.now();
 		const handler = (event) => {
 			if (
 				event.source !== window ||
@@ -135,22 +147,6 @@ function sendBridgeMsg(cmd, args = {}) {
 	});
 }
 
-// inject a <style> element, handling dom-ready edge case
-function injectStyle(id, css) {
-	if (document.getElementById(id)) return;
-	const style = document.createElement("style");
-	style.id = id;
-	style.textContent = css;
-	if (document.head) {
-		document.head.appendChild(style);
-	} else {
-		document.addEventListener("DOMContentLoaded", () => {
-			if (!document.getElementById(id)) document.head.appendChild(style);
-		});
-	}
-}
-
-// extract artist username from track data, publisher_metadata preferred
 function getArtistFromTrack(track) {
 	if (
 		track.publisher_metadata &&
@@ -179,7 +175,7 @@ function extractClientId() {
 	return null;
 }
 
-// --- track data cache (shared by RPC, scrobbler, stats) ---
+// --- track data cache ---
 
 const _trackDataCache = new Map();
 
@@ -196,6 +192,77 @@ async function fetchGodModeData(songUrl) {
 		return data;
 	} catch (e) {
 		return null;
+	}
+}
+
+// --- shared playback observer ---
+// single poll loop — scrobbler, stats, and rpc-bridge subscribe instead of
+// running their own independent setInterval loops.
+
+const _playbackListeners = [];
+let _playbackTimer = null;
+const PLAYBACK_SELECTOR = ".playbackSoundBadge__titleLink";
+
+let _currentSongUrl = null;
+let _currentTrackData = null;
+
+function _parseTimeStr(str) {
+	if (!str) return 0;
+	const match = str.match(/\d+:\d+(?::\d+)?/);
+	if (!match) return 0;
+	const parts = match[0].split(":").map(Number);
+	if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+	if (parts.length === 2) return parts[0] * 60 + parts[1];
+	return 0;
+}
+
+function onPlaybackChange(cb) {
+	_playbackListeners.push(cb);
+	if (_playbackListeners.length === 1) {
+		_playbackTimer = setInterval(_pollPlayback, 2000);
+	}
+}
+
+async function _pollPlayback() {
+	const titleLink = document.querySelector(PLAYBACK_SELECTOR);
+
+	if (!titleLink) {
+		if (_currentSongUrl !== null) {
+			_currentSongUrl = null;
+			_currentTrackData = null;
+			for (const cb of _playbackListeners) cb({ type: "none" });
+		}
+		return;
+	}
+
+	const songUrl = titleLink.href.split("?")[0];
+	const isPlaying =
+		navigator.mediaSession &&
+		navigator.mediaSession.playbackState === "playing";
+	const now = Date.now();
+
+	const passedEl = document.querySelector(".playbackTimeline__timePassed");
+	const durationEl = document.querySelector(".playbackTimeline__duration");
+	const position = passedEl ? _parseTimeStr(passedEl.textContent) : 0;
+	const duration = durationEl ? _parseTimeStr(durationEl.textContent) : 0;
+
+	let type = "tick";
+	if (songUrl !== _currentSongUrl) {
+		_currentSongUrl = songUrl;
+		_currentTrackData = await fetchGodModeData(songUrl);
+		type = "track_start";
+	}
+
+	for (const cb of _playbackListeners) {
+		cb({
+			type,
+			songUrl,
+			trackData: _currentTrackData,
+			isPlaying,
+			timestamp: now,
+			position,
+			duration,
+		});
 	}
 }
 
@@ -277,108 +344,6 @@ function customConfirm(message) {
 }
 
 // --- feature appliers ---
-
-function applyCustomAccentColor(newColor) {
-	const targetColors = ["#f50", "#ff5500"];
-	const processedNodes = new Set();
-
-	function hexToRgb(hex) {
-		let c = hex.substring(1).split("");
-		if (c.length === 3) c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-		c = "0x" + c.join("");
-		return [(c >> 16) & 255, (c >> 8) & 255, c & 255].join(",");
-	}
-	const rgbVal = hexToRgb(newColor);
-
-	async function processCssText(cssText, originalNode) {
-		if (!cssText) return;
-		let modified = false;
-		let newCssText = cssText;
-
-		for (const color of targetColors) {
-			const escaped = color.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-			const regex = new RegExp(escaped + "(?![a-fA-F0-9])", "gi");
-			if (regex.test(newCssText)) {
-				newCssText = newCssText.replace(regex, newColor);
-				modified = true;
-			}
-		}
-
-		const rgbRegex = /rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi;
-		if (rgbRegex.test(newCssText)) {
-			newCssText = newCssText.replace(rgbRegex, `rgb(${rgbVal})`);
-			modified = true;
-		}
-		const rawRgbRegex = /255\s*,\s*85\s*,\s*0/gi;
-		if (rawRgbRegex.test(newCssText)) {
-			newCssText = newCssText.replace(rawRgbRegex, rgbVal);
-			modified = true;
-		}
-
-		if (modified) {
-			const style = document.createElement("style");
-			style.setAttribute("data-sc-custom-accent", "true");
-			style.textContent = newCssText;
-			if (originalNode && originalNode.parentNode) {
-				originalNode.parentNode.insertBefore(style, originalNode.nextSibling);
-			} else {
-				document.head.appendChild(style);
-			}
-		}
-	}
-
-	async function processNode(node) {
-		if (node.hasAttribute("data-sc-custom-accent") || processedNodes.has(node))
-			return;
-		processedNodes.add(node);
-		try {
-			if (
-				node.tagName === "LINK" &&
-				node.rel === "stylesheet" &&
-				node.href &&
-				node.href.includes("sndcdn.com")
-			) {
-				const cssText = await fetch(node.href).then((r) => r.text());
-				await processCssText(cssText, node);
-			} else if (node.tagName === "STYLE") {
-				await processCssText(node.textContent, node);
-			}
-		} catch (e) {
-			/* skip */
-		}
-	}
-
-	const processStyles = () => {
-		document
-			.querySelectorAll('link[rel="stylesheet"], style')
-			.forEach(processNode);
-	};
-
-	if (document.readyState === "loading") {
-		document.addEventListener("DOMContentLoaded", processStyles);
-	} else {
-		processStyles();
-	}
-
-	const observer = new MutationObserver((mutations) => {
-		let shouldProcess = false;
-		for (const m of mutations) {
-			for (const node of m.addedNodes) {
-				if (
-					(node.tagName === "LINK" && node.rel === "stylesheet") ||
-					node.tagName === "STYLE"
-				) {
-					shouldProcess = true;
-				}
-			}
-		}
-		if (shouldProcess) setTimeout(processStyles, 50);
-	});
-	observer.observe(document.documentElement, {
-		childList: true,
-		subtree: true,
-	});
-}
 
 function applyWideLayout() {
 	const width = wideLayoutWidth || "1200";

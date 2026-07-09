@@ -42,12 +42,11 @@ const credInterval = setInterval(async () => {
 	if (cid && tok) clearInterval(credInterval);
 }, 2000);
 
-// --- real-time tracking ---
+// --- real-time tracking (subscribes to shared playback observer in core.js) ---
 
 function setupStatsTracking() {
 	if (!statsLocalTrackingEnabled) return;
 
-	let currentTrackId = null;
 	let currentTrackData = null;
 	let hasRecorded = false;
 	let startTime = 0;
@@ -76,51 +75,40 @@ function setupStatsTracking() {
 		}
 	}
 
-	setInterval(async () => {
-		if (!statsLocalTrackingEnabled) return;
-
-		const isPlaying =
-			navigator.mediaSession &&
-			navigator.mediaSession.playbackState === "playing";
-		const titleLink = document.querySelector(".playbackSoundBadge__titleLink");
-
-		if (!titleLink) {
+	onPlaybackChange((evt) => {
+		if (evt.type === "none") {
 			updateStatus("Waiting...", "#ccc");
-			currentTrackId = null;
 			return;
 		}
 
-		const songUrl = titleLink.href.split("?")[0];
-
-		if (songUrl !== currentTrackId) {
-			currentTrackId = songUrl;
+		if (evt.type === "track_start") {
+			currentTrackData = evt.trackData;
 			hasRecorded = false;
-			startTime = Date.now();
-
-			const trackData = await fetchGodModeData(songUrl);
-			if (trackData) {
-				currentTrackData = trackData;
-				recordThreshold = Math.min(trackData.duration / 1000 / 2, 240) * 1000;
-				if (isPlaying) updateStatus("Listening...", "#789cff");
+			startTime = evt.timestamp;
+			if (evt.trackData) {
+				recordThreshold =
+					Math.min(evt.trackData.duration / 1000 / 2, 240) * 1000;
+				if (evt.isPlaying) updateStatus("Listening...", "#789cff");
 			} else {
 				currentTrackData = null;
 			}
 			return;
 		}
 
-		if (currentTrackData && isPlaying) {
-			const elapsedTime = Date.now() - startTime;
-			if (!hasRecorded && elapsedTime >= recordThreshold) {
-				await recordListen(currentTrackData, startTime);
+		// tick
+		if (currentTrackData && evt.isPlaying) {
+			const elapsed = evt.timestamp - startTime;
+			if (!hasRecorded && elapsed >= recordThreshold) {
+				recordListen(currentTrackData, Math.floor(startTime / 1000));
 				hasRecorded = true;
 			}
-		} else if (!isPlaying && currentTrackId) {
+		} else if (!evt.isPlaying && currentTrackData) {
 			updateStatus(
 				hasRecorded ? "Recorded!" : "Paused",
 				hasRecorded ? "#5f5" : "#f9a826",
 			);
 		}
-	}, 2000);
+	});
 }
 
 // --- analytics overlay ---
