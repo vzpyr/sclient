@@ -111,7 +111,7 @@ function createWindow() {
 
 		const wrapperJs = `
 (function() {
-    const __SCLIENT_CONFIG__ = ${JSON.stringify(configPayload)};
+    window.__SCLIENT_CONFIG__ = ${JSON.stringify(configPayload)};
     ${injectedJs}
 })();`;
 

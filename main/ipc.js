@@ -70,12 +70,21 @@ function register({ ipcMain, session, app }) {
 		config.set("tray_icon", args.trayIcon ? "true" : "false");
 		config.set("hide_upsell", args.hideUpsell ? "true" : "false");
 		config.set("hide_artists", args.hideArtists ? "true" : "false");
-		config.set("true_shuffle", (args.true_shuffle || args.trueShuffle) ? "true" : "false");
-		config.set("true_shuffle_mode", args.true_shuffle_mode || args.trueShuffleMode || "native");
+		config.set(
+			"true_shuffle",
+			args.true_shuffle || args.trueShuffle ? "true" : "false",
+		);
+		config.set(
+			"true_shuffle_mode",
+			args.true_shuffle_mode || args.trueShuffleMode || "native",
+		);
 		config.set("region_bypass", args.regionBypass ? "true" : "false");
 		config.set("proxy_url", args.proxyUrl || "");
 		config.set("enhanced_header", args.enhancedHeader ? "true" : "false");
-		config.set("collapsible_sidebar", args.collapsibleSidebar ? "true" : "false");
+		config.set(
+			"collapsible_sidebar",
+			args.collapsibleSidebar ? "true" : "false",
+		);
 		config.set("listenbrainz", args.listenbrainz ? "true" : "false");
 		config.setSecure("listenbrainz_token", args.listenbrainzToken || "");
 		config.set("lastfm", args.lastfm ? "true" : "false");
@@ -85,7 +94,10 @@ function register({ ipcMain, session, app }) {
 		config.statsApiSyncEnabled = args.statsApiSync || false;
 		config.set("stats_api_sync", args.statsApiSync ? "true" : "false");
 		config.statsLocalTrackingEnabled = args.statsLocalTracking || false;
-		config.set("stats_local_tracking", args.statsLocalTracking ? "true" : "false");
+		config.set(
+			"stats_local_tracking",
+			args.statsLocalTracking ? "true" : "false",
+		);
 	});
 
 	// --- ListenBrainz ---
@@ -272,7 +284,9 @@ function register({ ipcMain, session, app }) {
 			});
 		} catch (err) {
 			if (err.stderr && err.stderr.includes("DRM protected")) {
-				throw new Error("This track is DRM protected and cannot be downloaded.");
+				throw new Error(
+					"This track is DRM protected and cannot be downloaded.",
+				);
 			}
 			if (err.stderr) {
 				const errorLines = err.stderr

@@ -107,7 +107,7 @@ function buildConfigPayload() {
 		true_shuffle_mode: get("true_shuffle_mode", "native"),
 		region_bypass: get("region_bypass") === "true",
 		proxy_url: get("proxy_url"),
-		enhanced_header: get("enhanced_header", "true") === "true",
+		enhanced_header: get("enhanced_header", "false") === "true",
 		collapsible_sidebar: get("collapsible_sidebar") === "true",
 		listenbrainz: get("listenbrainz") === "true",
 		listenbrainz_token: getSecure("listenbrainz_token"),
