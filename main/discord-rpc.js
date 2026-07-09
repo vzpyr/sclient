@@ -16,8 +16,8 @@ async function updateRpc({
 }) {
 	if (!rpcClient) {
 		rpcClient = new Client({ clientId: CLIENT_ID, transport: { type: "ipc" } });
-		loginPromise = rpcClient.login().catch((err) => {
-			console.error("[SClient] RPC Login failed:", err);
+		loginPromise = rpcClient.login().catch((e) => {
+			console.error("[SClient] RPC Login failed:", e);
 			rpcClient = null;
 			loginPromise = null;
 		});
@@ -27,7 +27,9 @@ async function updateRpc({
 
 	if (!isPlaying || !title) {
 		if (rpcClient && rpcClient.user) {
-			rpcClient.user.clearActivity().catch(() => {});
+			rpcClient.user.clearActivity().catch((e) => {
+				console.error("[SClient] RPC clear activity failed:", e);
+			});
 		}
 		return;
 	}
@@ -53,8 +55,8 @@ async function updateRpc({
 	}
 
 	if (rpcClient && rpcClient.user) {
-		rpcClient.user.setActivity(activity).catch((err) => {
-			console.error("[SClient] Failed to set activity:", err);
+		rpcClient.user.setActivity(activity).catch((e) => {
+			console.error("[SClient] RPC set activity failed:", e);
 		});
 	}
 }

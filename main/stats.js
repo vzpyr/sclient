@@ -99,9 +99,11 @@ async function syncPlayHistory() {
 			}
 			url = data.next_href || null;
 		}
-		console.log(`[SClient] Stats sync done — ${totalInserted} new entries`);
+		if (totalInserted > 0) {
+			console.log(`[SClient] Stats sync done — ${totalInserted} new entries.`);
+		}
 	} catch (e) {
-		console.error("[SClient] Stats sync error:", e.message);
+		console.error("[SClient] Stats sync error:", e);
 	} finally {
 		syncing = false;
 	}
@@ -131,8 +133,8 @@ function recordListen(playedAt, trackId, track) {
 			);
 		}
 		recordStmt.run(playedAt, trackId, JSON.stringify(track), "local");
-	} catch (err) {
-		console.error("[SClient] Stats record error:", err);
+	} catch (e) {
+		console.error("[SClient] Stats record error:", e);
 	}
 }
 
@@ -150,7 +152,7 @@ function getData(source) {
 		query += " ORDER BY played_at DESC";
 		return database.prepare(query).all(...params);
 	} catch (e) {
-		console.error("[SClient] Stats get data error:", e);
+		console.error("[SClient] Stats get data failed:", e);
 		return [];
 	}
 }
@@ -163,7 +165,7 @@ function wipeDb() {
 		database.exec("DELETE FROM listens");
 		console.log("[SClient] Stats DB wiped.");
 	} catch (e) {
-		console.error("[SClient] Stats wipe error:", e);
+		console.error("[SClient] Stats wipe failed:", e);
 	}
 }
 

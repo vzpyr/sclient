@@ -31,6 +31,7 @@ export default async function handler(req, res) {
 
     finalUrl = tu.toString();
   } catch {
+    console.error("[SClient] Proxy: invalid URL:", target);
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.statusCode = 400;
     return res.end("Invalid URL");
@@ -82,6 +83,7 @@ export default async function handler(req, res) {
     };
     await pump();
   } catch (e) {
+    console.error("[SClient] Proxy: fetch failed:", finalUrl, e.message);
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.statusCode = 502;
     res.end();

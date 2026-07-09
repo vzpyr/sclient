@@ -31,9 +31,6 @@ window.fetch = async function (...args) {
 				});
 
 				if (stubIds.length > 0) {
-					console.log(
-						`[SClient] Hydrating ${stubIds.length} track stubs for True Shuffle...`,
-					);
 					const urlObj = new URL(url);
 					const clientId = urlObj.searchParams.get("client_id");
 
@@ -72,7 +69,7 @@ window.fetch = async function (...args) {
 							return track;
 						});
 
-						console.log("[SClient] Playlist hydration complete!");
+						console.log("[SClient] Playlist hydration complete.");
 						return new Response(JSON.stringify(data), {
 							status: response.status,
 							statusText: response.statusText,
@@ -126,7 +123,7 @@ XMLHttpRequest.prototype.send = function (body) {
 		this._scUrl.includes("api-v2.soundcloud.com/playlists/") &&
 		this._scUrl.includes("representation=full")
 	) {
-		console.log("[SClient] Intercepting XHR playlist request:", this._scUrl);
+		console.log("[SClient] Intercepting XHR playlist request.");
 
 		fetch(this._scUrl, {
 			method: this._scMethod,
@@ -142,9 +139,6 @@ XMLHttpRequest.prototype.send = function (body) {
 					});
 
 					if (stubIds.length > 0) {
-						console.log(
-							`[SClient] XHR Hydrating ${stubIds.length} track stubs for True Shuffle...`,
-						);
 						const clientId = new URL(
 							this._scUrl,
 							window.location.origin,
@@ -159,7 +153,10 @@ XMLHttpRequest.prototype.send = function (body) {
 										`https://api-v2.soundcloud.com/tracks?ids=${chunk.join(",")}&client_id=${clientId}`,
 									)
 										.then((r) => r.json())
-										.catch(() => []),
+										.catch((e) => {
+											console.error("[SClient] XHR hydration chunk failed:", e);
+											return [];
+										}),
 								);
 							}
 
@@ -172,7 +169,7 @@ XMLHttpRequest.prototype.send = function (body) {
 							data.tracks = data.tracks.map((t) =>
 								!t.title && map[t.id] ? map[t.id] : t,
 							);
-							console.log("[SClient] XHR Playlist hydration complete!");
+							console.log("[SClient] XHR Playlist hydration complete.");
 						}
 					}
 				}
@@ -188,7 +185,7 @@ XMLHttpRequest.prototype.send = function (body) {
 						[data.tracks[i], data.tracks[j]] = [data.tracks[j], data.tracks[i]];
 					}
 					console.log(
-						`[SClient] XHR True Shuffle (API Mode) perfectly randomized ${data.tracks.length} tracks in memory!`,
+						`[SClient] True Shuffle randomized ${data.tracks.length} tracks in memory.`,
 					);
 				}
 

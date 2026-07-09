@@ -189,7 +189,10 @@ function renderAccounts(overlay) {
 							switchBtn.onclick = () => {
 								sendBridgeMsg("set_active_account", { name: acc })
 									.then(() => sendBridgeMsg("restart_app"))
-									.catch((e) => customAlert("Switch Error: " + e));
+									.catch((e) => {
+										console.error("[SClient] Account switch failed:", e);
+										customAlert("Switch Error: " + e);
+									});
 							};
 							btnContainer.appendChild(switchBtn);
 						}
@@ -205,7 +208,10 @@ function renderAccounts(overlay) {
 										if (confirmed) {
 											sendBridgeMsg("delete_account", { name: acc })
 												.then(() => renderAccounts(overlay))
-												.catch((e) => customAlert("Delete Error: " + e));
+												.catch((e) => {
+													console.error("[SClient] Account delete failed:", e);
+													customAlert("Delete Error: " + e);
+												});
 										}
 									},
 								);
@@ -239,9 +245,15 @@ function renderAccounts(overlay) {
 						list.appendChild(div);
 					}
 				})
-				.catch((e) => customAlert("Active Account Error: " + e));
+				.catch((e) => {
+					console.error("[SClient] Set active account failed:", e);
+					customAlert("Active Account Error: " + e);
+				});
 		})
-		.catch((e) => customAlert("Get Accounts Error: " + e));
+		.catch((e) => {
+			console.error("[SClient] Get accounts failed:", e);
+			customAlert("Get Accounts Error: " + e);
+		});
 }
 
 // --- main overlay ---
@@ -765,7 +777,10 @@ function createOverlay() {
 					if (confirmed) {
 						sendBridgeMsg("stats_wipe_db", {})
 							.then(() => customAlert("Stats data wiped."))
-							.catch((e) => customAlert("Wipe failed: " + e));
+							.catch((e) => {
+								console.error("[SClient] Stats wipe failed:", e);
+								customAlert("Wipe failed: " + e);
+							});
 					}
 				},
 			);
@@ -876,8 +891,9 @@ function createOverlay() {
 			.then(() => {
 				window.location.reload();
 			})
-			.catch((err) => {
-				customAlert("Failed to save: " + err);
+			.catch((e) => {
+				console.error("[SClient] Settings save failed:", e);
+				customAlert("Failed to save: " + e);
 			});
 	});
 

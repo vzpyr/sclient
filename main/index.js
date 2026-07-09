@@ -35,12 +35,16 @@ function createWindow() {
 	global._activeSession = ses;
 	global._blockerInstance = null;
 
-	ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
-		global._blockerInstance = blocker;
-		if (config.adblockEnabled) {
-			blocker.enableBlockingInSession(ses);
-		}
-	});
+	ElectronBlocker.fromPrebuiltAdsAndTracking(fetch)
+		.then((blocker) => {
+			global._blockerInstance = blocker;
+			if (config.adblockEnabled) {
+				blocker.enableBlockingInSession(ses);
+			}
+		})
+		.catch((e) => {
+			console.error("[SClient] Failed to initialize adblocker:", e);
+		});
 
 	// strip electron/chromium from UA
 	const defaultUA = ses.getUserAgent();

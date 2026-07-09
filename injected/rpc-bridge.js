@@ -62,7 +62,7 @@ function setupDiscordRpc() {
 				});
 			}
 		} catch (e) {
-			console.error("[SClient] Discord RPC Error:", e);
+			console.error("[SClient] Discord RPC bridge error:", e);
 		}
 	});
 }

@@ -13,11 +13,15 @@ function extractOAuthToken() {
 	try {
 		const token = localStorage.getItem("oauth_token");
 		if (token && token.startsWith("2-")) return token;
-	} catch (e) {}
+	} catch (e) {
+		console.debug("[SClient] Stats: localStorage read failed:", e);
+	}
 	try {
 		const token = sessionStorage.getItem("oauth_token");
 		if (token && token.startsWith("2-")) return token;
-	} catch (e) {}
+	} catch (e) {
+		console.debug("[SClient] Stats: sessionStorage read failed:", e);
+	}
 	return null;
 }
 
@@ -71,6 +75,7 @@ function setupStatsTracking() {
 			});
 			updateStatus("Recorded!", "#5f5");
 		} catch (e) {
+			console.error("[SClient] Stats record listen failed:", e);
 			updateStatus("Error", "#f55");
 		}
 	}
@@ -119,7 +124,9 @@ function destroyAllCharts() {
 	activeCharts.forEach((c) => {
 		try {
 			c.destroy();
-		} catch (e) {}
+		} catch (e) {
+			console.debug("[SClient] Stats: chart destroy failed:", e);
+		}
 	});
 	activeCharts = [];
 }

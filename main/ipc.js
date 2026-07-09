@@ -123,9 +123,9 @@ function register({ ipcMain, session, app }) {
 			const data = await res.json();
 			if (data.code) return { ok: false, code: data.code, message: data.error };
 			return { ok: true };
-		} catch (err) {
-			console.error("[SClient] Listenbrainz submit error:", err);
-			return { ok: false, code: 0, message: err.message };
+		} catch (e) {
+			console.error("[SClient] Listenbrainz submit error:", e);
+			return { ok: false, code: 0, message: e.message };
 		}
 	});
 
@@ -179,8 +179,9 @@ function register({ ipcMain, session, app }) {
 						config.set("integrations.lastfm.username", data.session.name);
 						settle({ success: true, username: data.session.name });
 					}
-				} catch (err) {
-					settle({ error: err.message });
+				} catch (e) {
+					console.error("[SClient] Last.fm auth error:", e);
+					settle({ error: e.message });
 				}
 			};
 
@@ -221,9 +222,9 @@ function register({ ipcMain, session, app }) {
 			if (data.error)
 				return { ok: false, code: data.error, message: data.message };
 			return { ok: true };
-		} catch (err) {
-			console.error("[SClient] Last.fm now playing error:", err);
-			return { ok: false, code: 0, message: err.message };
+		} catch (e) {
+			console.error("[SClient] Last.fm now playing error:", e);
+			return { ok: false, code: 0, message: e.message };
 		}
 	});
 
@@ -249,9 +250,9 @@ function register({ ipcMain, session, app }) {
 			if (data.error)
 				return { ok: false, code: data.error, message: data.message };
 			return { ok: true };
-		} catch (err) {
-			console.error("[SClient] Last.fm scrobble error:", err);
-			return { ok: false, code: 0, message: err.message };
+		} catch (e) {
+			console.error("[SClient] Last.fm scrobble error:", e);
+			return { ok: false, code: 0, message: e.message };
 		}
 	});
 
@@ -291,24 +292,25 @@ function register({ ipcMain, session, app }) {
 				noWarnings: true,
 				paths: dlDir,
 			});
-		} catch (err) {
-			if (err.stderr && err.stderr.includes("DRM protected")) {
+		} catch (e) {
+			console.error("[SClient] Download error:", e.message || e);
+			if (e.stderr && e.stderr.includes("DRM protected")) {
 				throw new Error(
 					"This track is DRM protected and cannot be downloaded.",
 				);
 			}
-			if (err.stderr) {
-				const errorLines = err.stderr
+			if (e.stderr) {
+				const errorLines = e.stderr
 					.split("\n")
 					.filter((line) => line.includes("ERROR:"));
 				throw new Error(
 					errorLines.length > 0
 						? errorLines.join(" | ")
-						: `Unknown youtube-dl error. (${err.stderr})`,
+						: `Unknown youtube-dl error. (${e.stderr})`,
 				);
 			}
 			throw new Error(
-				`Unknown download error occurred: ${err.message || err.toString()}`,
+				`Unknown download error occurred: ${e.message || e.toString()}`,
 			);
 		}
 	});

@@ -17,7 +17,7 @@ if (fs.existsSync(CONFIG_FILE)) {
 	try {
 		_store = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
 	} catch (e) {
-		console.error("[SClient] Failed to parse config.json, starting fresh");
+		console.error("[SClient] Failed to parse config.json, starting fresh.");
 	}
 }
 
@@ -67,7 +67,7 @@ function getSecure(key, defaultVal = "") {
 		}
 		return raw;
 	} catch (e) {
-		console.error("[SClient] Failed to decrypt", key, e);
+		console.error("[SClient] Failed to decrypt:", key, e);
 		return defaultVal;
 	}
 }
@@ -81,7 +81,7 @@ function setSecure(key, val) {
 		}
 		_save();
 	} catch (e) {
-		console.error("[SClient] Failed to encrypt", key, e);
+		console.error("[SClient] Failed to encrypt:", key, e);
 	}
 }
 

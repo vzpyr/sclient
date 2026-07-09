@@ -8,7 +8,7 @@ function applyAdblock() {
 	window.fetch = async function (...args) {
 		const url = typeof args[0] === "string" ? args[0] : args[0]?.url || "";
 		if (adDomains.some((domain) => url.includes(domain))) {
-			console.log("[SClient] Blocked ad request (fetch):", url);
+			console.debug("[SClient] Blocked ad request (fetch):", url);
 			return new Response(JSON.stringify({}), {
 				status: 200,
 				statusText: "OK",
@@ -24,7 +24,7 @@ function applyAdblock() {
 			typeof url === "string" &&
 			adDomains.some((domain) => url.includes(domain))
 		) {
-			console.log("[SClient] Blocked ad request (xhr):", url);
+			console.debug("[SClient] Blocked ad request (xhr):", url);
 			this.send = function () {
 				Object.defineProperty(this, "readyState", {
 					value: 4,
