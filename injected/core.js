@@ -179,14 +179,21 @@ function extractClientId() {
 	return null;
 }
 
+// --- track data cache (shared by RPC, scrobbler, stats) ---
+
+const _trackDataCache = new Map();
+
 async function fetchGodModeData(songUrl) {
+	if (_trackDataCache.has(songUrl)) return _trackDataCache.get(songUrl);
 	const clientId = extractClientId();
 	if (!clientId) return null;
 	try {
 		const resolveUrl = `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`;
 		const res = await fetch(resolveUrl);
 		if (!res.ok) return null;
-		return await res.json();
+		const data = await res.json();
+		_trackDataCache.set(songUrl, data);
+		return data;
 	} catch (e) {
 		return null;
 	}

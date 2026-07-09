@@ -205,6 +205,19 @@ function injectNavigationButtons() {
 
 // --- apply all features ---
 
+// baseline (always applied — not toggles)
+applyLayoutFixes();
+injectFloatingButtonStyles();
+injectStyle(
+	"sclient-player-fix",
+	`
+    .playControls__soundBadge { width: 40vw !important; min-width: 350px !important; max-width: 550px !important; flex: none !important; }
+    .playbackSoundBadge__titleContextContainer { max-width: none !important; flex: 1 !important; overflow: hidden !important; }
+    .playbackSoundBadge__actions { flex-shrink: 0 !important; }
+  `,
+);
+
+// features (toggle-gated)
 function applyFeatureStyles() {
 	if (lazyScrollEnabled) setupLazyScroll();
 
@@ -278,11 +291,7 @@ function applyFeatureStyles() {
 		}, 1000);
 	}
 
-	if (adblockEnabled) {
-		try {
-			if (typeof applyAdblock === "function") applyAdblock();
-		} catch (e) {}
-	}
+	if (adblockEnabled) applyAdblock();
 
 	if (hideUpsellEnabled) {
 		injectStyle(
@@ -299,14 +308,6 @@ function applyFeatureStyles() {
 	}
 
 	// player fix
-	injectStyle(
-		"sclient-player-fix",
-		`
-    .playControls__soundBadge { width: 40vw !important; min-width: 350px !important; max-width: 550px !important; flex: none !important; }
-    .playbackSoundBadge__titleContextContainer { max-width: none !important; flex: 1 !important; overflow: hidden !important; }
-    .playbackSoundBadge__actions { flex-shrink: 0 !important; }
-  `,
-	);
 
 	if (enhancedHeaderEnabled) {
 		injectStyle(
@@ -351,16 +352,13 @@ function applyFeatureStyles() {
 	}
 }
 
-// --- mutation observer for dynamic elements ---
+// --- mutation observer (debounced to avoid hammering DOM on every mutation) ---
 
-const settingsObserver = new MutationObserver(() => {
+let _obsTimer = null;
+const _obsRun = () => {
 	injectSClientMenuButton();
-	try {
-		if (typeof injectDownloadButton === "function") injectDownloadButton();
-	} catch (e) {}
-	try {
-		if (typeof injectLyricsButton === "function") injectLyricsButton();
-	} catch (e) {}
+	injectDownloadButton();
+	injectLyricsButton();
 	if (enhancedHeaderEnabled) {
 		replaceNavTabsWithIcons();
 		injectNavigationButtons();
@@ -368,6 +366,11 @@ const settingsObserver = new MutationObserver(() => {
 	if (collapsibleSidebarEnabled) {
 		injectSidebarToggle();
 	}
+};
+
+const settingsObserver = new MutationObserver(() => {
+	clearTimeout(_obsTimer);
+	_obsTimer = setTimeout(_obsRun, 100);
 });
 
 if (document.readyState === "loading") {

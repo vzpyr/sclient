@@ -3,125 +3,151 @@ const fs = require("fs");
 const { app, safeStorage } = require("electron");
 
 const CONFIG_DIR = path.join(app.getPath("userData"), "SClient");
+const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 
 if (!fs.existsSync(CONFIG_DIR)) {
 	fs.mkdirSync(CONFIG_DIR, { recursive: true });
 }
 
-function readConfig(name, defaultVal = "") {
-	const p = path.join(CONFIG_DIR, name);
-	if (!fs.existsSync(p)) return defaultVal;
-	return fs.readFileSync(p, "utf8");
-}
+// --- JSON config store ---
 
-function writeConfig(name, val) {
-	fs.writeFileSync(path.join(CONFIG_DIR, name), val);
-}
+let _store = {};
 
-function readSecureConfig(name, defaultVal = "") {
-	const p = path.join(CONFIG_DIR, name);
-	if (!fs.existsSync(p)) return defaultVal;
+if (fs.existsSync(CONFIG_FILE)) {
 	try {
-		const buffer = fs.readFileSync(p);
-		if (safeStorage.isEncryptionAvailable()) {
-			return safeStorage.decryptString(buffer);
-		}
-		return buffer.toString("utf8");
+		_store = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
 	} catch (e) {
-		console.error("[SClient] Failed to read secure config", e);
+		console.error("[SClient] Failed to parse config.json, starting fresh");
+	}
+}
+
+function _save() {
+	fs.writeFileSync(CONFIG_FILE, JSON.stringify(_store, null, 2));
+}
+
+function get(key, defaultVal = "") {
+	return key in _store ? _store[key] : defaultVal;
+}
+
+function set(key, val) {
+	_store[key] = val;
+	_save();
+}
+
+function getSecure(key, defaultVal = "") {
+	if (!(key in _store)) return defaultVal;
+	try {
+		if (safeStorage.isEncryptionAvailable()) {
+			const buf = Buffer.from(_store[key], "base64");
+			return safeStorage.decryptString(buf);
+		}
+		return _store[key];
+	} catch (e) {
+		console.error("[SClient] Failed to decrypt", key, e);
 		return defaultVal;
 	}
 }
 
-function writeSecureConfig(name, val) {
-	const p = path.join(CONFIG_DIR, name);
+function setSecure(key, val) {
 	try {
 		if (safeStorage.isEncryptionAvailable()) {
-			fs.writeFileSync(p, safeStorage.encryptString(val));
+			_store[key] = safeStorage.encryptString(val).toString("base64");
 		} else {
-			fs.writeFileSync(p, val);
+			_store[key] = val;
 		}
+		_save();
 	} catch (e) {
-		console.error("[SClient] Failed to write secure config", e);
+		console.error("[SClient] Failed to encrypt", key, e);
 	}
 }
 
-// state read from disk once at startup
-let adblockEnabled = readConfig("adblock.conf") === "true";
-let discordRpcEnabled = readConfig("discord_rpc.conf") === "true";
-let trayIconEnabled = readConfig("tray_icon.conf") === "true";
-let statsApiSyncEnabled = readConfig("stats_api_sync.conf") === "true";
-let statsLocalTrackingEnabled =
-	readConfig("stats_local_tracking.conf") === "true";
+// --- css / js are stored as separate files (content, not config) ---
 
-const DEFAULT_CSS = "";
-const DEFAULT_JS = "";
+function getFile(name) {
+	const p = path.join(CONFIG_DIR, name);
+	return fs.existsSync(p) ? fs.readFileSync(p, "utf8") : "";
+}
+
+function setFile(name, val) {
+	fs.writeFileSync(path.join(CONFIG_DIR, name), val);
+}
 
 if (!fs.existsSync(path.join(CONFIG_DIR, "custom.css"))) {
-	writeConfig("custom.css", DEFAULT_CSS);
+	setFile("custom.css", "");
 }
 if (!fs.existsSync(path.join(CONFIG_DIR, "custom.js"))) {
-	writeConfig("custom.js", DEFAULT_JS);
+	setFile("custom.js", "");
 }
+
+// --- runtime state (synced to disk but also held in memory for performance) ---
+
+let adblockEnabled = get("adblock") === "true";
+let statsApiSyncEnabled = get("stats_api_sync") === "true";
+let statsLocalTrackingEnabled = get("stats_local_tracking") === "true";
+
+// --- config payload sent to renderer ---
 
 function buildConfigPayload() {
 	return {
-		css: readConfig("custom.css"),
-		js: readConfig("custom.js"),
-		lazy_scroll: readConfig("lazy_scroll.conf") === "true",
-		hide_decorations: readConfig("hide_decorations.conf") === "true",
-		custom_accent: readConfig("custom_accent.conf") === "true",
-		accent_color: readConfig("accent_color.conf", "#FF0000"),
-		wide_layout: readConfig("wide_layout.conf") === "true",
-		wide_layout_width: readConfig("wide_layout_width.conf", "1200"),
-		oled_dark_mode: readConfig("oled_dark_mode.conf") === "true",
-		adblock: readConfig("adblock.conf") === "true",
-		discord_rpc: readConfig("discord_rpc.conf") === "true",
-		tray_icon: readConfig("tray_icon.conf") === "true",
-		hide_upsell: readConfig("hide_upsell.conf") === "true",
-		hide_artists: readConfig("hide_artists.conf") === "true",
-		true_shuffle: readConfig("true_shuffle.conf") === "true",
-		true_shuffle_mode: readConfig("true_shuffle_mode.conf", "native"),
-		region_bypass: readConfig("region_bypass.conf") === "true",
-		proxy_url: readConfig("proxy_url.conf"),
-		enhanced_header: readConfig("enhanced_header.conf", "true") === "true",
-		collapsible_sidebar: readConfig("collapsible_sidebar.conf") === "true",
-		listenbrainz: readConfig("listenbrainz.conf") === "true",
-		listenbrainz_token: readSecureConfig("listenbrainz_token.conf"),
-		lastfm: readConfig("lastfm.conf") === "true",
-		lastfm_api_key: readSecureConfig("lastfm_api_key.conf"),
-		lastfm_secret: readSecureConfig("lastfm_secret.conf"),
-		lastfm_session_key: readSecureConfig("lastfm_session_key.conf"),
-		lastfm_username: readConfig("lastfm_username.conf"),
+		css: getFile("custom.css"),
+		js: getFile("custom.js"),
+		lazy_scroll: get("lazy_scroll") === "true",
+		hide_decorations: get("hide_decorations") === "true",
+		custom_accent: get("custom_accent") === "true",
+		accent_color: get("accent_color", "#FF0000"),
+		wide_layout: get("wide_layout") === "true",
+		wide_layout_width: get("wide_layout_width", "1200"),
+		oled_dark_mode: get("oled_dark_mode") === "true",
+		adblock: get("adblock") === "true",
+		discord_rpc: get("discord_rpc") === "true",
+		tray_icon: get("tray_icon") === "true",
+		hide_upsell: get("hide_upsell") === "true",
+		hide_artists: get("hide_artists") === "true",
+		true_shuffle: get("true_shuffle") === "true",
+		true_shuffle_mode: get("true_shuffle_mode", "native"),
+		region_bypass: get("region_bypass") === "true",
+		proxy_url: get("proxy_url"),
+		enhanced_header: get("enhanced_header", "true") === "true",
+		collapsible_sidebar: get("collapsible_sidebar") === "true",
+		listenbrainz: get("listenbrainz") === "true",
+		listenbrainz_token: getSecure("listenbrainz_token"),
+		lastfm: get("lastfm") === "true",
+		lastfm_api_key: getSecure("lastfm_api_key"),
+		lastfm_secret: getSecure("lastfm_secret"),
+		lastfm_session_key: getSecure("lastfm_session_key"),
+		lastfm_username: get("lastfm_username"),
 		stats_api_sync: statsApiSyncEnabled,
 		stats_local_tracking: statsLocalTrackingEnabled,
 	};
 }
 
+// --- accounts (uses separate files for partition dirs — legit use case) ---
+
+function getActiveAccount() {
+	return get("active_account", "main");
+}
+
+function setActiveAccount(name) {
+	set("active_account", name);
+}
+
 module.exports = {
 	CONFIG_DIR,
-	readConfig,
-	writeConfig,
-	readSecureConfig,
-	writeSecureConfig,
+	CONFIG_FILE,
+	get,
+	set,
+	getSecure,
+	setSecure,
+	getFile,
+	setFile,
+	getActiveAccount,
+	setActiveAccount,
 	buildConfigPayload,
 	get adblockEnabled() {
 		return adblockEnabled;
 	},
 	set adblockEnabled(v) {
 		adblockEnabled = v;
-	},
-	get discordRpcEnabled() {
-		return discordRpcEnabled;
-	},
-	set discordRpcEnabled(v) {
-		discordRpcEnabled = v;
-	},
-	get trayIconEnabled() {
-		return trayIconEnabled;
-	},
-	set trayIconEnabled(v) {
-		trayIconEnabled = v;
 	},
 	get statsApiSyncEnabled() {
 		return statsApiSyncEnabled;

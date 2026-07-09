@@ -24,8 +24,8 @@ app.on("before-quit", () => {
 });
 
 function createWindow() {
-	const hideDecorations = config.readConfig("hide_decorations.conf") === "true";
-	const activeAccount = config.readConfig("active_account.conf", "main");
+	const hideDecorations = config.get("hide_decorations") === "true";
+	const activeAccount = config.getActiveAccount();
 
 	const partition =
 		activeAccount === "main" ? "persist:main" : `persist:${activeAccount}`;
@@ -82,7 +82,7 @@ function createWindow() {
 			"core.js",
 			"adblock.js",
 			"shuffle.js",
-			"rpc.js",
+			"rpc-bridge.js",
 			"downloader.js",
 			"lyrics.js",
 			"scrobbler.js",
@@ -109,38 +109,9 @@ function createWindow() {
 
 		const configPayload = config.buildConfigPayload();
 
-		// prevent injected code from accessing tauri/config globals directly
-		injectedJs = injectedJs
-			.replace(/window\.__TAURI__/g, "__TAURI__")
-			.replace(/window\.__SCLIENT_CONFIG__/g, "__SCLIENT_CONFIG__");
-
 		const wrapperJs = `
 (function() {
     const __SCLIENT_CONFIG__ = ${JSON.stringify(configPayload)};
-    const __TAURI__ = (() => {
-        const callbacks = new Map();
-        let cid = 0;
-        window.addEventListener('message', (event) => {
-            if (event.source !== window) return;
-            if (event.data && event.data.source === 'sclient-bridge-reply') {
-                const { callbackId, success, result, error } = event.data;
-                const cb = callbacks.get(callbackId);
-                if (cb) {
-                    callbacks.delete(callbackId);
-                    success ? cb.resolve(result) : cb.reject(new Error(error));
-                }
-            }
-        });
-        return {
-            core: {
-                invoke: (cmd, args) => new Promise((resolve, reject) => {
-                    const callbackId = cid++;
-                    callbacks.set(callbackId, { resolve, reject });
-                    window.postMessage({ source: 'sclient-bridge', action: 'invoke', cmd, args, callbackId }, '*');
-                })
-            }
-        };
-    })();
     ${injectedJs}
 })();`;
 
@@ -148,7 +119,7 @@ function createWindow() {
 	});
 
 	mainWindow.on("close", (e) => {
-		const trayEnabled = config.readConfig("tray_icon.conf") === "true";
+		const trayEnabled = config.get("tray_icon") === "true";
 		if (!isQuitting && trayEnabled && tray) {
 			e.preventDefault();
 			mainWindow.hide();
@@ -164,8 +135,8 @@ app.whenReady().then(async () => {
 
 	createWindow();
 
-	const trayEnabled = config.readConfig("tray_icon.conf") === "true";
-	if (trayEnabled) {
+	const trayEnabled2 = config.get("tray_icon") === "true";
+	if (trayEnabled2) {
 		try {
 			tray = new Tray(path.join(__dirname, "..", "assets", "tray.png"));
 			const contextMenu = Menu.buildFromTemplate([

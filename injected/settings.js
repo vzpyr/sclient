@@ -224,7 +224,7 @@ function renderAccounts(overlay) {
 									? "Clear all cookies and browser data? The app will restart."
 									: "Clear all cookies and browser data for main profile?";
 								customConfirm(msg).then((confirmed) => {
-									if (confirmed && window.__TAURI__ && window.__TAURI__.core) {
+									if (confirmed) {
 										sendBridgeMsg(
 											isActive ? "clear_data_and_restart" : "clear_data",
 										);

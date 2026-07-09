@@ -7,37 +7,20 @@ const PROXY_ENDPOINTS = [
 	"api-v2.soundcloud.com/media",
 ];
 
-const PATCH_TO_STRING = `
-const _origToString = Function.prototype.toString;
-Function.prototype.toString = function() {
-  if (this && this.__native_name) {
-    return 'function ' + this.__native_name + '() { [native code] }';
-  }
-  return _origToString.call(this);
-};
-function patchToString(fn, name) {
-  Object.defineProperty(fn, 'name', { value: name, configurable: true });
-  Object.defineProperty(fn, '__native_name', { value: name, enumerable: false, configurable: false, writable: false });
-}
-`;
-
 // region bypass proxy injection
 const cfg = ipcRenderer.sendSync("get-proxy-config");
 
 if (cfg.enabled && cfg.url && cfg.url.startsWith("http")) {
 	const proxyJs = `
     (function() {
-      ${PATCH_TO_STRING}
-      window.__SC_FAST_PROXY__ = true;
       var proxyUrl = '${cfg.url}';
       var endpoints = ${JSON.stringify(PROXY_ENDPOINTS)};
 
       var origFetch = window.fetch;
-      var newFetch = function() {
+      window.fetch = function() {
         var args = arguments;
         var url = typeof args[0] === 'string' ? args[0] : (args[0] instanceof URL ? args[0].href : (args[0] && args[0].url || ''));
         if (endpoints.some(function(d) { return url.indexOf(d) !== -1; })) {
-          console.log('%c[SClient]%c Proxy Intercept: fetch', 'color:#ff5500; font-weight:bold;', '');
           var p = new URL(proxyUrl);
           p.searchParams.set('url', url);
           if (typeof args[0] === 'string' || args[0] instanceof URL) args[0] = p.toString();
@@ -45,14 +28,11 @@ if (cfg.enabled && cfg.url && cfg.url.startsWith("http")) {
         }
         return origFetch.apply(this, args);
       };
-      patchToString(newFetch, 'fetch');
-      window.fetch = newFetch;
 
       var origOpen = XMLHttpRequest.prototype.open;
-      var newOpen = function(method, url) {
+      XMLHttpRequest.prototype.open = function(method, url) {
         var f = typeof url === 'string' ? url : (url instanceof URL ? url.href : '');
         if (f && endpoints.some(function(d) { return f.indexOf(d) !== -1; })) {
-          console.log('%c[SClient]%c Proxy Intercept: xhr  ', 'color:#ff5500; font-weight:bold;', '');
           var p = new URL(proxyUrl);
           p.searchParams.set('url', f);
           f = p.toString();
@@ -60,8 +40,6 @@ if (cfg.enabled && cfg.url && cfg.url.startsWith("http")) {
         arguments[1] = f;
         return origOpen.apply(this, arguments);
       };
-      patchToString(newOpen, 'open');
-      XMLHttpRequest.prototype.open = newOpen;
     })()`;
 
 	webFrame.executeJavaScript(proxyJs);

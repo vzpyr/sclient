@@ -1,8 +1,10 @@
 const crypto = require("crypto");
 const fetch = require("cross-fetch");
+const path = require("path");
+const fs = require("fs");
 const { BrowserWindow } = require("electron");
 const config = require("./config");
-const rpc = require("./rpc");
+const rpc = require("./discord-rpc");
 const stats = require("./stats");
 
 // --- Last.fm helpers ---
@@ -17,18 +19,19 @@ function generateLastFmSig(params, secret) {
 }
 
 function getLastFmCreds() {
-	const apiKey = config.readSecureConfig("lastfm_api_key.conf").trim();
-	const secret = config.readSecureConfig("lastfm_secret.conf").trim();
-	const sk = config.readSecureConfig("lastfm_session_key.conf").trim();
-	return { apiKey, secret, sk };
+	return {
+		apiKey: config.getSecure("lastfm_api_key").trim(),
+		secret: config.getSecure("lastfm_secret").trim(),
+		sk: config.getSecure("lastfm_session_key").trim(),
+	};
 }
 
 function register({ ipcMain, session, app }) {
 	// proxy config (sync)
 	ipcMain.on("get-proxy-config", (event) => {
 		event.returnValue = {
-			enabled: config.readConfig("region_bypass.conf") === "true",
-			url: config.readConfig("proxy_url.conf"),
+			enabled: config.get("region_bypass") === "true",
+			url: config.get("proxy_url"),
 		};
 	});
 
@@ -37,33 +40,20 @@ function register({ ipcMain, session, app }) {
 	ipcMain.handle("get_custom_files", () => config.buildConfigPayload());
 
 	ipcMain.handle("save_custom_files", (_e, args) => {
-		config.writeConfig("custom.css", args.css);
-		config.writeConfig("custom.js", args.js);
-		config.writeConfig("lazy_scroll.conf", args.lazyScroll ? "true" : "false");
-		config.writeConfig(
-			"hide_decorations.conf",
-			args.hideDecorations ? "true" : "false",
-		);
-		config.writeConfig(
-			"custom_accent.conf",
-			args.customAccent ? "true" : "false",
-		);
-		config.writeConfig("accent_color.conf", args.accentColor || "#f50");
-		config.writeConfig("wide_layout.conf", args.wideLayout ? "true" : "false");
-		config.writeConfig(
-			"wide_layout_width.conf",
-			args.wideLayoutWidth ? args.wideLayoutWidth.toString() : "1200",
-		);
-		config.writeConfig(
-			"oled_dark_mode.conf",
-			args.oledDarkMode ? "true" : "false",
-		);
+		config.setFile("custom.css", args.css);
+		config.setFile("custom.js", args.js);
+		config.set("lazy_scroll", args.lazyScroll ? "true" : "false");
+		config.set("hide_decorations", args.hideDecorations ? "true" : "false");
+		config.set("custom_accent", args.customAccent ? "true" : "false");
+		config.set("accent_color", args.accentColor || "#f50");
+		config.set("wide_layout", args.wideLayout ? "true" : "false");
+		config.set("wide_layout_width", args.wideLayoutWidth || "1200");
+		config.set("oled_dark_mode", args.oledDarkMode ? "true" : "false");
 
 		const oldAdblock = config.adblockEnabled;
 		config.adblockEnabled = !!args.adblock;
-		config.writeConfig("adblock.conf", args.adblock ? "true" : "false");
+		config.set("adblock", args.adblock ? "true" : "false");
 
-		// notify via global state if needed; blocker toggle handled in index.js
 		if (
 			oldAdblock !== config.adblockEnabled &&
 			global._blockerInstance &&
@@ -76,62 +66,33 @@ function register({ ipcMain, session, app }) {
 			}
 		}
 
-		config.writeConfig("discord_rpc.conf", args.discordRpc ? "true" : "false");
-		config.writeConfig("tray_icon.conf", args.trayIcon ? "true" : "false");
-		config.writeConfig("hide_upsell.conf", args.hideUpsell ? "true" : "false");
-		config.writeConfig(
-			"hide_artists.conf",
-			args.hideArtists ? "true" : "false",
-		);
-		config.writeConfig(
-			"true_shuffle.conf",
-			args.true_shuffle || args.trueShuffle ? "true" : "false",
-		);
-		config.writeConfig(
-			"true_shuffle_mode.conf",
-			args.true_shuffle_mode || args.trueShuffleMode || "native",
-		);
-		config.writeConfig(
-			"region_bypass.conf",
-			args.regionBypass ? "true" : "false",
-		);
-		config.writeConfig("proxy_url.conf", args.proxyUrl || "");
-		config.writeConfig(
-			"enhanced_header.conf",
-			args.enhancedHeader ? "true" : "false",
-		);
-		config.writeConfig(
-			"collapsible_sidebar.conf",
-			args.collapsibleSidebar ? "true" : "false",
-		);
-		config.writeConfig(
-			"listenbrainz.conf",
-			args.listenbrainz ? "true" : "false",
-		);
-		config.writeSecureConfig(
-			"listenbrainz_token.conf",
-			args.listenbrainzToken || "",
-		);
-		config.writeConfig("lastfm.conf", args.lastfm ? "true" : "false");
-		config.writeSecureConfig("lastfm_api_key.conf", args.lastfmApiKey || "");
-		config.writeSecureConfig("lastfm_secret.conf", args.lastfmSecret || "");
+		config.set("discord_rpc", args.discordRpc ? "true" : "false");
+		config.set("tray_icon", args.trayIcon ? "true" : "false");
+		config.set("hide_upsell", args.hideUpsell ? "true" : "false");
+		config.set("hide_artists", args.hideArtists ? "true" : "false");
+		config.set("true_shuffle", (args.true_shuffle || args.trueShuffle) ? "true" : "false");
+		config.set("true_shuffle_mode", args.true_shuffle_mode || args.trueShuffleMode || "native");
+		config.set("region_bypass", args.regionBypass ? "true" : "false");
+		config.set("proxy_url", args.proxyUrl || "");
+		config.set("enhanced_header", args.enhancedHeader ? "true" : "false");
+		config.set("collapsible_sidebar", args.collapsibleSidebar ? "true" : "false");
+		config.set("listenbrainz", args.listenbrainz ? "true" : "false");
+		config.setSecure("listenbrainz_token", args.listenbrainzToken || "");
+		config.set("lastfm", args.lastfm ? "true" : "false");
+		config.setSecure("lastfm_api_key", args.lastfmApiKey || "");
+		config.setSecure("lastfm_secret", args.lastfmSecret || "");
+
 		config.statsApiSyncEnabled = args.statsApiSync || false;
-		config.writeConfig(
-			"stats_api_sync.conf",
-			args.statsApiSync ? "true" : "false",
-		);
+		config.set("stats_api_sync", args.statsApiSync ? "true" : "false");
 		config.statsLocalTrackingEnabled = args.statsLocalTracking || false;
-		config.writeConfig(
-			"stats_local_tracking.conf",
-			args.statsLocalTracking ? "true" : "false",
-		);
+		config.set("stats_local_tracking", args.statsLocalTracking ? "true" : "false");
 	});
 
 	// --- ListenBrainz ---
 
 	ipcMain.handle("submit_listenbrainz", async (_e, args) => {
 		try {
-			const token = config.readSecureConfig("listenbrainz_token.conf").trim();
+			const token = config.getSecure("listenbrainz_token").trim();
 			if (!token) return { ok: false, code: 0 };
 			const res = await fetch("https://api.listenbrainz.org/1/submit-listens", {
 				method: "POST",
@@ -153,8 +114,8 @@ function register({ ipcMain, session, app }) {
 	// --- Last.fm ---
 
 	ipcMain.handle("lastfm_authenticate", async () => {
-		const apiKey = config.readSecureConfig("lastfm_api_key.conf").trim();
-		const secret = config.readSecureConfig("lastfm_secret.conf").trim();
+		const apiKey = config.getSecure("lastfm_api_key").trim();
+		const secret = config.getSecure("lastfm_secret").trim();
 		if (!apiKey || !secret) return { error: "Missing API key or secret" };
 
 		return new Promise((resolve) => {
@@ -172,8 +133,9 @@ function register({ ipcMain, session, app }) {
 				webPreferences: { nodeIntegration: false, contextIsolation: true },
 			});
 
-			const authUrl = `https://www.last.fm/api/auth/?api_key=${apiKey}&cb=https://soundcloud.com/discover`;
-			authWin.loadURL(authUrl);
+			authWin.loadURL(
+				`https://www.last.fm/api/auth/?api_key=${apiKey}&cb=https://soundcloud.com/discover`,
+			);
 
 			const handleUrl = async (url) => {
 				try {
@@ -192,11 +154,8 @@ function register({ ipcMain, session, app }) {
 					if (data.error) {
 						settle({ error: data.message });
 					} else {
-						config.writeSecureConfig(
-							"lastfm_session_key.conf",
-							data.session.key,
-						);
-						config.writeConfig("lastfm_username.conf", data.session.name);
+						config.setSecure("lastfm_session_key", data.session.key);
+						config.set("lastfm_username", data.session.name);
 						settle({ success: true, username: data.session.name });
 					}
 				} catch (err) {
@@ -211,13 +170,13 @@ function register({ ipcMain, session, app }) {
 	});
 
 	ipcMain.handle("lastfm_save_credentials", (_e, args) => {
-		config.writeSecureConfig("lastfm_api_key.conf", args.apiKey || "");
-		config.writeSecureConfig("lastfm_secret.conf", args.secret || "");
+		config.setSecure("lastfm_api_key", args.apiKey || "");
+		config.setSecure("lastfm_secret", args.secret || "");
 	});
 
 	ipcMain.handle("lastfm_disconnect", () => {
-		config.writeSecureConfig("lastfm_session_key.conf", "");
-		config.writeConfig("lastfm_username.conf", "");
+		config.setSecure("lastfm_session_key", "");
+		config.set("lastfm_username", "");
 	});
 
 	ipcMain.handle("lastfm_now_playing", async (_e, args) => {
@@ -313,19 +272,17 @@ function register({ ipcMain, session, app }) {
 			});
 		} catch (err) {
 			if (err.stderr && err.stderr.includes("DRM protected")) {
-				throw new Error(
-					"This track is DRM protected and cannot be downloaded.",
-				);
+				throw new Error("This track is DRM protected and cannot be downloaded.");
 			}
 			if (err.stderr) {
 				const errorLines = err.stderr
 					.split("\n")
 					.filter((line) => line.includes("ERROR:"));
-				const cleanError =
+				throw new Error(
 					errorLines.length > 0
 						? errorLines.join(" | ")
-						: `Unknown youtube-dl error. (${err.stderr})`;
-				throw new Error(cleanError);
+						: `Unknown youtube-dl error. (${err.stderr})`,
+				);
 			}
 			throw new Error(
 				`Unknown download error occurred: ${err.message || err.toString()}`,
@@ -341,14 +298,9 @@ function register({ ipcMain, session, app }) {
 
 	// --- Accounts ---
 
-	const path = require("path");
-	const fs = require("fs");
-
-	ipcMain.handle("get_active_account", () =>
-		config.readConfig("active_account.conf", "main"),
-	);
+	ipcMain.handle("get_active_account", () => config.getActiveAccount());
 	ipcMain.handle("set_active_account", (_e, args) =>
-		config.writeConfig("active_account.conf", args.name),
+		config.setActiveAccount(args.name),
 	);
 	ipcMain.handle("get_accounts", () => {
 		const partitionsDir = path.join(app.getPath("userData"), "Partitions");
@@ -380,14 +332,14 @@ function register({ ipcMain, session, app }) {
 		app.exit(0);
 	});
 	ipcMain.handle("clear_data", async () => {
-		const activeAccount = config.readConfig("active_account.conf", "main");
+		const activeAccount = config.getActiveAccount();
 		const part =
 			activeAccount === "main" ? `persist:main` : `persist:${activeAccount}`;
 		await session.fromPartition(part).clearStorageData();
 		return "done";
 	});
 	ipcMain.handle("clear_data_and_restart", async () => {
-		const activeAccount = config.readConfig("active_account.conf", "main");
+		const activeAccount = config.getActiveAccount();
 		const part =
 			activeAccount === "main" ? `persist:main` : `persist:${activeAccount}`;
 		await session.fromPartition(part).clearStorageData();
