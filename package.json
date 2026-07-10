@@ -1,12 +1,14 @@
 {
   "name": "sclient",
   "desktopName": "com.vzpyr.sclient.desktop",
-  "version": "0.1.2",
+  "version": "0.1.0",
   "description": "Customizable cross-platform desktop client for SoundCloud",
   "main": "main/index.js",
   "scripts": {
     "start": "electron .",
+    "prebuild:linux": "node -e \"require('@electron/get').downloadArtifact({ version: '42.3.3+wvcus', artifactName: 'electron', platform: 'linux', arch: 'x64', mirrorOptions: { mirror: 'https://github.com/castlabs/electron-releases/releases/download/', customDir: 'v42.3.3+wvcus' } }).catch(() => process.exit(1))\"",
     "build:linux": "electron-builder --linux",
+    "prebuild:win": "node -e \"require('@electron/get').downloadArtifact({ version: '42.3.3+wvcus', artifactName: 'electron', platform: 'win32', arch: 'x64', mirrorOptions: { mirror: 'https://github.com/castlabs/electron-releases/releases/download/', customDir: 'v42.3.3+wvcus' } }).catch(() => process.exit(1))\"",
     "build:win": "electron-builder --windows",
     "postinstall": "electron-builder install-app-deps"
   },

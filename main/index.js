@@ -54,7 +54,7 @@ function createWindow() {
 		height: 800,
 		frame: !hideFrame,
 		title: "SClient",
-		icon: path.join(__dirname, "..", "icons", "32x32.png"),
+		icon: path.join(__dirname, "..", "assets", "32x32.png"),
 		webPreferences: {
 			partition,
 			preload: path.join(__dirname, "..", "preload.js"),
@@ -131,7 +131,7 @@ app.whenReady().then(async () => {
 
 	if (config.isEnabled("features.tray_icon")) {
 		try {
-			tray = new Tray(path.join(__dirname, "..", "icons", "32x32.png"));
+			tray = new Tray(path.join(__dirname, "..", "assets", "32x32.png"));
 			tray.setToolTip("SClient");
 			tray.setContextMenu(
 				Menu.buildFromTemplate([
