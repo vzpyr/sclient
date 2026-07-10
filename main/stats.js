@@ -155,10 +155,70 @@ function wipeDb() {
 	}
 }
 
+function exportDb(savePath) {
+	const currentDb = getDb();
+	if (!currentDb) throw new Error("Stats DB not initialized");
+	
+	const newDb = new Database(savePath);
+	newDb.pragma("journal_mode = WAL");
+	newDb.exec(`
+		CREATE TABLE IF NOT EXISTS listens (
+			played_at INTEGER NOT NULL,
+			track_id INTEGER NOT NULL,
+			track_json TEXT NOT NULL,
+			source TEXT NOT NULL DEFAULT 'api',
+			PRIMARY KEY (played_at, track_id)
+		)
+	`);
+	
+	const rows = currentDb.prepare("SELECT * FROM listens").all();
+	const insert = newDb.prepare("INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)");
+	newDb.transaction(() => {
+		for (const r of rows) {
+			insert.run(r.played_at, r.track_id, r.track_json, r.source);
+		}
+	})();
+	newDb.close();
+}
+
+function importDb(openPath, overwrite = false) {
+	const currentDb = getDb();
+	if (!currentDb) throw new Error("Stats DB not initialized");
+	
+	const impDb = new Database(openPath);
+	const hasListens = impDb.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='listens'").get();
+	if (!hasListens) {
+		impDb.close();
+		throw new Error("Invalid stats database: missing listens table");
+	}
+	
+	const rows = impDb.prepare("SELECT * FROM listens").all();
+	impDb.close();
+	
+	if (rows.length > 0) {
+		const first = rows[0];
+		if (!('played_at' in first && 'track_id' in first && 'track_json' in first)) {
+			throw new Error("Invalid stats database: missing required columns");
+		}
+	}
+	
+	const insert = currentDb.prepare("INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)");
+	currentDb.transaction(() => {
+		if (overwrite) {
+			currentDb.exec("DELETE FROM listens");
+		}
+		for (const r of rows) {
+			insert.run(r.played_at, r.track_id, r.track_json, r.source || 'api');
+		}
+	})();
+}
+
 module.exports = {
 	storeCredentials,
 	recordListen,
 	getData,
 	wipeDb,
 	syncPlayHistory,
+	exportDb,
+	importDb,
 };

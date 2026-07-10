@@ -615,6 +615,12 @@ function createAnalyticsOverlay() {
           <option value="30">Last 30 days</option>
           <option value="365">Last year</option>
         </select>
+        <button id="sclient-stats-export-btn" title="Export Stats DB" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #aaa; cursor: pointer; border-radius: 6px; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='#aaa';">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-down"><path d="m16 19 3 3 3-3"/><path d="M19 16v6"/><path d="M21 12.536V5"/><path d="M3 12A9 3 0 0 0 15.182 14.806"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
+        </button>
+        <button id="sclient-stats-import-btn" title="Import Stats DB" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #aaa; cursor: pointer; border-radius: 6px; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='#aaa';">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-up"><path d="M19 22v-6"/><path d="M21 12.536V5"/><path d="m22 19-3-3-3 3"/><path d="M3 12A9 3 0 0 0 14.457 14.886"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
+        </button>
         <button id="sclient-stats-close-btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #aaa; cursor: pointer; font-size: 18px; padding: 8px 14px; border-radius: 8px; transition: all 0.2s;"
           onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';"
           onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='#aaa';">&times; Close</button>
@@ -643,6 +649,50 @@ function createAnalyticsOverlay() {
 			const val = document.getElementById("sclient-stats-days-select").value;
 			currentDays = val ? parseInt(val) : null;
 			renderAnalytics();
+		});
+
+	document
+		.getElementById("sclient-stats-export-btn")
+		.addEventListener("click", async () => {
+			try {
+				await sendBridge("stats_export_db");
+				if (typeof showToast !== "undefined") showToast("Stats exported successfully");
+			} catch (e) {
+				if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
+					if (typeof showToast !== "undefined") showToast("Export failed: " + e.message);
+				}
+			}
+		});
+
+	document
+		.getElementById("sclient-stats-import-btn")
+		.addEventListener("click", async () => {
+			try {
+				const filePath = await sendBridge("stats_pick_import_file");
+				if (!filePath) return;
+
+				let overwrite = false;
+				if (typeof showConfirm !== "undefined") {
+					const choice = await showConfirm(
+						"You selected a database file to import.\n\nDo you want to completely overwrite your existing stats, or merge them together?",
+						[
+							{ id: "cancel", text: "Cancel", type: "secondary" },
+							{ id: "merge", text: "Merge", type: "primary" },
+							{ id: "overwrite", text: "Overwrite", type: "danger" }
+						]
+					);
+					if (choice === "cancel" || choice === false) return;
+					overwrite = choice === "overwrite";
+				}
+				
+				await sendBridge("stats_execute_import", { filePath, overwrite });
+				if (typeof showToast !== "undefined") showToast("Stats imported successfully");
+				renderAnalytics();
+			} catch (e) {
+				if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
+					if (typeof showToast !== "undefined") showToast("Import failed: " + e.message);
+				}
+			}
 		});
 
 	const onEsc = (e) => {

@@ -128,7 +128,7 @@ function sendBridge(cmd, args = {}) {
 		timeout = setTimeout(() => {
 			window.removeEventListener("message", handler);
 			reject(new Error("Bridge timeout"));
-		}, 10000);
+		}, 300000);
 		window.postMessage(
 			{
 				source: "sclient-bridge",
@@ -257,13 +257,14 @@ function showToast(message) {
 	const isLight = document.body.classList.contains("theme-light");
 	toast.style.cssText = `
     position: fixed; bottom: 20px; left: 20px;
-    background: ${isLight ? "rgba(250, 250, 250, 0.95)" : "rgba(18, 18, 18, 0.95)"};
-    color: ${isLight ? "#222" : "#fff"}; padding: 12px 24px; border-radius: 8px;
-    font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    border: 1px solid ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"};
-    z-index: 9999999; opacity: 0; transform: translateY(10px);
-    transition: all 0.3s ease;
+    background: var(--background-surface-color, ${isLight ? "#f2f2f2" : "#1e1e1e"});
+    color: ${isLight ? "#333" : "#fff"}; border: 1px solid ${isLight ? "#ccc" : "#333"};
+    border-radius: 20px; min-height: 40px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 500;
+    pointer-events: none; z-index: 9999999; opacity: 0; transform: translateY(10px);
+    transition: all 0.3s ease; white-space: pre-line; text-align: center;
   `;
 	document.body.appendChild(toast);
 	requestAnimationFrame(() => {
@@ -277,7 +278,7 @@ function showToast(message) {
 	}, 3500);
 }
 
-function showConfirm(message) {
+function showConfirm(message, options) {
 	return new Promise((resolve) => {
 		const isLight = document.body.classList.contains("theme-light");
 		const bg = isLight ? "#fff" : "#1e1e1e";
@@ -299,25 +300,15 @@ function showConfirm(message) {
 		const btnRow = document.createElement("div");
 		btnRow.style.cssText = "display: flex; gap: 12px; justify-content: center;";
 
-		const cancelBtn = document.createElement("button");
-		cancelBtn.textContent = "Cancel";
-		cancelBtn.style.cssText = `padding: 8px 16px; background: transparent; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 6px; cursor: pointer; font-weight: 500;`;
-
-		const okBtn = document.createElement("button");
-		okBtn.textContent = "Confirm";
-		okBtn.style.cssText =
-			"padding: 8px 16px; background: #d32f2f; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;";
-
-		btnRow.appendChild(cancelBtn);
-		btnRow.appendChild(okBtn);
-		modal.appendChild(btnRow);
-		backdrop.appendChild(modal);
-		document.body.appendChild(backdrop);
-
-		requestAnimationFrame(() => {
-			backdrop.style.opacity = "1";
-			modal.style.transform = "scale(1)";
-		});
+		let buttons = [];
+		if (Array.isArray(options)) {
+			buttons = options;
+		} else {
+			buttons = [
+				{ id: false, text: arguments[2] || "Cancel", type: "secondary" },
+				{ id: true, text: arguments[1] || "Confirm", type: "danger" }
+			];
+		}
 
 		const cleanup = (res) => {
 			backdrop.style.opacity = "0";
@@ -327,8 +318,29 @@ function showConfirm(message) {
 				resolve(res);
 			}, 200);
 		};
-		cancelBtn.onclick = () => cleanup(false);
-		okBtn.onclick = () => cleanup(true);
+
+		buttons.forEach(b => {
+			const btn = document.createElement("button");
+			btn.textContent = b.text;
+			if (b.type === "danger") {
+				btn.style.cssText = "padding: 8px 16px; background: #d32f2f; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;";
+			} else if (b.type === "primary") {
+				btn.style.cssText = `padding: 8px 16px; background: ${getAccent ? getAccent() : '#1976d2'}; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;`;
+			} else {
+				btn.style.cssText = `padding: 8px 16px; background: transparent; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 6px; cursor: pointer; font-weight: 500;`;
+			}
+			btn.onclick = () => cleanup(b.id);
+			btnRow.appendChild(btn);
+		});
+
+		modal.appendChild(btnRow);
+		backdrop.appendChild(modal);
+		document.body.appendChild(backdrop);
+
+		requestAnimationFrame(() => {
+			backdrop.style.opacity = "1";
+			modal.style.transform = "scale(1)";
+		});
 	});
 }
 

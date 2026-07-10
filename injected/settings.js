@@ -1,9 +1,7 @@
-// ── Shared style constants ──────────────────────────────────────────────────
 const S_CARD = "display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);";
 const S_INPUT = "width:100%;box-sizing:border-box;background:rgba(0,0,0,0.5);border:1px solid #333;color:white;border-radius:4px;padding:6px 10px;font-family:Inter,sans-serif;font-size:12px;outline:none;transition:border-color 0.2s;";
 const S_BTN_SM = "padding:7px 12px;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;border-radius:4px;border:none;";
 
-// ── Toggle helpers ──────────────────────────────────────────────────────────
 function toggleHtml({ label, toggleId, bgId, sliderId }) {
 	return `<div style="${S_CARD}">
   <span style="font-size:14px;font-weight:500;">${label}</span>
@@ -38,7 +36,6 @@ function setupToggle(overlay, { toggleId, bgId, sliderId, initial, onChange }) {
 	return { toggle, bg, slider };
 }
 
-// ── Syntax highlighting ─────────────────────────────────────────────────────
 function highlight(text, patterns) {
 	let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 	const tokens = [];
@@ -73,7 +70,6 @@ function highlightJs(text) {
 	]);
 }
 
-// ── Editor setup ────────────────────────────────────────────────────────────
 function setupEditors(overlay) {
 	const $ = (id) => overlay.querySelector(id);
 	const cssEd = $("#sclient-css-editor"), jsEd = $("#sclient-js-editor");
@@ -102,7 +98,6 @@ function setupEditors(overlay) {
 	updateCss(cssEd); updateJs(jsEd);
 }
 
-// ── Account list ─────────────────────────────────────────────────────────────
 function renderAccounts(overlay) {
 	sendBridge("get_accounts")
 		.then((accounts) => {
@@ -171,7 +166,6 @@ function renderAccounts(overlay) {
 		.catch((e) => { console.error("[SClient] Get accounts failed:", e); showToast("Get Accounts Error: " + e); });
 }
 
-// ── Overlay creation ─────────────────────────────────────────────────────────
 function createOverlay() {
 	if (document.getElementById("sclient-settings-overlay")) return;
 
@@ -252,7 +246,7 @@ function createOverlay() {
           </div>
         </div>
         <input type="password" id="sclient-listenbrainz-token-input" placeholder="Enter ListenBrainz User Token..." style="${S_INPUT}">
-        <div style="margin-top:5px;font-size:11px;color:#888;">Get your token from <a href="https://listenbrainz.org/profile/" target="_blank" style="color:#aaa;text-decoration:underline;">listenbrainz.org/profile</a></div>
+        <div style="margin-top:5px;font-size:11px;color:#888;">Get your token from <a href="https://listenbrainz.org/settings/" target="_blank" style="color:#aaa;text-decoration:underline;">listenbrainz.org/settings</a></div>
       </div>
 
       <div style="margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
@@ -359,7 +353,6 @@ function createOverlay() {
 	document.body.appendChild(overlay);
 	setupEditors(overlay);
 
-	// Data-driven toggle setup
 	const TOGGLE_CONFIGS = [
 		{ toggleId: "sclient-lazy-scroll-toggle",        bgId: "sclient-toggle-bg-lazy-scroll",        sliderId: "sclient-toggle-slider-lazy-scroll",        initial: lazyScrollOn },
 		{ toggleId: "sclient-decorations-toggle",        bgId: "sclient-toggle-bg-decorations",        sliderId: "sclient-toggle-slider-decorations",        initial: hideDecorationsOn },
@@ -390,7 +383,6 @@ function createOverlay() {
 	widthInput.value = wideLayoutWidth && wideLayoutWidth !== "1200" ? wideLayoutWidth : "";
 	overlay.querySelector("#sclient-trueshuffle-engine").value = trueShuffleMode;
 
-	// Accent color UI
 	const accentToggle = overlay.querySelector("#sclient-accent-toggle");
 	const accentBg     = overlay.querySelector("#sclient-toggle-bg-accent");
 	const accentSlider = overlay.querySelector("#sclient-toggle-slider-accent");
@@ -412,7 +404,6 @@ function createOverlay() {
 		if (/^#[0-9A-F]{6}$/i.test(e.target.value)) accentPicker.value = e.target.value;
 	});
 
-	// ListenBrainz / Last.fm inputs
 	overlay.querySelector("#sclient-listenbrainz-token-input").value = listenbrainzToken;
 	overlay.querySelector("#sclient-lastfm-apikey-input").value = cfg.lastfm_api_key || "";
 	overlay.querySelector("#sclient-lastfm-secret-input").value = cfg.lastfm_secret || "";
@@ -470,7 +461,7 @@ function createOverlay() {
 
 	overlay.querySelector("#sclient-proxyurl-input").value = proxyUrl;
 	overlay.querySelector("#sclient-proxyurl-public-btn").addEventListener("click", () => {
-		overlay.querySelector("#sclient-proxyurl-input").value = "https://scproxy.vercel.app/";
+		overlay.querySelector("#sclient-proxyurl-input").value = "https://sc.z-n.cc/";
 	});
 
 	overlay.querySelector("#sclient-close-btn").addEventListener("click", toggleOverlay);
@@ -525,7 +516,6 @@ function createOverlay() {
 	renderAccounts(overlay);
 }
 
-// ── Overlay toggle ────────────────────────────────────────────────────────────
 function toggleOverlay() {
 	createOverlay();
 	const overlay = document.getElementById("sclient-settings-overlay");

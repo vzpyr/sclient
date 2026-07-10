@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const fetch = require("cross-fetch");
 const path = require("path");
 const fs = require("fs");
-const { BrowserWindow } = require("electron");
+const { BrowserWindow, dialog } = require("electron");
 const config = require("./config");
 const rpc = require("./discord-rpc");
 const stats = require("./stats");
@@ -244,6 +244,30 @@ function register({ ipcMain, session, app }) {
 
 	ipcMain.handle("stats_wipe_db", () => {
 		stats.wipeDb();
+	});
+
+	ipcMain.handle("stats_export_db", async (_e) => {
+		const res = await dialog.showSaveDialog({
+			title: "Export Stats Database",
+			defaultPath: "soundcloud-stats.db",
+			filters: [{ name: "Database", extensions: ["db", "sqlite", "sqlite3"] }]
+		});
+		if (res.canceled) throw new Error("cancelled");
+		stats.exportDb(res.filePath);
+	});
+
+	ipcMain.handle("stats_pick_import_file", async () => {
+		const res = await dialog.showOpenDialog({
+			title: "Import Stats Database",
+			filters: [{ name: "Database", extensions: ["db", "sqlite", "sqlite3"] }],
+			properties: ['openFile']
+		});
+		if (res.canceled || res.filePaths.length === 0) return null;
+		return res.filePaths[0];
+	});
+
+	ipcMain.handle("stats_execute_import", async (_e, args) => {
+		stats.importDb(args.filePath, args.overwrite);
 	});
 
 	const ytdlexec = require("youtube-dl-exec");
