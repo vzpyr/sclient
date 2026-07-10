@@ -87,6 +87,9 @@ const credTimer = setInterval(async () => {
 	if (extractClientId() && extractOAuthToken()) clearInterval(credTimer);
 }, 2000);
 
+let _statsRefresh = null;
+function refreshStatsStatus() { if (_statsRefresh) _statsRefresh(); }
+
 function setupStatsTracking() {
 	if (!statsLocalOn) return;
 
@@ -94,16 +97,17 @@ function setupStatsTracking() {
 	let hasRecorded = false;
 	let startTime = 0;
 	let threshold = 0;
+	let lastText = "Waiting...", lastColor = "#ccc";
 
 	function setStatus(text, color) {
+		lastText = text; lastColor = color || "#ccc";
 		const el = document.getElementById("sclient-stats-status");
-		if (el) {
-			el.textContent = text;
-			el.style.color = color || "#ccc";
-		}
+		if (el) { el.textContent = text; el.style.color = lastColor; }
 	}
 
-	setStatus("Waiting...", "#ccc");
+	_statsRefresh = () => setStatus(lastText, lastColor);
+
+
 
 	async function record(t, ts) {
 		try {
@@ -142,6 +146,8 @@ function setupStatsTracking() {
 			if (!hasRecorded && evt.timestamp - startTime >= threshold) {
 				record(trackData, Math.floor(startTime / 1000));
 				hasRecorded = true;
+			} else if (!hasRecorded) {
+				setStatus("Listening...", "#789cff");
 			}
 		} else if (!evt.isPlaying && trackData) {
 			setStatus(

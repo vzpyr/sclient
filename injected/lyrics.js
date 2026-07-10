@@ -40,6 +40,7 @@ function toggleLyrics() {
 	const sidebar = document.getElementById("sclient-lyrics-sidebar");
 	lyricsOpen = !lyricsOpen;
 	if (lyricsOpen) {
+		void sidebar.offsetWidth;
 		sidebar.style.left = "20px";
 		fetchLyrics();
 	} else {
