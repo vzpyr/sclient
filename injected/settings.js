@@ -227,6 +227,14 @@ function createOverlay() {
         </div>
       </div>
 
+      <div style="${S_CARD}">
+        <span style="font-size:14px;font-weight:500;">Custom Font</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="text" id="sclient-custom-font-text" placeholder="e.g. Roboto" style="width:120px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;">
+          ${toggleLabelHtml("sclient-custom-font-toggle", "sclient-toggle-bg-custom-font", "sclient-toggle-slider-custom-font")}
+        </div>
+      </div>
+
       ${togglesHtml}
 
       <div style="${S_CARD}">
@@ -404,6 +412,22 @@ function createOverlay() {
 		if (/^#[0-9A-F]{6}$/i.test(e.target.value)) accentPicker.value = e.target.value;
 	});
 
+	const customFontToggle = overlay.querySelector("#sclient-custom-font-toggle");
+	const customFontBg     = overlay.querySelector("#sclient-toggle-bg-custom-font");
+	const customFontSlider = overlay.querySelector("#sclient-toggle-slider-custom-font");
+	const customFontText   = overlay.querySelector("#sclient-custom-font-text");
+
+	customFontToggle.checked = cfg.custom_font || false;
+	customFontText.value = cfg.custom_font_family || "";
+
+	function setCustomFontUi(on) {
+		customFontBg.style.backgroundColor = on ? getAccent() : "#333";
+		customFontSlider.style.transform = on ? "translateX(20px)" : "translateX(0)";
+		customFontText.style.opacity = on ? "1" : "0.5";
+	}
+	setCustomFontUi(cfg.custom_font || false);
+	customFontToggle.addEventListener("change", (e) => setCustomFontUi(e.target.checked));
+
 	overlay.querySelector("#sclient-listenbrainz-token-input").value = listenbrainzToken;
 	overlay.querySelector("#sclient-lastfm-apikey-input").value = cfg.lastfm_api_key || "";
 	overlay.querySelector("#sclient-lastfm-secret-input").value = cfg.lastfm_secret || "";
@@ -486,6 +510,8 @@ function createOverlay() {
 			hideDecorations:      $("#sclient-decorations-toggle").checked,
 			customAccent:         accentToggle.checked,
 			accentColor:          accentText.value,
+			customFont:           customFontToggle.checked,
+			customFontFamily:     customFontText.value,
 			wideLayout:           $("#sclient-wide-layout-toggle").checked,
 			wideLayoutWidth:      ww,
 			collapsibleSidebar:   $("#sclient-collapsible-sidebar-toggle").checked,

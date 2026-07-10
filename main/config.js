@@ -106,6 +106,8 @@ function buildPayload() {
 		hide_decorations: isEnabled("features.hide_decorations"),
 		custom_accent: isEnabled("features.custom_accent"),
 		accent_color: get("features.accent_color", "#FF0000"),
+		custom_font: isEnabled("features.custom_font"),
+		custom_font_family: get("features.custom_font_family", ""),
 		wide_layout: isEnabled("features.wide_layout"),
 		wide_layout_width: get("features.wide_layout_width", "1200"),
 		oled_dark_mode: isEnabled("features.oled_dark_mode"),

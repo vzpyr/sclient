@@ -69,6 +69,8 @@ function register({ ipcMain, session, app }) {
 		);
 		config.set("features.custom_accent", args.customAccent ? "true" : "false");
 		config.set("features.accent_color", args.accentColor || "#f50");
+		config.set("features.custom_font", args.customFont ? "true" : "false");
+		config.set("features.custom_font_family", args.customFontFamily || "");
 		config.set("features.wide_layout", args.wideLayout ? "true" : "false");
 		config.set("features.wide_layout_width", args.wideLayoutWidth || "1200");
 		config.set("features.oled_dark_mode", args.oledDarkMode ? "true" : "false");

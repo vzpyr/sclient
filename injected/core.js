@@ -75,6 +75,22 @@ injectStyle(
 const cfg = window.__SCLIENT_CONFIG__ || {};
 const customAccentOn = cfg.custom_accent || false;
 const accentColor = cfg.accent_color || "#FF0000";
+const customFontOn = cfg.custom_font || false;
+const customFontFamily = cfg.custom_font_family || "";
+
+if (customFontOn && customFontFamily) {
+	const familyUrl = customFontFamily.trim().replace(/\s+/g, '+');
+	injectStyle(
+		"sclient-global-font",
+		`
+  @import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;700&display=swap');
+  html, body, * {
+    font-family: '${customFontFamily}', monospace !important;
+  }
+`
+	);
+}
+
 const lazyScrollOn = cfg.lazy_scroll || false;
 const hideDecorationsOn = cfg.hide_decorations || false;
 const wideLayoutOn = cfg.wide_layout || false;
