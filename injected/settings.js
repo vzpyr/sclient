@@ -313,7 +313,7 @@ function createOverlay() {
 
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:14px;font-weight:500;">Bypass Song Region Blocks</span>
+          <span style="font-size:14px;font-weight:500;">Enable Region Bypass Proxy</span>
           ${toggleLabelHtml("sclient-regionbypass-toggle", "sclient-toggle-bg-regionbypass", "sclient-toggle-slider-regionbypass")}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
