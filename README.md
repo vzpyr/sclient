@@ -13,17 +13,19 @@ SClient adds several enhancements and quality of life features to the standard w
 ### 🎧 Playback & Discovery
 * **DRM Support**: Play DRM-protected tracks using proper Widevine DRM out of the box (Castlabs Electron).
 * **True Shuffle**: Fixes the default shuffle behavior by pre-loading the entire playlist or using an API-based shuffle engine.
-* **Region Bypass**: Experimental built-in proxy support to bypass geographic track restrictions. Use the free public proxy (accessible within the app) or self-host your own (app.js).
+* **Region Bypass**: Experimental built-in proxy support to bypass geographic track restrictions. Use the free public proxy (accessible within the app) or self-host your own.
 
 ### 🔌 Integrations & Tools
-* **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`.
+* **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`, featuring a sleek UI toast with a live download progress bar.
+* **Lyrics Integration**: Access lyrics for the current song directly from the playback bar. Includes a dedicated sidebar with manual artist and title search fallbacks.
 * **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Any sensitive information is securely stored and encrypted using your OS's native keyring (safeStorage).
 * **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
-* **Listening Stats & Analytics**: Track your listening history locally with an SQLite database. View detailed analytics with charts for top artists, tracks, genres, listening hours, and more. Optionally sync your SoundCloud play history automatically.
+* **Listening Stats & Analytics**: Track your listening history locally with an SQLite database. View detailed analytics with charts for top artists, tracks, genres, and listening hours. You can securely export, import, or merge your local database to seamlessly migrate your data.
 
 ### 🎨 Customization & UI Tweaks
 * **Extensive Interface Tweaks**: Enable a true black OLED dark mode, wide layout, collapsible sidebar, and an enhanced header with modern Lucide icons. Add a lazy scroll button, hide window decorations, and disable subscription upsells.
-* **Custom CSS/JS**: Fully inject your own custom CSS and JavaScript.
+* **Custom Accent Color**: Personalize the entire app interface by choosing a custom accent color using the built-in color picker in the settings menu.
+* **Custom CSS/JS Editor**: Inject your own custom CSS and JavaScript. No need to modify source files, write your code directly in the live, syntax-highlighted editor built right into the settings overlay.
 * **Multi-Account Support**: Create, manage, and switch between multiple isolated profiles.
 * **System Tray**: Run the application in the background and control playback from your system tray.
 
