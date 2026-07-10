@@ -322,6 +322,7 @@ function createOverlay() {
           <button id="sclient-proxyurl-public-btn" style="flex-shrink:0;white-space:nowrap;padding:4px 8px;background:#333;border:1px solid #444;color:#ccc;border-radius:4px;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;transition:background 0.2s;">Use Public</button>
         </div>
         <div style="font-size:10px;color:#666;margin-top:2px;">Opening profile may geo-lock some songs</div>
+        <div style="font-size:10px;color:#f88;margin-top:2px;">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic.</div>
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:15px;">
