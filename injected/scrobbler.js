@@ -86,8 +86,10 @@ function setupScrobbling() {
 			threshold = evt.trackData
 				? Math.min(evt.trackData.duration / 1000 / 2, 240)
 				: 0;
-			if (evt.isPlaying && artist && title)
+			if (evt.isPlaying && artist && title) {
 				broadcast("nowPlaying", artist, title);
+				for (const b of backends) updateStatus(b.elId, "Listening...", "#789cff");
+			}
 			prevPlaying = evt.isPlaying;
 			return;
 		}
@@ -102,6 +104,8 @@ function setupScrobbling() {
 				broadcast("scrobble", artist, title, startTime);
 				hasScrobbled = true;
 				for (const b of backends) updateStatus(b.elId, "Scrobbled!", "#5f5");
+			} else if (!hasScrobbled) {
+				for (const b of backends) updateStatus(b.elId, "Listening...", "#789cff");
 			}
 		} else if (!evt.isPlaying && evt.trackData) {
 			const status = hasScrobbled ? "Scrobbled!" : "Paused";
