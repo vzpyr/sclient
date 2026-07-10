@@ -109,3 +109,17 @@ window.addEventListener("message", (event) => {
 ipcRenderer.on("download_progress", (_event, data) => {
 	window.postMessage({ source: "sclient-bridge-event", event: "download_progress", data }, "*");
 });
+
+window.addEventListener("message", (event) => {
+	if (event.source !== window || !event.data) return;
+	if (event.data.source === "sclient-mini-update") {
+		ipcRenderer.send("mini_update", event.data.data);
+	}
+	if (event.data.source === "sclient-mini-toggle") {
+		ipcRenderer.send("toggle_miniplayer");
+	}
+});
+
+ipcRenderer.on("mini_action", (_event, action) => {
+	window.postMessage({ source: "sclient-mini-action", action }, "*");
+});

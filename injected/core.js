@@ -296,7 +296,69 @@ async function pollPlayback() {
 			duration,
 		});
 	}
+
+	if (typeof window !== "undefined") {
+		const likeBtn = document.querySelector(".playbackSoundBadge__like");
+		const shuffleBtn = document.querySelector(".shuffleControl");
+		const repeatBtn = document.querySelector(".repeatControl");
+		
+		let loopState = "none";
+		if (repeatBtn) {
+			if (repeatBtn.classList.contains("m-one")) loopState = "one";
+			else if (repeatBtn.classList.contains("m-all")) loopState = "all";
+		}
+		
+		window.postMessage({ 
+			source: "sclient-mini-update", 
+			data: {
+				trackData: currentTrackData,
+				isPlaying: isPlaying,
+				position: position,
+				duration: duration,
+				isLiked: likeBtn ? likeBtn.classList.contains("sc-button-selected") : false,
+				isShuffled: shuffleBtn ? shuffleBtn.classList.contains("m-shuffling") : false,
+				loopState: loopState,
+				accent: typeof getAccent === "function" ? getAccent() : "#f50"
+			}
+		}, "*");
+	}
 }
+
+function injectMiniplayerButton() {
+	if (document.getElementById("sclient-mini-btn")) return;
+
+	const dlBtn = document.getElementById("sclient-download-btn");
+	if (!dlBtn || !dlBtn.parentNode) return;
+
+	const btn = document.createElement("button");
+	btn.id = "sclient-mini-btn";
+	btn.className = "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
+	btn.title = "Mini Player";
+	btn.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-turntable-icon lucide-turntable"><path d="M10 12.01h.01"/><path d="M18 8v4a8 8 0 0 1-1.07 4"/><circle cx="10" cy="12" r="4"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div>';
+
+	btn.addEventListener("click", (e) => {
+		e.preventDefault();
+		window.postMessage({ source: "sclient-mini-toggle" }, "*");
+	});
+
+	dlBtn.parentNode.insertBefore(btn, dlBtn);
+}
+
+window.addEventListener("message", (event) => {
+	if (event.source !== window || !event.data || event.data.source !== "sclient-mini-action") return;
+	const { action } = event.data;
+	if (action === "playpause") document.querySelector(".playControl")?.click();
+	if (action === "next") document.querySelector(".skipControl__next")?.click();
+	if (action === "prev") document.querySelector(".skipControl__previous")?.click();
+	if (action === "shuffle") document.querySelector(".shuffleControl")?.click();
+	if (action === "loop") document.querySelector(".repeatControl")?.click();
+	if (action === "like") document.querySelector(".playbackSoundBadge__like")?.click();
+	if (action && action.action === "seek") {
+		if (typeof seekTo === "function") seekTo(action.value);
+	}
+	// Force an immediate update so the bridge gets the new state immediately instead of waiting for the 2s loop
+	setTimeout(() => { if (typeof pollPlayback === "function") pollPlayback(); }, 50);
+});
 
 function showToast(message) {
 	const toast = document.createElement("div");

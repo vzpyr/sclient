@@ -127,6 +127,65 @@ app.whenReady().then(async () => {
 
 	ipc.register({ ipcMain, session, app });
 
+	let miniWin = null;
+	ipcMain.on("toggle_miniplayer", () => {
+		if (miniWin) {
+			miniWin.close();
+			return;
+		}
+		miniWin = new BrowserWindow({
+			width: 480,
+			height: 180,
+			frame: false,
+			resizable: false,
+			alwaysOnTop: true,
+			webPreferences: {
+				nodeIntegration: true,
+				contextIsolation: false
+			}
+		});
+		miniWin.loadFile(path.join(__dirname, "mini.html"));
+		miniWin.on("closed", () => {
+			miniWin = null;
+			if (win && !win.isDestroyed()) win.show();
+		});
+		if (win && !win.isDestroyed()) win.hide();
+	});
+	
+	ipcMain.on("mini_close", () => { if (miniWin) miniWin.close(); });
+	ipcMain.on("mini_minimize", () => { if (miniWin) miniWin.minimize(); });
+	ipcMain.on("mini_fullscreen", () => { 
+		if (miniWin && !miniWin.isDestroyed()) {
+			const willBeFS = !miniWin.isFullScreen();
+			if (willBeFS) {
+				miniWin.setResizable(true);
+				miniWin.setFullScreen(true);
+			} else {
+				miniWin.setFullScreen(false);
+				setTimeout(() => {
+					if (!miniWin.isDestroyed() && !miniWin.isFullScreen()) {
+						if (miniWin.desiredSize) {
+							miniWin.setResizable(true);
+							miniWin.setSize(miniWin.desiredSize.width, miniWin.desiredSize.height);
+						}
+						miniWin.setResizable(false);
+					}
+				}, 100);
+			}
+		}
+	});
+	ipcMain.on("mini_action", (_e, action) => { if (win) win.webContents.send("mini_action", action); });
+	ipcMain.on("mini_update", (_e, data) => { if (miniWin) miniWin.webContents.send("mini_update", data); });
+	ipcMain.on("resize_mini", (_e, width, height) => {
+		if (miniWin && !miniWin.isDestroyed()) {
+			miniWin.desiredSize = { width, height };
+			if (miniWin.isFullScreen()) return; // Don't resize window if we are fullscreen!
+			miniWin.setResizable(true);
+			miniWin.setSize(width, height);
+			miniWin.setResizable(false);
+		}
+	});
+
 	createWindow();
 
 	if (config.isEnabled("features.tray_icon")) {
