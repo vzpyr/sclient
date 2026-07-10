@@ -105,3 +105,7 @@ window.addEventListener("message", (event) => {
 			);
 		});
 });
+
+ipcRenderer.on("download_progress", (_event, data) => {
+	window.postMessage({ source: "sclient-bridge-event", event: "download_progress", data }, "*");
+});

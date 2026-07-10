@@ -253,31 +253,54 @@ function register({ ipcMain, session, app }) {
 	const ytdl = ytdlexec.create(ytdlBin);
 
 	ipcMain.handle("download_song", async (_e, args) => {
-		try {
-			await ytdl(args.url, {
+		return new Promise((resolve, reject) => {
+			const proc = ytdl.exec(args.url, {
 				extractAudio: true,
 				audioFormat: "best",
-				noProgress: true,
 				noWarnings: true,
 				paths: app.getPath("downloads"),
 			});
-		} catch (e) {
-			console.error("[SClient] Download error:", e.message || e);
-			if (e.stderr && e.stderr.includes("DRM protected")) {
-				throw new Error(
-					"This track is DRM protected and cannot be downloaded.",
-				);
-			}
-			if (e.stderr) {
-				const lines = e.stderr.split("\n").filter((l) => l.includes("ERROR:"));
-				throw new Error(
-					lines.length > 0
-						? lines.join(" | ")
-						: `Unknown youtube-dl error. (${e.stderr})`,
-				);
-			}
-			throw new Error(`Unknown download error: ${e.message || e.toString()}`);
-		}
+
+			let stdoutBuf = "";
+			proc.stdout.on("data", (data) => {
+				stdoutBuf += data.toString();
+				const parts = stdoutBuf.split(/[\r\n]+/);
+				stdoutBuf = parts.pop();
+				for (const part of parts) {
+					const match = part.match(/\[download\]\s+([\d\.]+)%/);
+					if (match && match[1]) {
+						_e.sender.send("download_progress", { url: args.url, percent: match[1] });
+					}
+				}
+				// Since youtube-dl often ends with \r and doesn't flush \n immediately, also check the remaining buffer:
+				const matchEnd = stdoutBuf.match(/\[download\]\s+([\d\.]+)%/);
+				if (matchEnd && matchEnd[1]) {
+					_e.sender.send("download_progress", { url: args.url, percent: matchEnd[1] });
+				}
+			});
+
+			let stderr = "";
+			proc.stderr.on("data", (data) => {
+				stderr += data.toString();
+			});
+
+			proc.on("close", (code) => {
+				if (code === 0) {
+					resolve();
+				} else {
+					if (stderr.includes("DRM protected")) {
+						reject(new Error("This track is DRM protected and cannot be downloaded."));
+					} else {
+						const lines = stderr.split("\n").filter((l) => l.includes("ERROR:"));
+						reject(new Error(lines.length > 0 ? lines.join(" | ") : `Unknown youtube-dl error. (${stderr})`));
+					}
+				}
+			});
+
+			proc.on("error", (err) => {
+				reject(new Error(`Unknown download error: ${err.message || err.toString()}`));
+			});
+		});
 	});
 
 	ipcMain.handle("update_rpc", async (_e, args) => {
