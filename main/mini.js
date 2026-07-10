@@ -47,7 +47,7 @@ $("btn-lyrics").addEventListener("click", () => {
 	$("btn-lyrics").classList.toggle("active", lyricsOpenLocal);
 	const content = document.querySelector(".content");
 	if (lyricsOpenLocal) {
-		ipcRenderer.send("resize_mini", 700, 480);
+		ipcRenderer.send("resize_mini", 800, 450);
 		content.classList.add("with-lyrics");
 		if (currentArtist && currentTitle) fetchLyrics(currentArtist, currentTitle);
 	} else {

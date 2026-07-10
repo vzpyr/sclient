@@ -178,9 +178,9 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       WITH-LYRICS OVERRIDES  (windowed only, ≤ 749px)
+       WITH-LYRICS OVERRIDES  (windowed only, ≤ 899px)
     ═══════════════════════════════════════════════════════════ */
-    @media (max-width: 749px) {
+    @media (max-width: 899px), (max-height: 499px) {
       .with-lyrics #player-section {
         flex-direction: column;
         width: 255px; flex-shrink: 0;
@@ -193,9 +193,9 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       FULLSCREEN / LARGE / TV  (≥ 750 × 500)
+       FULLSCREEN / LARGE / TV  (≥ 900 × 500)
     ═══════════════════════════════════════════════════════════ */
-    @media (min-width: 750px) and (min-height: 500px) {
+    @media (min-width: 900px) and (min-height: 500px) {
 
       .content {
         padding: 5% 8%;
