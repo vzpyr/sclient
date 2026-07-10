@@ -24,6 +24,7 @@ SClient adds several enhancements and quality of life features to the standard w
 * **Listening Stats & Analytics**: Track your listening history locally with an SQLite database. View detailed analytics with charts for top artists, tracks, genres, and listening hours. You can securely export, import, or merge your local database to seamlessly migrate your data.
 
 ### 🎨 Customization & UI Tweaks
+* **Mini Player**: Switch to a sleek, compact player window for distraction-free listening. Includes integrated lyrics and a dedicated fullscreen mode.
 * **Extensive Interface Tweaks**: Enable a true black OLED dark mode, wide layout, collapsible sidebar, and an enhanced header with modern Lucide icons. Add a lazy scroll button, hide window decorations, and disable subscription upsells.
 * **Custom Accent Color**: Personalize the entire app interface by choosing a custom accent color using the built-in color picker in the settings menu.
 * **Custom Font**: Globally apply any Google Web Font to the entire interface right from the settings.
