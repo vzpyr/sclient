@@ -41,7 +41,7 @@ async function updateRpc({
 		state: artist,
 		largeImageKey: artwork || undefined,
 		smallImageKey: "icon",
-		smallImageText: "SClient | 0.1",
+		smallImageText: "SClient",
 		instance: false,
 	};
 
