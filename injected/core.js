@@ -12,16 +12,48 @@ function injectStyle(id, css) {
 	}
 }
 
-injectStyle(
-	"sclient-scrollbar",
-	`
+function injectToIframes(id, css) {
+	const applyToIframe = (ifr) => {
+		try {
+			if (!ifr.contentDocument) return;
+			if (ifr.contentDocument.getElementById(id + "-iframe")) return;
+			const style = ifr.contentDocument.createElement("style");
+			style.id = id + "-iframe";
+			style.textContent = css;
+			ifr.contentDocument.head.appendChild(style);
+		} catch (e) {}
+	};
+
+	document.querySelectorAll("iframe").forEach(applyToIframe);
+
+	const obs = new MutationObserver((mutations) => {
+		for (const mut of mutations) {
+			for (const node of mut.addedNodes) {
+				if (node.tagName === "IFRAME") {
+					node.addEventListener("load", () => applyToIframe(node));
+					applyToIframe(node);
+				} else if (node.querySelectorAll) {
+					node.querySelectorAll("iframe").forEach(ifr => {
+						ifr.addEventListener("load", () => applyToIframe(ifr));
+						applyToIframe(ifr);
+					});
+				}
+			}
+		}
+	});
+	obs.observe(document.documentElement, { childList: true, subtree: true });
+}
+
+const sclientScrollbarCss = `
   ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
   * { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
-`,
-);
+`;
+
+injectStyle("sclient-scrollbar", sclientScrollbarCss);
+injectToIframes("sclient-scrollbar", sclientScrollbarCss);
 
 injectStyle(
 	"sclient-light-theme-overlays",
@@ -87,36 +119,7 @@ if (customFontOn && customFontFamily) {
   }
 `;
 	injectStyle("sclient-global-font", css);
-
-	const applyToIframe = (ifr) => {
-		try {
-			if (!ifr.contentDocument) return;
-			if (ifr.contentDocument.getElementById("sclient-global-font-iframe")) return;
-			const style = ifr.contentDocument.createElement("style");
-			style.id = "sclient-global-font-iframe";
-			style.textContent = css;
-			ifr.contentDocument.head.appendChild(style);
-		} catch (e) {}
-	};
-
-	document.querySelectorAll("iframe").forEach(applyToIframe);
-
-	const obs = new MutationObserver((mutations) => {
-		for (const mut of mutations) {
-			for (const node of mut.addedNodes) {
-				if (node.tagName === "IFRAME") {
-					node.addEventListener("load", () => applyToIframe(node));
-					applyToIframe(node);
-				} else if (node.querySelectorAll) {
-					node.querySelectorAll("iframe").forEach(ifr => {
-						ifr.addEventListener("load", () => applyToIframe(ifr));
-						applyToIframe(ifr);
-					});
-				}
-			}
-		}
-	});
-	obs.observe(document.documentElement, { childList: true, subtree: true });
+	injectToIframes("sclient-global-font", css);
 }
 
 const lazyScrollOn = cfg.lazy_scroll || false;
