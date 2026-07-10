@@ -290,3 +290,19 @@ function renderLoop() {
 	requestAnimationFrame(renderLoop);
 }
 renderLoop();
+
+// ── Artwork size sync ──────────────────────────────────────────────────────
+// Both no-lyrics and with-lyrics must show the SAME artwork size.
+// We can't hardcode 152px because the actual viewport height varies by OS/DPI.
+// Solution: measure window.innerHeight - 28 (padding*2) when in mini mode
+// and store it as a CSS variable used by both layouts.
+function syncArtworkSize() {
+	// Only update while in mini (no-lyrics) mode — the 480×180 window.
+	// When lyrics are open the window is 700×480, which would give the wrong size.
+	if (!document.querySelector(".content.with-lyrics")) {
+		const size = Math.max(60, window.innerHeight - 28);
+		document.documentElement.style.setProperty("--mini-art-size", size + "px");
+	}
+}
+syncArtworkSize(); // run immediately so there's no first-frame mismatch
+window.addEventListener("resize", syncArtworkSize);

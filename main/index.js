@@ -179,10 +179,14 @@ app.whenReady().then(async () => {
 	ipcMain.on("resize_mini", (_e, width, height) => {
 		if (miniWin && !miniWin.isDestroyed()) {
 			miniWin.desiredSize = { width, height };
-			if (miniWin.isFullScreen()) return; // Don't resize window if we are fullscreen!
+			if (miniWin.isFullScreen()) return;
 			miniWin.setResizable(true);
 			miniWin.setSize(width, height);
-			miniWin.setResizable(false);
+			setTimeout(() => {
+				if (miniWin && !miniWin.isDestroyed() && !miniWin.isFullScreen()) {
+					miniWin.setResizable(false);
+				}
+			}, 150);
 		}
 	});
 
