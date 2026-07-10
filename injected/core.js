@@ -80,15 +80,43 @@ const customFontFamily = cfg.custom_font_family || "";
 
 if (customFontOn && customFontFamily) {
 	const familyUrl = customFontFamily.trim().replace(/\s+/g, '+');
-	injectStyle(
-		"sclient-global-font",
-		`
+	const css = `
   @import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;700&display=swap');
   html, body, * {
     font-family: '${customFontFamily}', monospace !important;
   }
-`
-	);
+`;
+	injectStyle("sclient-global-font", css);
+
+	const applyToIframe = (ifr) => {
+		try {
+			if (!ifr.contentDocument) return;
+			if (ifr.contentDocument.getElementById("sclient-global-font-iframe")) return;
+			const style = ifr.contentDocument.createElement("style");
+			style.id = "sclient-global-font-iframe";
+			style.textContent = css;
+			ifr.contentDocument.head.appendChild(style);
+		} catch (e) {}
+	};
+
+	document.querySelectorAll("iframe").forEach(applyToIframe);
+
+	const obs = new MutationObserver((mutations) => {
+		for (const mut of mutations) {
+			for (const node of mut.addedNodes) {
+				if (node.tagName === "IFRAME") {
+					node.addEventListener("load", () => applyToIframe(node));
+					applyToIframe(node);
+				} else if (node.querySelectorAll) {
+					node.querySelectorAll("iframe").forEach(ifr => {
+						ifr.addEventListener("load", () => applyToIframe(ifr));
+						applyToIframe(ifr);
+					});
+				}
+			}
+		}
+	});
+	obs.observe(document.documentElement, { childList: true, subtree: true });
 }
 
 const lazyScrollOn = cfg.lazy_scroll || false;
