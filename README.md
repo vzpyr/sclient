@@ -14,6 +14,7 @@ SClient adds several enhancements and quality of life features to the standard w
 * **DRM Support**: Play DRM-protected tracks using proper Widevine DRM out of the box (Castlabs Electron).
 * **True Shuffle**: Fixes the default shuffle behavior by pre-loading the entire playlist or using an API-based shuffle engine.
 * **Region Bypass**: Experimental built-in proxy support to bypass geographic track restrictions. Use the free public proxy (accessible within the app) or self-host your own.
+  * **⚠️ Disclaimer:** Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. You should self-host it for maximum security (e.g. via Vercel).
 
 ### 🔌 Integrations & Tools
 * **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`, featuring a sleek UI toast with a live download progress bar.
@@ -25,6 +26,7 @@ SClient adds several enhancements and quality of life features to the standard w
 ### 🎨 Customization & UI Tweaks
 * **Extensive Interface Tweaks**: Enable a true black OLED dark mode, wide layout, collapsible sidebar, and an enhanced header with modern Lucide icons. Add a lazy scroll button, hide window decorations, and disable subscription upsells.
 * **Custom Accent Color**: Personalize the entire app interface by choosing a custom accent color using the built-in color picker in the settings menu.
+* **Custom Font**: Globally apply any Google Web Font to the entire interface right from the settings.
 * **Custom CSS/JS Editor**: Inject your own custom CSS and JavaScript. No need to modify source files, write your code directly in the live, syntax-highlighted editor built right into the settings overlay.
 * **Multi-Account Support**: Create, manage, and switch between multiple isolated profiles.
 * **System Tray**: Run the application in the background and control playback from your system tray.
