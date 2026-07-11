@@ -10,7 +10,6 @@
         --accent: #f50;
       }
 
-      /* ── Reset ─────────────────────────────────────────────── */
       html,
       body {
         margin: 0;
@@ -28,7 +27,6 @@
         outline: none !important;
       }
 
-      /* ── Blurred background ─────────────────────────────────── */
       #bg {
         position: absolute;
         top: -10%;
@@ -42,7 +40,6 @@
         transition: background-image 0.6s ease;
       }
 
-      /* ── Window chrome ──────────────────────────────────────── */
       .drag-region {
         position: absolute;
         top: 0;
@@ -83,7 +80,6 @@
         background: rgba(255, 255, 255, 0.22);
       }
 
-      /* ── Root layout ────────────────────────────────────────── */
       .content {
         position: relative;
         z-index: 5;
@@ -93,10 +89,6 @@
         box-sizing: border-box;
         overflow: hidden;
       }
-
-      /* ═══════════════════════════════════════════════════════════
-       MINI  (~480×180 windowed)
-    ═══════════════════════════════════════════════════════════ */
 
       #player-section {
         display: flex;
@@ -117,7 +109,6 @@
         align-items: center;
       }
       .artwork {
-        /* --mini-art-size is written by JS (window.innerHeight - 28) so both layouts always match */
         width: var(--mini-art-size, 152px);
         height: var(--mini-art-size, 152px);
         border-radius: 10px;
@@ -260,7 +251,6 @@
         color: #111;
       }
 
-      /* ── Lyrics panel ──────────────────────────────────────── */
       #lyrics-section {
         display: none;
         flex: 1;
@@ -321,9 +311,6 @@
         filter: blur(0px) !important;
       }
 
-      /* ═══════════════════════════════════════════════════════════
-       WITH-LYRICS OVERRIDES  (windowed only, ≤ 899px)
-    ═══════════════════════════════════════════════════════════ */
       @media (max-width: 899px), (max-height: 499px) {
         .with-lyrics #player-section {
           flex-direction: column;
@@ -347,9 +334,6 @@
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════
-       FULLSCREEN / LARGE / TV  (≥ 900 × 500)
-    ═══════════════════════════════════════════════════════════ */
       @media (min-width: 900px) and (min-height: 500px) {
         .content {
           padding: 5% 8%;
@@ -386,7 +370,6 @@
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
         }
 
-        /* capped at 720px so the progress bar doesn't stretch edge to edge on wide screens */
         .right-panel {
           flex: 1;
           min-width: 0;
@@ -457,8 +440,6 @@
           font-size: 16px;
         }
 
-        /* ── Lyrics panel (right column) ── */
-        /* ── Lyrics panel (right column) ── */
         #lyrics-section {
           display: flex;
           flex: 1;
