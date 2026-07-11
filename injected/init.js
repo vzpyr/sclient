@@ -202,20 +202,20 @@ function applyFeatureStyles() {
 	applyLayoutFixes();
 	injectFloatingButtonStyles();
 
-	if (oledDarkOn) {
+	if (customBgColorOn) {
 		injectStyle(
-			"sclient-oled-dark-mode",
+			"sclient-custom-bg-color",
 			`
       .theme-dark {
-        --background-surface-color: #000000 !important;
-        --button-secondary-background-color: #000000 !important;
-        --button-secondary-selected-background-color: #000000 !important;
-        --highlight-color: #000000 !important;
-        --surface-color: #000000 !important;
+        --background-surface-color: ${bgColor} !important;
+        --button-secondary-background-color: ${bgColor} !important;
+        --button-secondary-selected-background-color: ${bgColor} !important;
+        --highlight-color: ${bgColor} !important;
+        --surface-color: ${bgColor} !important;
       }
-      .theme-dark div.MuiBox-root.mui-1i9nq8r { background-color: #000000 !important; }
+      .theme-dark div.MuiBox-root.mui-1i9nq8r { background-color: ${bgColor} !important; }
       .theme-dark, .theme-dark *, .theme-dark body, .theme-dark html {
-        --mui-palette-background-default: #000000 !important;
+        --mui-palette-background-default: ${bgColor} !important;
       }
     `,
 		);
@@ -225,28 +225,28 @@ function applyFeatureStyles() {
 				try {
 					if (iframe.contentDocument && iframe.contentDocument.head) {
 						if (
-							!iframe.contentDocument.getElementById("sclient-oled-dark-mode")
+							!iframe.contentDocument.getElementById("sclient-custom-bg-color")
 						) {
 							iframe.contentDocument.head.appendChild(
 								document
-									.getElementById("sclient-oled-dark-mode")
+									.getElementById("sclient-custom-bg-color")
 									.cloneNode(true),
 							);
 						}
 						let fs = iframe.contentDocument.getElementById(
-							"sclient-oled-iframe-force",
+							"sclient-custom-bg-iframe-force",
 						);
 						if (!fs) {
 							fs = document.createElement("style");
-							fs.id = "sclient-oled-iframe-force";
+							fs.id = "sclient-custom-bg-iframe-force";
 							fs.textContent = `
                 :root, html, body {
-                  --mui-palette-background-default: #000000 !important;
-                  --background-surface-color: #000000 !important;
-                  --button-secondary-background-color: #000000 !important;
-                  --button-secondary-selected-background-color: #000000 !important;
-                  --highlight-color: #000000 !important;
-                  --surface-color: #000000 !important;
+                  --mui-palette-background-default: ${bgColor} !important;
+                  --background-surface-color: ${bgColor} !important;
+                  --button-secondary-background-color: ${bgColor} !important;
+                  --button-secondary-selected-background-color: ${bgColor} !important;
+                  --highlight-color: ${bgColor} !important;
+                  --surface-color: ${bgColor} !important;
                 }
               `;
 							iframe.contentDocument.head.appendChild(fs);

@@ -25,7 +25,7 @@ SClient adds several enhancements and quality of life features to the standard w
 
 ### 🎨 Customization & UI Tweaks
 * **Mini Player**: Switch to a sleek, compact player window for distraction-free listening. Includes integrated lyrics and a dedicated fullscreen mode.
-* **Extensive Interface Tweaks**: Enable a true black OLED dark mode, wide layout, collapsible sidebar, and an enhanced header with modern Lucide icons. Add a lazy scroll button, hide window decorations, and disable subscription upsells.
+* **Extensive Interface Tweaks**: Enable a custom background color (Dark Mode), wide layout, collapsible sidebar, and an enhanced header with modern Lucide icons. Add a lazy scroll button, hide window decorations, and disable subscription upsells.
 * **Custom Accent Color**: Personalize the entire app interface by choosing a custom accent color using the built-in color picker in the settings menu.
 * **Custom Font**: Globally apply any Google Web Font to the entire interface right from the settings.
 * **Custom CSS/JS Editor**: Inject your own custom CSS and JavaScript. No need to modify source files, write your code directly in the live, syntax-highlighted editor built right into the settings overlay.

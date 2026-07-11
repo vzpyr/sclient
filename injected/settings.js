@@ -183,7 +183,6 @@ function createOverlay() {
   `;
 
 	const TOGGLES = [
-		{ label: "Enable OLED Dark Mode",                   id: "oled-dark-mode" },
 		{ label: "Enable Enhanced Header",                  id: "enhanced-header" },
 		{ label: "Enable Collapsible Sidebar",              id: "collapsible-sidebar" },
 		{ label: "Enable Discord Rich Presence",            id: "rpc" },
@@ -224,6 +223,15 @@ function createOverlay() {
           <input type="color" id="sclient-accent-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
           <input type="text" id="sclient-accent-color-text" style="width:60px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
           ${toggleLabelHtml("sclient-accent-toggle", "sclient-toggle-bg-accent", "sclient-toggle-slider-accent")}
+        </div>
+      </div>
+
+      <div style="${S_CARD}">
+        <span style="font-size:14px;font-weight:500;">Custom Background Color (Dark Mode)</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="color" id="sclient-bg-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
+          <input type="text" id="sclient-bg-color-text" style="width:60px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
+          ${toggleLabelHtml("sclient-bg-color-toggle", "sclient-toggle-bg-bg-color", "sclient-toggle-slider-bg-color")}
         </div>
       </div>
 
@@ -365,7 +373,6 @@ function createOverlay() {
 	const TOGGLE_CONFIGS = [
 		{ toggleId: "sclient-lazy-scroll-toggle",        bgId: "sclient-toggle-bg-lazy-scroll",        sliderId: "sclient-toggle-slider-lazy-scroll",        initial: lazyScrollOn },
 		{ toggleId: "sclient-decorations-toggle",        bgId: "sclient-toggle-bg-decorations",        sliderId: "sclient-toggle-slider-decorations",        initial: hideDecorationsOn },
-		{ toggleId: "sclient-oled-dark-mode-toggle",     bgId: "sclient-toggle-bg-oled-dark-mode",     sliderId: "sclient-toggle-slider-oled-dark-mode",     initial: oledDarkOn },
 		{ toggleId: "sclient-enhanced-header-toggle",    bgId: "sclient-toggle-bg-enhanced-header",    sliderId: "sclient-toggle-slider-enhanced-header",    initial: enhancedHeaderOn },
 		{ toggleId: "sclient-wide-layout-toggle",        bgId: "sclient-toggle-bg-wide-layout",        sliderId: "sclient-toggle-slider-wide-layout",        initial: wideLayoutOn },
 		{ toggleId: "sclient-collapsible-sidebar-toggle",bgId: "sclient-toggle-bg-collapsible-sidebar",sliderId: "sclient-toggle-slider-collapsible-sidebar",initial: collapsibleSidebarOn },
@@ -417,6 +424,27 @@ function createOverlay() {
 	const customFontBg     = overlay.querySelector("#sclient-toggle-bg-custom-font");
 	const customFontSlider = overlay.querySelector("#sclient-toggle-slider-custom-font");
 	const customFontText   = overlay.querySelector("#sclient-custom-font-text");
+
+	const bgColorToggle = overlay.querySelector("#sclient-bg-color-toggle");
+	const bgColorBg     = overlay.querySelector("#sclient-toggle-bg-bg-color");
+	const bgColorSlider = overlay.querySelector("#sclient-toggle-slider-bg-color");
+	const bgColorPicker = overlay.querySelector("#sclient-bg-color-picker");
+	const bgColorText   = overlay.querySelector("#sclient-bg-color-text");
+
+	bgColorToggle.checked = cfg.custom_bg_color || false;
+	bgColorPicker.value = bgColorText.value = cfg.bg_color || "#000000";
+
+	function setBgColorUi(on) {
+		bgColorBg.style.backgroundColor = on ? getAccent() : "#333";
+		bgColorSlider.style.transform = on ? "translateX(20px)" : "translateX(0)";
+		bgColorPicker.style.opacity = bgColorText.style.opacity = on ? "1" : "0.5";
+	}
+	setBgColorUi(cfg.custom_bg_color || false);
+	bgColorToggle.addEventListener("change", (e) => setBgColorUi(e.target.checked));
+	bgColorPicker.addEventListener("input", (e) => { bgColorText.value = e.target.value; });
+	bgColorText.addEventListener("input", (e) => {
+		if (/^#[0-9A-F]{6}$/i.test(e.target.value)) bgColorPicker.value = e.target.value;
+	});
 
 	customFontToggle.checked = cfg.custom_font || false;
 	customFontText.value = cfg.custom_font_family || "";
@@ -516,7 +544,8 @@ function createOverlay() {
 			wideLayout:           $("#sclient-wide-layout-toggle").checked,
 			wideLayoutWidth:      ww,
 			collapsibleSidebar:   $("#sclient-collapsible-sidebar-toggle").checked,
-			oledDarkMode:         $("#sclient-oled-dark-mode-toggle").checked,
+			customBgColor:        $("#sclient-bg-color-toggle").checked,
+			bgColor:              $("#sclient-bg-color-text").value,
 			adblock:              $("#sclient-adblock-toggle").checked,
 			discordRpc:           $("#sclient-rpc-toggle").checked,
 			trayIcon:             $("#sclient-tray-toggle").checked,

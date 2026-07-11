@@ -73,7 +73,8 @@ function register({ ipcMain, session, app }) {
 		config.set("features.custom_font_family", args.customFontFamily || "");
 		config.set("features.wide_layout", args.wideLayout ? "true" : "false");
 		config.set("features.wide_layout_width", args.wideLayoutWidth || "1200");
-		config.set("features.oled_dark_mode", args.oledDarkMode ? "true" : "false");
+		config.set("features.custom_bg_color", args.customBgColor ? "true" : "false");
+		config.set("features.bg_color", args.bgColor || "#000000");
 
 		const oldAdblock = config.adblockEnabled;
 		config.adblockEnabled = !!args.adblock;
