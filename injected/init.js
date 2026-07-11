@@ -340,3 +340,4 @@ if (document.readyState === "loading") {
 }
 
 applyFeatureStyles();
+console.log("[SClient] Successfully injected all modules.");

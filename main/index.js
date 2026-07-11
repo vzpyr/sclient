@@ -123,6 +123,7 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+	console.log(`[SClient] Starting v${app.getVersion()}...`);
 	await components.whenReady();
 
 	ipc.register({ ipcMain, session, app });
