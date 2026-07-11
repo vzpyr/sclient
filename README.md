@@ -33,6 +33,9 @@ SClient adds several enhancements and quality of life features to the standard w
 * **Multi-Account Support**: Create, manage, and switch between multiple isolated profiles.
 * **System Tray**: Run the application in the background and control playback from your system tray.
 
+### ⚠️ ToS Disclaimer
+Please note that some of the features (such as adblocking, track downloading, and region bypassing) may conflict with SoundCloud's ToS. Most likely, nothing will happen, but keep this in mind. Use this application at your own risk.
+
 ## Installation
 
 You can install SClient by downloading a pre-built binary or by compiling it from source.
