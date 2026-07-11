@@ -37,6 +37,7 @@ jobs:
         run: npm run build:linux
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEBUG: "electron-builder,electron-builder:*"
 
       - name: Build Windows
         if: matrix.os == 'windows-latest'
