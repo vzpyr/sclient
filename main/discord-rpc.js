@@ -1,4 +1,5 @@
 const { Client, StatusDisplayType } = require("@xhayper/discord-rpc");
+const { app } = require("electron");
 
 const CLIENT_ID = "1520494903954637072";
 
@@ -41,7 +42,7 @@ async function updateRpc({
 		state: artist,
 		largeImageKey: artwork || undefined,
 		smallImageKey: "icon",
-		smallImageText: "SClient",
+		smallImageText: `SClient | ${app.getVersion()}`,
 		instance: false,
 	};
 
