@@ -1,47 +1,47 @@
 let activeCharts = [];
 
 function destroyCharts() {
-	activeCharts.forEach((c) => {
-		try {
-			c.destroy();
-		} catch (e) {}
-	});
-	activeCharts = [];
+  activeCharts.forEach((c) => {
+    try {
+      c.destroy();
+    } catch (e) {}
+  });
+  activeCharts = [];
 }
 
 function fmtDuration(ms) {
-	const s = Math.floor(ms / 1000);
-	const h = Math.floor(s / 3600);
-	const m = Math.floor((s % 3600) / 60);
-	if (h > 0) return `${h}h ${m}m`;
-	return `${m}m`;
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
 }
 
 function fmtCount(n) {
-	if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
-	if (n >= 1000) return (n / 1000).toFixed(1) + "K";
-	return n.toString();
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
+  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
+  return n.toString();
 }
 
 function getGenre(track) {
-	return track.genre && track.genre.trim() ? track.genre : "Unknown";
+  return track.genre && track.genre.trim() ? track.genre : "Unknown";
 }
 
 const CHART_COLORS = [
-	"#33b5e5",
-	"#6699cc",
-	"#9977aa",
-	"#bb66aa",
-	"#dd5588",
-	"#00C851",
-	"#007E33",
-	"#ffbb33",
-	"#ff8800",
-	"#CC0000",
-	"#ff7733",
-	"#ff9966",
-	"#ffbb99",
-	"#ffddcc",
+  "#33b5e5",
+  "#6699cc",
+  "#9977aa",
+  "#bb66aa",
+  "#dd5588",
+  "#00C851",
+  "#007E33",
+  "#ffbb33",
+  "#ff8800",
+  "#CC0000",
+  "#ff7733",
+  "#ff9966",
+  "#ffbb99",
+  "#ffddcc",
 ];
 
 let currentSource = "";
@@ -49,270 +49,264 @@ let currentLimit = 20;
 let currentDays = null;
 
 function extractOAuthToken() {
-	try {
-		for (const c of document.cookie.split(";")) {
-			const [key, val] = c.trim().split("=");
-			if (key === "oauth_token" && val && val.startsWith("2-")) return val;
-		}
-	} catch (e) {}
-	try {
-		const t = localStorage.getItem("oauth_token");
-		if (t && t.startsWith("2-")) return t;
-	} catch (e) {}
-	try {
-		const t = sessionStorage.getItem("oauth_token");
-		if (t && t.startsWith("2-")) return t;
-	} catch (e) {}
-	return null;
+  try {
+    for (const c of document.cookie.split(";")) {
+      const [key, val] = c.trim().split("=");
+      if (key === "oauth_token" && val && val.startsWith("2-")) return val;
+    }
+  } catch (e) {}
+  try {
+    const t = localStorage.getItem("oauth_token");
+    if (t && t.startsWith("2-")) return t;
+  } catch (e) {}
+  try {
+    const t = sessionStorage.getItem("oauth_token");
+    if (t && t.startsWith("2-")) return t;
+  } catch (e) {}
+  return null;
 }
 
 async function extractAndSendCredentials() {
-	const cid = extractClientId();
-	const tok = extractOAuthToken();
-	if (cid && tok)
-		await sendBridge("stats_store_credentials", {
-			clientId: cid,
-			oauthToken: tok,
-		});
+  const cid = extractClientId();
+  const tok = extractOAuthToken();
+  if (cid && tok)
+    await sendBridge("stats_store_credentials", {
+      clientId: cid,
+      oauthToken: tok,
+    });
 }
 
 let credRetries = 0;
 const credTimer = setInterval(async () => {
-	credRetries++;
-	if (credRetries > 30) {
-		clearInterval(credTimer);
-		return;
-	}
-	await extractAndSendCredentials();
-	if (extractClientId() && extractOAuthToken()) clearInterval(credTimer);
+  credRetries++;
+  if (credRetries > 30) {
+    clearInterval(credTimer);
+    return;
+  }
+  await extractAndSendCredentials();
+  if (extractClientId() && extractOAuthToken()) clearInterval(credTimer);
 }, 2000);
 
 let _statsRefresh = null;
-function refreshStatsStatus() { if (_statsRefresh) _statsRefresh(); }
+function refreshStatsStatus() {
+  if (_statsRefresh) _statsRefresh();
+}
 
 function setupStatsTracking() {
-	if (!statsLocalOn) return;
+  if (!statsLocalOn) return;
 
-	let trackData = null;
-	let hasRecorded = false;
-	let startTime = 0;
-	let threshold = 0;
-	let lastText = "Waiting...", lastColor = "#ccc";
+  let trackData = null;
+  let hasRecorded = false;
+  let startTime = 0;
+  let threshold = 0;
+  let lastText = "Waiting...",
+    lastColor = "#ccc";
 
-	function setStatus(text, color) {
-		lastText = text; lastColor = color || "#ccc";
-		const el = document.getElementById("sclient-stats-status");
-		if (el) { el.textContent = text; el.style.color = lastColor; }
-	}
+  function setStatus(text, color) {
+    lastText = text;
+    lastColor = color || "#ccc";
+    const el = document.getElementById("sclient-stats-status");
+    if (el) {
+      el.textContent = text;
+      el.style.color = lastColor;
+    }
+  }
 
-	_statsRefresh = () => setStatus(lastText, lastColor);
+  _statsRefresh = () => setStatus(lastText, lastColor);
 
+  async function record(t, ts) {
+    try {
+      await sendBridge("stats_record_listen", {
+        played_at: ts,
+        track_id: t.id,
+        track: t,
+      });
+      setStatus("Recorded!", "#5f5");
+    } catch (e) {
+      console.error("[SClient] Stats record listen failed:", e);
+      setStatus("Error", "#f55");
+    }
+  }
 
+  onPlaybackChange((evt) => {
+    if (evt.type === "none") {
+      setStatus("Waiting...", "#ccc");
+      return;
+    }
 
-	async function record(t, ts) {
-		try {
-			await sendBridge("stats_record_listen", {
-				played_at: ts,
-				track_id: t.id,
-				track: t,
-			});
-			setStatus("Recorded!", "#5f5");
-		} catch (e) {
-			console.error("[SClient] Stats record listen failed:", e);
-			setStatus("Error", "#f55");
-		}
-	}
+    if (evt.type === "track_start") {
+      trackData = evt.trackData;
+      hasRecorded = false;
+      startTime = evt.timestamp;
+      if (evt.trackData) {
+        threshold = Math.min(evt.trackData.duration / 1000 / 2, 240) * 1000;
+        if (evt.isPlaying) setStatus("Listening...", "#789cff");
+      } else {
+        trackData = null;
+      }
+      return;
+    }
 
-	onPlaybackChange((evt) => {
-		if (evt.type === "none") {
-			setStatus("Waiting...", "#ccc");
-			return;
-		}
-
-		if (evt.type === "track_start") {
-			trackData = evt.trackData;
-			hasRecorded = false;
-			startTime = evt.timestamp;
-			if (evt.trackData) {
-				threshold = Math.min(evt.trackData.duration / 1000 / 2, 240) * 1000;
-				if (evt.isPlaying) setStatus("Listening...", "#789cff");
-			} else {
-				trackData = null;
-			}
-			return;
-		}
-
-		if (trackData && evt.isPlaying) {
-			if (!hasRecorded && evt.timestamp - startTime >= threshold) {
-				record(trackData, Math.floor(startTime / 1000));
-				hasRecorded = true;
-			} else if (!hasRecorded) {
-				setStatus("Listening...", "#789cff");
-			}
-		} else if (!evt.isPlaying && trackData) {
-			setStatus(
-				hasRecorded ? "Recorded!" : "Paused",
-				hasRecorded ? "#5f5" : "#f9a826",
-			);
-		}
-	});
+    if (trackData && evt.isPlaying) {
+      if (!hasRecorded && evt.timestamp - startTime >= threshold) {
+        record(trackData, Math.floor(startTime / 1000));
+        hasRecorded = true;
+      } else if (!hasRecorded) {
+        setStatus("Listening...", "#789cff");
+      }
+    } else if (!evt.isPlaying && trackData) {
+      setStatus(hasRecorded ? "Recorded!" : "Paused", hasRecorded ? "#5f5" : "#f9a826");
+    }
+  });
 }
 
 function renderFilterBar() {
-	const accent = getAccent();
-	const btn = (label, source) => {
-		const active = currentSource === source;
-		return `<button class="sclient-stats-filter-btn" data-source="${source}" style="padding: 6px 14px; background: ${active ? accent : "rgba(255,255,255,0.06)"}; color: ${active ? "#fff" : "#aaa"}; border: ${active ? "none" : "1px solid rgba(255,255,255,0.1)"}; border-radius: 6px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; font-weight: ${active ? "600" : "400"};">${label}</button>`;
-	};
-	return `<div style="display: flex; gap: 8px; margin-bottom: 20px;">${btn("All", "")}${btn("History", "api")}${btn("Local", "local")}</div>`;
+  const accent = getAccent();
+  const btn = (label, source) => {
+    const active = currentSource === source;
+    return `<button class="sclient-stats-filter-btn" data-source="${source}" style="padding: 6px 14px; background: ${active ? accent : "rgba(255,255,255,0.06)"}; color: ${active ? "#fff" : "#aaa"}; border: ${active ? "none" : "1px solid rgba(255,255,255,0.1)"}; border-radius: 6px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; font-weight: ${active ? "600" : "400"};">${label}</button>`;
+  };
+  return `<div style="display: flex; gap: 8px; margin-bottom: 20px;">${btn("All", "")}${btn("History", "api")}${btn("Local", "local")}</div>`;
 }
 
 function wireFilters() {
-	document.querySelectorAll(".sclient-stats-filter-btn").forEach((b) => {
-		b.addEventListener("click", () => {
-			currentSource = b.dataset.source;
-			renderAnalytics();
-		});
-	});
+  document.querySelectorAll(".sclient-stats-filter-btn").forEach((b) => {
+    b.addEventListener("click", () => {
+      currentSource = b.dataset.source;
+      renderAnalytics();
+    });
+  });
 }
 
 function upsertChart(id, index, config) {
-	const existing = index < activeCharts.length ? activeCharts[index] : null;
-	if (existing && existing.canvas && existing.canvas.id === id) {
-		existing.data = config.data;
-		existing.options = config.options;
-		existing.update();
-		return existing;
-	}
-	const ctx = document.getElementById(id);
-	if (!ctx) return null;
-	const chart = new Chart(ctx, config);
-	if (index < activeCharts.length) {
-		activeCharts[index].destroy();
-		activeCharts[index] = chart;
-	} else activeCharts.push(chart);
-	return chart;
+  const existing = index < activeCharts.length ? activeCharts[index] : null;
+  if (existing && existing.canvas && existing.canvas.id === id) {
+    existing.data = config.data;
+    existing.options = config.options;
+    existing.update();
+    return existing;
+  }
+  const ctx = document.getElementById(id);
+  if (!ctx) return null;
+  const chart = new Chart(ctx, config);
+  if (index < activeCharts.length) {
+    activeCharts[index].destroy();
+    activeCharts[index] = chart;
+  } else activeCharts.push(chart);
+  return chart;
 }
 
 async function renderAnalytics() {
-	const content = document.getElementById("sclient-stats-content");
-	if (!content) return;
+  const content = document.getElementById("sclient-stats-content");
+  if (!content) return;
 
-	let data;
-	try {
-		data = await sendBridge("stats_get_data", {
-			source: currentSource || undefined,
-		});
-	} catch (e) {
-		content.innerHTML =
-			renderFilterBar() +
-			`<div style="text-align:center; margin-top:60px; opacity:0.6;">Failed to load stats: ${e.message}</div>`;
-		wireFilters();
-		return;
-	}
+  let data;
+  try {
+    data = await sendBridge("stats_get_data", {
+      source: currentSource || undefined,
+    });
+  } catch (e) {
+    content.innerHTML =
+      renderFilterBar() +
+      `<div style="text-align:center; margin-top:60px; opacity:0.6;">Failed to load stats: ${e.message}</div>`;
+    wireFilters();
+    return;
+  }
 
-	if (!data || data.length === 0) {
-		content.innerHTML =
-			renderFilterBar() +
-			`
+  if (!data || data.length === 0) {
+    content.innerHTML =
+      renderFilterBar() +
+      `
       <div style="text-align:center; margin-top:80px;">
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:0.3; margin-bottom:16px;"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
         <div style="font-size:18px; font-weight:600; margin-bottom:8px; opacity:0.7;">No listening data yet</div>
         <div style="font-size:13px; opacity:0.4;">Play some music and it'll show up here!</div>
       </div>`;
-		wireFilters();
-		return;
-	}
+    wireFilters();
+    return;
+  }
 
-	let entries = data.map((d) => {
-		let track;
-		try {
-			track =
-				typeof d.track_json === "string"
-					? JSON.parse(d.track_json)
-					: d.track_json;
-		} catch (e) {
-			track = {};
-		}
-		return { played_at: d.played_at, track_id: d.track_id, track };
-	});
+  let entries = data.map((d) => {
+    let track;
+    try {
+      track = typeof d.track_json === "string" ? JSON.parse(d.track_json) : d.track_json;
+    } catch (e) {
+      track = {};
+    }
+    return { played_at: d.played_at, track_id: d.track_id, track };
+  });
 
-	if (currentDays) {
-		const cutoff = Date.now() - currentDays * 86400000;
-		entries = entries.filter((e) => e.played_at >= cutoff);
-	}
+  if (currentDays) {
+    const cutoff = Date.now() - currentDays * 86400000;
+    entries = entries.filter((e) => e.played_at >= cutoff);
+  }
 
-	if (entries.length === 0) {
-		content.innerHTML =
-			renderFilterBar() +
-			`
+  if (entries.length === 0) {
+    content.innerHTML =
+      renderFilterBar() +
+      `
       <div style="text-align:center; margin-top:80px;">
         <div style="font-size:18px; font-weight:600; margin-bottom:8px; opacity:0.7;">No data in selected time range</div>
         <div style="font-size:13px; opacity:0.4;">Try a wider time range</div>
       </div>`;
-		wireFilters();
-		return;
-	}
+    wireFilters();
+    return;
+  }
 
-	const totalPlays = entries.length;
-	const totalDuration = entries.reduce(
-		(s, e) => s + (e.track.duration || 0),
-		0,
-	);
-	const uniqueArtists = new Set(entries.map((e) => getArtistFromTrack(e.track)))
-		.size;
-	const uniqueTracks = new Set(entries.map((e) => e.track_id)).size;
+  const totalPlays = entries.length;
+  const totalDuration = entries.reduce((s, e) => s + (e.track.duration || 0), 0);
+  const uniqueArtists = new Set(entries.map((e) => getArtistFromTrack(e.track))).size;
+  const uniqueTracks = new Set(entries.map((e) => e.track_id)).size;
 
-	const artistCounts = {};
-	entries.forEach((e) => {
-		const a = getArtistFromTrack(e.track);
-		artistCounts[a] = (artistCounts[a] || 0) + 1;
-	});
-	const topArtists = Object.entries(artistCounts)
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, 15);
+  const artistCounts = {};
+  entries.forEach((e) => {
+    const a = getArtistFromTrack(e.track);
+    artistCounts[a] = (artistCounts[a] || 0) + 1;
+  });
+  const topArtists = Object.entries(artistCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15);
 
-	const trackCounts = {};
-	entries.forEach((e) => {
-		const k = e.track_id;
-		if (!trackCounts[k])
-			trackCounts[k] = {
-				count: 0,
-				title: e.track.title || "Unknown",
-				artist: getArtistFromTrack(e.track),
-			};
-		trackCounts[k].count++;
-	});
-	const topTracks = Object.values(trackCounts)
-		.sort((a, b) => b.count - a.count)
-		.slice(0, 15);
+  const trackCounts = {};
+  entries.forEach((e) => {
+    const k = e.track_id;
+    if (!trackCounts[k])
+      trackCounts[k] = {
+        count: 0,
+        title: e.track.title || "Unknown",
+        artist: getArtistFromTrack(e.track),
+      };
+    trackCounts[k].count++;
+  });
+  const topTracks = Object.values(trackCounts)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 15);
 
-	const genreCounts = {};
-	entries.forEach((e) => {
-		const g = getGenre(e.track);
-		genreCounts[g] = (genreCounts[g] || 0) + 1;
-	});
-	const topGenres = Object.entries(genreCounts)
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, 12);
+  const genreCounts = {};
+  entries.forEach((e) => {
+    const g = getGenre(e.track);
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  });
+  const topGenres = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
 
-	const hourCounts = new Array(24).fill(0);
-	entries.forEach((e) => {
-		hourCounts[new Date(e.played_at).getHours()]++;
-	});
+  const hourCounts = new Array(24).fill(0);
+  entries.forEach((e) => {
+    hourCounts[new Date(e.played_at).getHours()]++;
+  });
 
-	const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-	const dayCounts = new Array(7).fill(0);
-	entries.forEach((e) => {
-		dayCounts[new Date(e.played_at).getDay()]++;
-	});
+  const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayCounts = new Array(7).fill(0);
+  entries.forEach((e) => {
+    dayCounts[new Date(e.played_at).getDay()]++;
+  });
 
-	const recent =
-		currentLimit === "all" ? entries : entries.slice(0, currentLimit);
-	const accent = getAccent();
-	const colors = [accent, ...CHART_COLORS];
+  const recent = currentLimit === "all" ? entries : entries.slice(0, currentLimit);
+  const accent = getAccent();
+  const colors = [accent, ...CHART_COLORS];
 
-	const html = `
+  const html = `
     <style>
       #sclient-stats-content { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
       #sclient-stats-content::-webkit-scrollbar { width: 6px; }
@@ -359,247 +353,238 @@ async function renderAnalytics() {
           <thead><tr><th>Time</th><th>Track</th><th>Artist</th><th>Genre</th><th>Duration</th></tr></thead>
           <tbody>
             ${recent
-							.map(
-								(e) => `
+              .map(
+                (e) => `
               <tr>
                 <td style="white-space: nowrap; color: #888;">${new Date(e.played_at).toLocaleString()}</td>
                 <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${e.track.title || "Unknown"}</td>
                 <td style="color: #aaa;">${getArtistFromTrack(e.track)}</td>
                 <td style="color: #888;">${getGenre(e.track)}</td>
                 <td style="color: #888;">${fmtDuration(e.track.duration || 0)}</td>
-              </tr>`,
-							)
-							.join("")}
+              </tr>`
+              )
+              .join("")}
           </tbody>
         </table>
       </div>
     </div>
   `;
 
-	destroyCharts();
-	content.innerHTML = html;
-	wireFilters();
+  destroyCharts();
+  content.innerHTML = html;
+  wireFilters();
 
-	const limitSel = document.getElementById("sclient-stats-limit-select");
-	if (limitSel) {
-		limitSel.addEventListener("change", () => {
-			currentLimit =
-				limitSel.value === "all" ? "all" : parseInt(limitSel.value);
-			renderAnalytics();
-		});
-	}
+  const limitSel = document.getElementById("sclient-stats-limit-select");
+  if (limitSel) {
+    limitSel.addEventListener("change", () => {
+      currentLimit = limitSel.value === "all" ? "all" : parseInt(limitSel.value);
+      renderAnalytics();
+    });
+  }
 
-	if (typeof Chart === "undefined") return;
+  if (typeof Chart === "undefined") return;
 
-	Chart.defaults.color = "#888";
-	Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
-	Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
+  Chart.defaults.color = "#888";
+  Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
+  Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
 
-	upsertChart("sclient-chart-artists", 0, {
-		type: "bar",
-		indexAxis: "y",
-		data: {
-			labels: topArtists.map((a) => a[0]),
-			datasets: [
-				{
-					label: "Plays",
-					data: topArtists.map((a) => a[1]),
-					backgroundColor: topArtists.map(
-						(_, i) => colors[i % colors.length] + "99",
-					),
-					borderColor: topArtists.map((_, i) => colors[i % colors.length]),
-					borderWidth: 1,
-					borderRadius: 4,
-				},
-			],
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: { legend: { display: false } },
-			scales: {
-				x: {
-					grid: { color: "rgba(255,255,255,0.04)" },
-					ticks: { precision: 0 },
-				},
-				y: { grid: { display: false }, ticks: { font: { size: 11 } } },
-			},
-		},
-	});
+  upsertChart("sclient-chart-artists", 0, {
+    type: "bar",
+    indexAxis: "y",
+    data: {
+      labels: topArtists.map((a) => a[0]),
+      datasets: [
+        {
+          label: "Plays",
+          data: topArtists.map((a) => a[1]),
+          backgroundColor: topArtists.map((_, i) => colors[i % colors.length] + "99"),
+          borderColor: topArtists.map((_, i) => colors[i % colors.length]),
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { color: "rgba(255,255,255,0.04)" },
+          ticks: { precision: 0 },
+        },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      },
+    },
+  });
 
-	upsertChart("sclient-chart-tracks", 1, {
-		type: "bar",
-		indexAxis: "y",
-		data: {
-			labels: topTracks.map((t) =>
-				t.title.length > 30 ? t.title.slice(0, 30) + "..." : t.title,
-			),
-			datasets: [
-				{
-					label: "Plays",
-					data: topTracks.map((t) => t.count),
-					backgroundColor: topTracks.map(
-						(_, i) => colors[i % colors.length] + "99",
-					),
-					borderColor: topTracks.map((_, i) => colors[i % colors.length]),
-					borderWidth: 1,
-					borderRadius: 4,
-				},
-			],
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: { legend: { display: false } },
-			scales: {
-				x: {
-					grid: { color: "rgba(255,255,255,0.04)" },
-					ticks: { precision: 0 },
-				},
-				y: { grid: { display: false }, ticks: { font: { size: 11 } } },
-			},
-		},
-	});
+  upsertChart("sclient-chart-tracks", 1, {
+    type: "bar",
+    indexAxis: "y",
+    data: {
+      labels: topTracks.map((t) => (t.title.length > 30 ? t.title.slice(0, 30) + "..." : t.title)),
+      datasets: [
+        {
+          label: "Plays",
+          data: topTracks.map((t) => t.count),
+          backgroundColor: topTracks.map((_, i) => colors[i % colors.length] + "99"),
+          borderColor: topTracks.map((_, i) => colors[i % colors.length]),
+          borderWidth: 1,
+          borderRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { color: "rgba(255,255,255,0.04)" },
+          ticks: { precision: 0 },
+        },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      },
+    },
+  });
 
-	const otherSum = topGenres.slice(10).reduce((s, g) => s + g[1], 0);
-	const genreLabels = topGenres.slice(0, 10).map((g) => g[0]);
-	const genreData = topGenres.slice(0, 10).map((g) => g[1]);
-	if (otherSum > 0) {
-		genreLabels.push("Other");
-		genreData.push(otherSum);
-	}
+  const otherSum = topGenres.slice(10).reduce((s, g) => s + g[1], 0);
+  const genreLabels = topGenres.slice(0, 10).map((g) => g[0]);
+  const genreData = topGenres.slice(0, 10).map((g) => g[1]);
+  if (otherSum > 0) {
+    genreLabels.push("Other");
+    genreData.push(otherSum);
+  }
 
-	upsertChart("sclient-chart-genres", 2, {
-		type: "doughnut",
-		data: {
-			labels: genreLabels,
-			datasets: [
-				{
-					data: genreData,
-					backgroundColor: genreLabels.map(
-						(_, i) => colors[i % colors.length] + "CC",
-					),
-					borderColor: "rgba(10,10,10,0.5)",
-					borderWidth: 2,
-				},
-			],
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: true,
-			plugins: {
-				legend: {
-					position: "right",
-					labels: {
-						padding: 12,
-						font: { size: 11 },
-						usePointStyle: true,
-						pointStyleWidth: 8,
-					},
-				},
-			},
-		},
-	});
+  upsertChart("sclient-chart-genres", 2, {
+    type: "doughnut",
+    data: {
+      labels: genreLabels,
+      datasets: [
+        {
+          data: genreData,
+          backgroundColor: genreLabels.map((_, i) => colors[i % colors.length] + "CC"),
+          borderColor: "rgba(10,10,10,0.5)",
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: {
+        legend: {
+          position: "right",
+          labels: {
+            padding: 12,
+            font: { size: 11 },
+            usePointStyle: true,
+            pointStyleWidth: 8,
+          },
+        },
+      },
+    },
+  });
 
-	upsertChart("sclient-chart-hours", 3, {
-		type: "bar",
-		data: {
-			labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
-			datasets: [
-				{
-					label: "Plays",
-					data: hourCounts,
-					backgroundColor: accent + "88",
-					borderColor: accent,
-					borderWidth: 1,
-					borderRadius: 3,
-				},
-			],
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: { legend: { display: false } },
-			scales: {
-				x: {
-					grid: { display: false },
-					ticks: { font: { size: 10 }, maxTicksLimit: 12 },
-				},
-				y: {
-					grid: { color: "rgba(255,255,255,0.04)" },
-					ticks: { precision: 0 },
-				},
-			},
-		},
-	});
+  upsertChart("sclient-chart-hours", 3, {
+    type: "bar",
+    data: {
+      labels: Array.from({ length: 24 }, (_, i) => `${i}:00`),
+      datasets: [
+        {
+          label: "Plays",
+          data: hourCounts,
+          backgroundColor: accent + "88",
+          borderColor: accent,
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 10 }, maxTicksLimit: 12 },
+        },
+        y: {
+          grid: { color: "rgba(255,255,255,0.04)" },
+          ticks: { precision: 0 },
+        },
+      },
+    },
+  });
 
-	upsertChart("sclient-chart-days", 4, {
-		type: "bar",
-		data: {
-			labels: DAYS,
-			datasets: [
-				{
-					label: "Plays",
-					data: dayCounts,
-					backgroundColor: DAYS.map((_, i) => colors[i % colors.length] + "88"),
-					borderColor: DAYS.map((_, i) => colors[i % colors.length]),
-					borderWidth: 1,
-					borderRadius: 6,
-				},
-			],
-		},
-		options: {
-			responsive: true,
-			maintainAspectRatio: false,
-			plugins: { legend: { display: false } },
-			scales: {
-				x: { grid: { display: false } },
-				y: {
-					grid: { color: "rgba(255,255,255,0.04)" },
-					ticks: { precision: 0 },
-				},
-			},
-		},
-	});
+  upsertChart("sclient-chart-days", 4, {
+    type: "bar",
+    data: {
+      labels: DAYS,
+      datasets: [
+        {
+          label: "Plays",
+          data: dayCounts,
+          backgroundColor: DAYS.map((_, i) => colors[i % colors.length] + "88"),
+          borderColor: DAYS.map((_, i) => colors[i % colors.length]),
+          borderWidth: 1,
+          borderRadius: 6,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          grid: { color: "rgba(255,255,255,0.04)" },
+          ticks: { precision: 0 },
+        },
+      },
+    },
+  });
 }
 
 function toggleAnalytics() {
-	const settings = document.getElementById("sclient-settings-overlay");
-	if (settings) settings.style.right = "-450px";
+  const settings = document.getElementById("sclient-settings-overlay");
+  if (settings) settings.style.right = "-450px";
 
-	const lyrics = document.getElementById("sclient-lyrics-sidebar");
-	if (lyrics) lyrics.style.left = "-400px";
+  const lyrics = document.getElementById("sclient-lyrics-sidebar");
+  if (lyrics) lyrics.style.left = "-400px";
 
-	const overlay = document.getElementById("sclient-stats-overlay");
-	if (overlay) {
-		overlay.style.display = overlay.style.display === "flex" ? "none" : "flex";
-		if (overlay.style.display === "flex") {
-			currentSource = "";
-			renderAnalytics();
-		}
-		return;
-	}
+  const overlay = document.getElementById("sclient-stats-overlay");
+  if (overlay) {
+    overlay.style.display = overlay.style.display === "flex" ? "none" : "flex";
+    if (overlay.style.display === "flex") {
+      currentSource = "";
+      renderAnalytics();
+    }
+    return;
+  }
 
-	createAnalyticsOverlay();
-	document.getElementById("sclient-stats-overlay").style.display = "flex";
-	currentSource = "";
-	renderAnalytics();
+  createAnalyticsOverlay();
+  document.getElementById("sclient-stats-overlay").style.display = "flex";
+  currentSource = "";
+  renderAnalytics();
 }
 
 function createAnalyticsOverlay() {
-	if (document.getElementById("sclient-stats-overlay")) return;
+  if (document.getElementById("sclient-stats-overlay")) return;
 
-	const accent = getAccent();
-	const overlay = document.createElement("div");
-	overlay.id = "sclient-stats-overlay";
-	overlay.style.cssText = `
+  const accent = getAccent();
+  const overlay = document.createElement("div");
+  overlay.id = "sclient-stats-overlay";
+  overlay.style.cssText = `
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(10, 10, 10, 0.97); backdrop-filter: blur(15px);
     z-index: 9999998; display: none; flex-direction: column;
     color: #fff; font-family: 'Inter', system-ui, -apple-system, sans-serif;
   `;
 
-	overlay.innerHTML = `
+  overlay.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;">
       <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: ${accent}; display: flex; align-items: center; gap: 10px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
@@ -631,74 +616,66 @@ function createAnalyticsOverlay() {
     </div>
   `;
 
-	document.body.appendChild(overlay);
+  document.body.appendChild(overlay);
 
-	const close = () => {
-		overlay.style.display = "none";
-		destroyCharts();
-		document.removeEventListener("keydown", onEsc);
-	};
+  const close = () => {
+    overlay.style.display = "none";
+    destroyCharts();
+    document.removeEventListener("keydown", onEsc);
+  };
 
-	document
-		.getElementById("sclient-stats-close-btn")
-		.addEventListener("click", close);
+  document.getElementById("sclient-stats-close-btn").addEventListener("click", close);
 
-	document
-		.getElementById("sclient-stats-days-select")
-		.addEventListener("change", () => {
-			const val = document.getElementById("sclient-stats-days-select").value;
-			currentDays = val ? parseInt(val) : null;
-			renderAnalytics();
-		});
+  document.getElementById("sclient-stats-days-select").addEventListener("change", () => {
+    const val = document.getElementById("sclient-stats-days-select").value;
+    currentDays = val ? parseInt(val) : null;
+    renderAnalytics();
+  });
 
-	document
-		.getElementById("sclient-stats-export-btn")
-		.addEventListener("click", async () => {
-			try {
-				await sendBridge("stats_export_db");
-				if (typeof showToast !== "undefined") showToast("Stats exported successfully");
-			} catch (e) {
-				if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
-					if (typeof showToast !== "undefined") showToast("Export failed: " + e.message);
-				}
-			}
-		});
+  document.getElementById("sclient-stats-export-btn").addEventListener("click", async () => {
+    try {
+      await sendBridge("stats_export_db");
+      if (typeof showToast !== "undefined") showToast("Stats exported successfully");
+    } catch (e) {
+      if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
+        if (typeof showToast !== "undefined") showToast("Export failed: " + e.message);
+      }
+    }
+  });
 
-	document
-		.getElementById("sclient-stats-import-btn")
-		.addEventListener("click", async () => {
-			try {
-				const filePath = await sendBridge("stats_pick_import_file");
-				if (!filePath) return;
+  document.getElementById("sclient-stats-import-btn").addEventListener("click", async () => {
+    try {
+      const filePath = await sendBridge("stats_pick_import_file");
+      if (!filePath) return;
 
-				let overwrite = false;
-				if (typeof showConfirm !== "undefined") {
-					const choice = await showConfirm(
-						"You selected a database file to import.\n\nDo you want to completely overwrite your existing stats, or merge them together?",
-						[
-							{ id: "cancel", text: "Cancel", type: "secondary" },
-							{ id: "merge", text: "Merge", type: "primary" },
-							{ id: "overwrite", text: "Overwrite", type: "danger" }
-						]
-					);
-					if (choice === "cancel" || choice === false) return;
-					overwrite = choice === "overwrite";
-				}
-				
-				await sendBridge("stats_execute_import", { filePath, overwrite });
-				if (typeof showToast !== "undefined") showToast("Stats imported successfully");
-				renderAnalytics();
-			} catch (e) {
-				if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
-					if (typeof showToast !== "undefined") showToast("Import failed: " + e.message);
-				}
-			}
-		});
+      let overwrite = false;
+      if (typeof showConfirm !== "undefined") {
+        const choice = await showConfirm(
+          "You selected a database file to import.\n\nDo you want to completely overwrite your existing stats, or merge them together?",
+          [
+            { id: "cancel", text: "Cancel", type: "secondary" },
+            { id: "merge", text: "Merge", type: "primary" },
+            { id: "overwrite", text: "Overwrite", type: "danger" },
+          ]
+        );
+        if (choice === "cancel" || choice === false) return;
+        overwrite = choice === "overwrite";
+      }
 
-	const onEsc = (e) => {
-		if (e.key === "Escape") close();
-	};
-	document.addEventListener("keydown", onEsc);
+      await sendBridge("stats_execute_import", { filePath, overwrite });
+      if (typeof showToast !== "undefined") showToast("Stats imported successfully");
+      renderAnalytics();
+    } catch (e) {
+      if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
+        if (typeof showToast !== "undefined") showToast("Import failed: " + e.message);
+      }
+    }
+  });
+
+  const onEsc = (e) => {
+    if (e.key === "Escape") close();
+  };
+  document.addEventListener("keydown", onEsc);
 }
 
 if (statsLocalOn) setupStatsTracking();

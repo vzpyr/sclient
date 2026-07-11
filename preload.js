@@ -1,16 +1,16 @@
 const { ipcRenderer, webFrame } = require("electron");
 
 const ENDPOINTS = [
-	"api-v2.soundcloud.com/resolve",
-	"api-v2.soundcloud.com/tracks",
-	"api-v2.soundcloud.com/playlists",
-	"api-v2.soundcloud.com/media",
+  "api-v2.soundcloud.com/resolve",
+  "api-v2.soundcloud.com/tracks",
+  "api-v2.soundcloud.com/playlists",
+  "api-v2.soundcloud.com/media",
 ];
 
 const proxyCfg = ipcRenderer.sendSync("get-proxy-config");
 
 if (proxyCfg.enabled && proxyCfg.url && proxyCfg.url.startsWith("http")) {
-	webFrame.executeJavaScript(`
+  webFrame.executeJavaScript(`
 (function() {
   var proxyUrl = '${proxyCfg.url}'
   var endpoints = ${JSON.stringify(ENDPOINTS)}
@@ -42,8 +42,7 @@ if (proxyCfg.enabled && proxyCfg.url && proxyCfg.url.startsWith("http")) {
 }
 
 const ua = navigator.userAgent;
-const chromeVersion =
-	(ua.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/) || [])[1] || "120.0.0.0";
+const chromeVersion = (ua.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/) || [])[1] || "120.0.0.0";
 const majorVersion = chromeVersion.split(".")[0];
 
 const PLATFORMS = { win32: "Windows", darwin: "macOS", linux: "Linux" };
@@ -79,47 +78,47 @@ webFrame.executeJavaScript(`
 })()`);
 
 window.addEventListener("message", (event) => {
-	if (event.source !== window) return;
-	if (!event.data || event.data.source !== "sclient-bridge") return;
+  if (event.source !== window) return;
+  if (!event.data || event.data.source !== "sclient-bridge") return;
 
-	const { action, cmd, args, callbackId } = event.data;
-	if (action !== "invoke") return;
+  const { action, cmd, args, callbackId } = event.data;
+  if (action !== "invoke") return;
 
-	ipcRenderer
-		.invoke(cmd, args)
-		.then((result) => {
-			window.postMessage(
-				{ source: "sclient-bridge-reply", callbackId, success: true, result },
-				"*",
-			);
-		})
-		.catch((err) => {
-			window.postMessage(
-				{
-					source: "sclient-bridge-reply",
-					callbackId,
-					success: false,
-					error: err.message,
-				},
-				"*",
-			);
-		});
+  ipcRenderer
+    .invoke(cmd, args)
+    .then((result) => {
+      window.postMessage(
+        { source: "sclient-bridge-reply", callbackId, success: true, result },
+        "*"
+      );
+    })
+    .catch((err) => {
+      window.postMessage(
+        {
+          source: "sclient-bridge-reply",
+          callbackId,
+          success: false,
+          error: err.message,
+        },
+        "*"
+      );
+    });
 });
 
 ipcRenderer.on("download_progress", (_event, data) => {
-	window.postMessage({ source: "sclient-bridge-event", event: "download_progress", data }, "*");
+  window.postMessage({ source: "sclient-bridge-event", event: "download_progress", data }, "*");
 });
 
 window.addEventListener("message", (event) => {
-	if (event.source !== window || !event.data) return;
-	if (event.data.source === "sclient-mini-update") {
-		ipcRenderer.send("mini_update", event.data.data);
-	}
-	if (event.data.source === "sclient-mini-toggle") {
-		ipcRenderer.send("toggle_miniplayer");
-	}
+  if (event.source !== window || !event.data) return;
+  if (event.data.source === "sclient-mini-update") {
+    ipcRenderer.send("mini_update", event.data.data);
+  }
+  if (event.data.source === "sclient-mini-toggle") {
+    ipcRenderer.send("toggle_miniplayer");
+  }
 });
 
 ipcRenderer.on("mini_action", (_event, action) => {
-	window.postMessage({ source: "sclient-mini-action", action }, "*");
+  window.postMessage({ source: "sclient-mini-action", action }, "*");
 });

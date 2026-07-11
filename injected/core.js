@@ -1,47 +1,47 @@
 function injectStyle(id, css) {
-	if (document.getElementById(id)) return;
-	const style = document.createElement("style");
-	style.id = id;
-	style.textContent = css;
-	if (document.head) {
-		document.head.appendChild(style);
-	} else {
-		document.addEventListener("DOMContentLoaded", () => {
-			if (!document.getElementById(id)) document.head.appendChild(style);
-		});
-	}
+  if (document.getElementById(id)) return;
+  const style = document.createElement("style");
+  style.id = id;
+  style.textContent = css;
+  if (document.head) {
+    document.head.appendChild(style);
+  } else {
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!document.getElementById(id)) document.head.appendChild(style);
+    });
+  }
 }
 
 function injectToIframes(id, css) {
-	const applyToIframe = (ifr) => {
-		try {
-			if (!ifr.contentDocument) return;
-			if (ifr.contentDocument.getElementById(id + "-iframe")) return;
-			const style = ifr.contentDocument.createElement("style");
-			style.id = id + "-iframe";
-			style.textContent = css;
-			ifr.contentDocument.head.appendChild(style);
-		} catch (e) {}
-	};
+  const applyToIframe = (ifr) => {
+    try {
+      if (!ifr.contentDocument) return;
+      if (ifr.contentDocument.getElementById(id + "-iframe")) return;
+      const style = ifr.contentDocument.createElement("style");
+      style.id = id + "-iframe";
+      style.textContent = css;
+      ifr.contentDocument.head.appendChild(style);
+    } catch (e) {}
+  };
 
-	document.querySelectorAll("iframe").forEach(applyToIframe);
+  document.querySelectorAll("iframe").forEach(applyToIframe);
 
-	const obs = new MutationObserver((mutations) => {
-		for (const mut of mutations) {
-			for (const node of mut.addedNodes) {
-				if (node.tagName === "IFRAME") {
-					node.addEventListener("load", () => applyToIframe(node));
-					applyToIframe(node);
-				} else if (node.querySelectorAll) {
-					node.querySelectorAll("iframe").forEach(ifr => {
-						ifr.addEventListener("load", () => applyToIframe(ifr));
-						applyToIframe(ifr);
-					});
-				}
-			}
-		}
-	});
-	obs.observe(document.documentElement, { childList: true, subtree: true });
+  const obs = new MutationObserver((mutations) => {
+    for (const mut of mutations) {
+      for (const node of mut.addedNodes) {
+        if (node.tagName === "IFRAME") {
+          node.addEventListener("load", () => applyToIframe(node));
+          applyToIframe(node);
+        } else if (node.querySelectorAll) {
+          node.querySelectorAll("iframe").forEach((ifr) => {
+            ifr.addEventListener("load", () => applyToIframe(ifr));
+            applyToIframe(ifr);
+          });
+        }
+      }
+    }
+  });
+  obs.observe(document.documentElement, { childList: true, subtree: true });
 }
 
 const sclientScrollbarCss = `
@@ -56,8 +56,8 @@ injectStyle("sclient-scrollbar", sclientScrollbarCss);
 injectToIframes("sclient-scrollbar", sclientScrollbarCss);
 
 injectStyle(
-	"sclient-light-theme-overlays",
-	`
+  "sclient-light-theme-overlays",
+  `
   body.theme-light #sclient-settings-overlay,
   body.theme-light #sclient-lyrics-sidebar {
     background: rgba(250, 250, 250, 0.95) !important;
@@ -101,7 +101,7 @@ injectStyle(
   body.theme-light #sclient-trueshuffle-engine option {
     background: #fff; color: #333;
   }
-`,
+`
 );
 
 const cfg = window.__SCLIENT_CONFIG__ || {};
@@ -111,15 +111,15 @@ const customFontOn = cfg.custom_font || false;
 const customFontFamily = cfg.custom_font_family || "";
 
 if (customFontOn && customFontFamily) {
-	const familyUrl = customFontFamily.trim().replace(/\s+/g, '+');
-	const css = `
+  const familyUrl = customFontFamily.trim().replace(/\s+/g, "+");
+  const css = `
   @import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;700&display=swap');
   html, body, * {
     font-family: '${customFontFamily}', monospace !important;
   }
 `;
-	injectStyle("sclient-global-font", css);
-	injectToIframes("sclient-global-font", css);
+  injectStyle("sclient-global-font", css);
+  injectToIframes("sclient-global-font", css);
 }
 
 const lazyScrollOn = cfg.lazy_scroll || false;
@@ -149,88 +149,84 @@ const statsApiOn = cfg.stats_api_sync || false;
 const statsLocalOn = cfg.stats_local_tracking || false;
 
 function getAccent() {
-	return customAccentOn ? accentColor : "#f50";
+  return customAccentOn ? accentColor : "#f50";
 }
 
 let bridgeIdCounter = 0;
 
 function sendBridge(cmd, args = {}) {
-	return new Promise((resolve, reject) => {
-		const cid = cmd + "_" + ++bridgeIdCounter + "_" + Date.now();
-		let timeout;
-		const handler = (event) => {
-			if (
-				event.source !== window ||
-				!event.data ||
-				event.data.source !== "sclient-bridge-reply"
-			)
-				return;
-			if (event.data.callbackId === cid) {
-				clearTimeout(timeout);
-				window.removeEventListener("message", handler);
-				if (event.data.success) resolve(event.data.result);
-				else reject(new Error(event.data.error));
-			}
-		};
-		window.addEventListener("message", handler);
-		timeout = setTimeout(() => {
-			window.removeEventListener("message", handler);
-			reject(new Error("Bridge timeout"));
-		}, 300000);
-		window.postMessage(
-			{
-				source: "sclient-bridge",
-				action: "invoke",
-				cmd,
-				args,
-				callbackId: cid,
-			},
-			"*",
-		);
-	});
+  return new Promise((resolve, reject) => {
+    const cid = cmd + "_" + ++bridgeIdCounter + "_" + Date.now();
+    let timeout;
+    const handler = (event) => {
+      if (event.source !== window || !event.data || event.data.source !== "sclient-bridge-reply")
+        return;
+      if (event.data.callbackId === cid) {
+        clearTimeout(timeout);
+        window.removeEventListener("message", handler);
+        if (event.data.success) resolve(event.data.result);
+        else reject(new Error(event.data.error));
+      }
+    };
+    window.addEventListener("message", handler);
+    timeout = setTimeout(() => {
+      window.removeEventListener("message", handler);
+      reject(new Error("Bridge timeout"));
+    }, 300000);
+    window.postMessage(
+      {
+        source: "sclient-bridge",
+        action: "invoke",
+        cmd,
+        args,
+        callbackId: cid,
+      },
+      "*"
+    );
+  });
 }
 
 function getArtistFromTrack(track) {
-	if (
-		track.publisher_metadata &&
-		track.publisher_metadata.artist &&
-		track.publisher_metadata.artist.trim()
-	) {
-		return track.publisher_metadata.artist;
-	}
-	if (track.user && track.user.username) return track.user.username;
-	return "Unknown";
+  if (
+    track.publisher_metadata &&
+    track.publisher_metadata.artist &&
+    track.publisher_metadata.artist.trim()
+  ) {
+    return track.publisher_metadata.artist;
+  }
+  if (track.user && track.user.username) return track.user.username;
+  return "Unknown";
 }
 
 function extractClientId() {
-	for (const r of performance.getEntriesByType("resource")) {
-		if (r.name.includes("client_id=")) {
-			try {
-				const cid = new URL(r.name).searchParams.get("client_id");
-				if (cid) return cid;
-			} catch (e) {}
-		}
-	}
-	return null;
+  for (const r of performance.getEntriesByType("resource")) {
+    if (r.name.includes("client_id=")) {
+      try {
+        const cid = new URL(r.name).searchParams.get("client_id");
+        if (cid) return cid;
+      } catch (e) {}
+    }
+  }
+  return null;
 }
 
 const trackCache = new Map();
 
 async function fetchTrackData(songUrl) {
-	if (trackCache.has(songUrl)) return trackCache.get(songUrl);
-	const clientId = extractClientId();
-	if (!clientId) return null;
-	try {
-		const res = await fetch(
-			`https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`,
-		);
-		if (!res.ok) return null;
-		const data = await res.json();
-		trackCache.set(songUrl, data);
-		return data;
-	} catch (e) {
-		return null;
-	}
+  if (trackCache.has(songUrl)) return trackCache.get(songUrl);
+  const clientId = extractClientId();
+  if (!clientId) return null;
+  try {
+    const res = await fetch(
+      `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    trackCache.set(songUrl, data);
+    return data;
+  } catch (e) {
+    return null;
+  }
 }
 
 const playbackListeners = [];
@@ -240,132 +236,137 @@ let currentSongUrl = null;
 let currentTrackData = null;
 
 function parseTime(str) {
-	if (!str) return 0;
-	const m = str.match(/\d+:\d+(?::\d+)?/);
-	if (!m) return 0;
-	const parts = m[0].split(":").map(Number);
-	if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-	if (parts.length === 2) return parts[0] * 60 + parts[1];
-	return 0;
+  if (!str) return 0;
+  const m = str.match(/\d+:\d+(?::\d+)?/);
+  if (!m) return 0;
+  const parts = m[0].split(":").map(Number);
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  return 0;
 }
 
 function onPlaybackChange(cb) {
-	playbackListeners.push(cb);
-	if (playbackListeners.length === 1) {
-		playbackTimer = setInterval(pollPlayback, 2000);
-	}
+  playbackListeners.push(cb);
+  if (playbackListeners.length === 1) {
+    playbackTimer = setInterval(pollPlayback, 2000);
+  }
 }
 
 async function pollPlayback() {
-	const titleLink = document.querySelector(PLAYBACK_SEL);
+  const titleLink = document.querySelector(PLAYBACK_SEL);
 
-	if (!titleLink) {
-		if (currentSongUrl !== null) {
-			currentSongUrl = null;
-			currentTrackData = null;
-			for (const cb of playbackListeners) cb({ type: "none" });
-		}
-		return;
-	}
+  if (!titleLink) {
+    if (currentSongUrl !== null) {
+      currentSongUrl = null;
+      currentTrackData = null;
+      for (const cb of playbackListeners) cb({ type: "none" });
+    }
+    return;
+  }
 
-	const songUrl = titleLink.href.split("?")[0];
-	const isPlaying =
-		navigator.mediaSession &&
-		navigator.mediaSession.playbackState === "playing";
-	const now = Date.now();
+  const songUrl = titleLink.href.split("?")[0];
+  const isPlaying = navigator.mediaSession && navigator.mediaSession.playbackState === "playing";
+  const now = Date.now();
 
-	const passed = document.querySelector(".playbackTimeline__timePassed");
-	const dur = document.querySelector(".playbackTimeline__duration");
-	const position = passed ? parseTime(passed.textContent) : 0;
-	const duration = dur ? parseTime(dur.textContent) : 0;
+  const passed = document.querySelector(".playbackTimeline__timePassed");
+  const dur = document.querySelector(".playbackTimeline__duration");
+  const position = passed ? parseTime(passed.textContent) : 0;
+  const duration = dur ? parseTime(dur.textContent) : 0;
 
-	let type = "tick";
-	if (songUrl !== currentSongUrl) {
-		currentSongUrl = songUrl;
-		currentTrackData = await fetchTrackData(songUrl);
-		type = "track_start";
-	}
+  let type = "tick";
+  if (songUrl !== currentSongUrl) {
+    currentSongUrl = songUrl;
+    currentTrackData = await fetchTrackData(songUrl);
+    type = "track_start";
+  }
 
-	for (const cb of playbackListeners) {
-		cb({
-			type,
-			songUrl,
-			trackData: currentTrackData,
-			isPlaying,
-			timestamp: now,
-			position,
-			duration,
-		});
-	}
+  for (const cb of playbackListeners) {
+    cb({
+      type,
+      songUrl,
+      trackData: currentTrackData,
+      isPlaying,
+      timestamp: now,
+      position,
+      duration,
+    });
+  }
 
-	if (typeof window !== "undefined") {
-		const likeBtn = document.querySelector(".playbackSoundBadge__like");
-		const shuffleBtn = document.querySelector(".shuffleControl");
-		const repeatBtn = document.querySelector(".repeatControl");
-		
-		let loopState = "none";
-		if (repeatBtn) {
-			if (repeatBtn.classList.contains("m-one")) loopState = "one";
-			else if (repeatBtn.classList.contains("m-all")) loopState = "all";
-		}
-		
-		window.postMessage({ 
-			source: "sclient-mini-update", 
-			data: {
-				trackData: currentTrackData,
-				isPlaying: isPlaying,
-				position: position,
-				duration: duration,
-				isLiked: likeBtn ? likeBtn.classList.contains("sc-button-selected") : false,
-				isShuffled: shuffleBtn ? shuffleBtn.classList.contains("m-shuffling") : false,
-				loopState: loopState,
-				accent: typeof getAccent === "function" ? getAccent() : "#f50"
-			}
-		}, "*");
-	}
+  if (typeof window !== "undefined") {
+    const likeBtn = document.querySelector(".playbackSoundBadge__like");
+    const shuffleBtn = document.querySelector(".shuffleControl");
+    const repeatBtn = document.querySelector(".repeatControl");
+
+    let loopState = "none";
+    if (repeatBtn) {
+      if (repeatBtn.classList.contains("m-one")) loopState = "one";
+      else if (repeatBtn.classList.contains("m-all")) loopState = "all";
+    }
+
+    window.postMessage(
+      {
+        source: "sclient-mini-update",
+        data: {
+          trackData: currentTrackData,
+          isPlaying: isPlaying,
+          position: position,
+          duration: duration,
+          isLiked: likeBtn ? likeBtn.classList.contains("sc-button-selected") : false,
+          isShuffled: shuffleBtn ? shuffleBtn.classList.contains("m-shuffling") : false,
+          loopState: loopState,
+          accent: typeof getAccent === "function" ? getAccent() : "#f50",
+        },
+      },
+      "*"
+    );
+  }
 }
 
 function injectMiniplayerButton() {
-	if (document.getElementById("sclient-mini-btn")) return;
+  if (document.getElementById("sclient-mini-btn")) return;
 
-	const dlBtn = document.getElementById("sclient-download-btn");
-	if (!dlBtn || !dlBtn.parentNode) return;
+  const dlBtn = document.getElementById("sclient-download-btn");
+  if (!dlBtn || !dlBtn.parentNode) return;
 
-	const btn = document.createElement("button");
-	btn.id = "sclient-mini-btn";
-	btn.className = "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
-	btn.title = "Mini Player";
-	btn.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-turntable-icon lucide-turntable"><path d="M10 12.01h.01"/><path d="M18 8v4a8 8 0 0 1-1.07 4"/><circle cx="10" cy="12" r="4"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div>';
+  const btn = document.createElement("button");
+  btn.id = "sclient-mini-btn";
+  btn.className =
+    "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
+  btn.title = "Mini Player";
+  btn.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-turntable-icon lucide-turntable"><path d="M10 12.01h.01"/><path d="M18 8v4a8 8 0 0 1-1.07 4"/><circle cx="10" cy="12" r="4"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></div>';
 
-	btn.addEventListener("click", (e) => {
-		e.preventDefault();
-		window.postMessage({ source: "sclient-mini-toggle" }, "*");
-	});
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.postMessage({ source: "sclient-mini-toggle" }, "*");
+  });
 
-	dlBtn.parentNode.insertBefore(btn, dlBtn);
+  dlBtn.parentNode.insertBefore(btn, dlBtn);
 }
 
 window.addEventListener("message", (event) => {
-	if (event.source !== window || !event.data || event.data.source !== "sclient-mini-action") return;
-	const { action } = event.data;
-	if (action === "playpause") document.querySelector(".playControl")?.click();
-	if (action === "next") document.querySelector(".skipControl__next")?.click();
-	if (action === "prev") document.querySelector(".skipControl__previous")?.click();
-	if (action === "shuffle") document.querySelector(".shuffleControl")?.click();
-	if (action === "loop") document.querySelector(".repeatControl")?.click();
-	if (action === "like") document.querySelector(".playbackSoundBadge__like")?.click();
-	if (action && action.action === "seek") {
-		if (typeof seekTo === "function") seekTo(action.value);
-	}
+  if (event.source !== window || !event.data || event.data.source !== "sclient-mini-action") return;
+  const { action } = event.data;
+  if (action === "playpause") document.querySelector(".playControl")?.click();
+  if (action === "next") document.querySelector(".skipControl__next")?.click();
+  if (action === "prev") document.querySelector(".skipControl__previous")?.click();
+  if (action === "shuffle") document.querySelector(".shuffleControl")?.click();
+  if (action === "loop") document.querySelector(".repeatControl")?.click();
+  if (action === "like") document.querySelector(".playbackSoundBadge__like")?.click();
+  if (action && action.action === "seek") {
+    if (typeof seekTo === "function") seekTo(action.value);
+  }
 
-	setTimeout(() => { if (typeof pollPlayback === "function") pollPlayback(); }, 50);
+  setTimeout(() => {
+    if (typeof pollPlayback === "function") pollPlayback();
+  }, 50);
 });
 
 function showToast(message) {
-	const toast = document.createElement("div");
-	toast.textContent = message;
-	const isLight = document.body.classList.contains("theme-light");
-	toast.style.cssText = `
+  const toast = document.createElement("div");
+  toast.textContent = message;
+  const isLight = document.body.classList.contains("theme-light");
+  toast.style.cssText = `
     position: fixed; bottom: 20px; left: 20px;
     background: var(--background-surface-color, ${isLight ? "#f2f2f2" : "#1e1e1e"});
     color: ${isLight ? "#333" : "#fff"}; border: 1px solid ${isLight ? "#ccc" : "#333"};
@@ -376,93 +377,91 @@ function showToast(message) {
     pointer-events: none; z-index: 9999999; opacity: 0; transform: translateY(10px);
     transition: all 0.3s ease; white-space: pre-line; text-align: center;
   `;
-	document.body.appendChild(toast);
-	requestAnimationFrame(() => {
-		toast.style.opacity = "1";
-		toast.style.transform = "translateY(0)";
-	});
-	setTimeout(() => {
-		toast.style.opacity = "0";
-		toast.style.transform = "translateY(10px)";
-		setTimeout(() => toast.remove(), 300);
-	}, 3500);
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateY(0)";
+  });
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(10px)";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
 }
 
 function showConfirm(message, options) {
-	return new Promise((resolve) => {
-		const isLight = document.body.classList.contains("theme-light");
-		const bg = isLight ? "#fff" : "#1e1e1e";
-		const textColor = isLight ? "#111" : "#fff";
-		const borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)";
+  return new Promise((resolve) => {
+    const isLight = document.body.classList.contains("theme-light");
+    const bg = isLight ? "#fff" : "#1e1e1e";
+    const textColor = isLight ? "#111" : "#fff";
+    const borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)";
 
-		const backdrop = document.createElement("div");
-		backdrop.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);`;
+    const backdrop = document.createElement("div");
+    backdrop.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);`;
 
-		const modal = document.createElement("div");
-		modal.style.cssText = `background: ${bg}; color: ${textColor}; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid ${borderColor}; transform: scale(0.9); transition: transform 0.2s;`;
+    const modal = document.createElement("div");
+    modal.style.cssText = `background: ${bg}; color: ${textColor}; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid ${borderColor}; transform: scale(0.9); transition: transform 0.2s;`;
 
-		const msg = document.createElement("div");
-		msg.textContent = message;
-		msg.style.cssText =
-			"font-size: 16px; font-weight: 500; margin-bottom: 24px;";
-		modal.appendChild(msg);
+    const msg = document.createElement("div");
+    msg.textContent = message;
+    msg.style.cssText = "font-size: 16px; font-weight: 500; margin-bottom: 24px;";
+    modal.appendChild(msg);
 
-		const btnRow = document.createElement("div");
-		btnRow.style.cssText = "display: flex; gap: 12px; justify-content: center;";
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display: flex; gap: 12px; justify-content: center;";
 
-		let buttons = [];
-		if (Array.isArray(options)) {
-			buttons = options;
-		} else {
-			buttons = [
-				{ id: false, text: arguments[2] || "Cancel", type: "secondary" },
-				{ id: true, text: arguments[1] || "Confirm", type: "danger" }
-			];
-		}
+    let buttons = [];
+    if (Array.isArray(options)) {
+      buttons = options;
+    } else {
+      buttons = [
+        { id: false, text: arguments[2] || "Cancel", type: "secondary" },
+        { id: true, text: arguments[1] || "Confirm", type: "danger" },
+      ];
+    }
 
-		const cleanup = (res) => {
-			backdrop.style.opacity = "0";
-			modal.style.transform = "scale(0.9)";
-			setTimeout(() => {
-				backdrop.remove();
-				resolve(res);
-			}, 200);
-		};
+    const cleanup = (res) => {
+      backdrop.style.opacity = "0";
+      modal.style.transform = "scale(0.9)";
+      setTimeout(() => {
+        backdrop.remove();
+        resolve(res);
+      }, 200);
+    };
 
-		buttons.forEach(b => {
-			const btn = document.createElement("button");
-			btn.textContent = b.text;
-			if (b.type === "danger") {
-				btn.style.cssText = "padding: 8px 16px; background: #d32f2f; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;";
-			} else if (b.type === "primary") {
-				btn.style.cssText = `padding: 8px 16px; background: ${getAccent ? getAccent() : '#1976d2'}; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;`;
-			} else {
-				btn.style.cssText = `padding: 8px 16px; background: transparent; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 6px; cursor: pointer; font-weight: 500;`;
-			}
-			btn.onclick = () => cleanup(b.id);
-			btnRow.appendChild(btn);
-		});
+    buttons.forEach((b) => {
+      const btn = document.createElement("button");
+      btn.textContent = b.text;
+      if (b.type === "danger") {
+        btn.style.cssText =
+          "padding: 8px 16px; background: #d32f2f; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;";
+      } else if (b.type === "primary") {
+        btn.style.cssText = `padding: 8px 16px; background: ${getAccent ? getAccent() : "#1976d2"}; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;`;
+      } else {
+        btn.style.cssText = `padding: 8px 16px; background: transparent; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 6px; cursor: pointer; font-weight: 500;`;
+      }
+      btn.onclick = () => cleanup(b.id);
+      btnRow.appendChild(btn);
+    });
 
-		modal.appendChild(btnRow);
-		backdrop.appendChild(modal);
-		document.body.appendChild(backdrop);
+    modal.appendChild(btnRow);
+    backdrop.appendChild(modal);
+    document.body.appendChild(backdrop);
 
-		requestAnimationFrame(() => {
-			backdrop.style.opacity = "1";
-			modal.style.transform = "scale(1)";
-		});
-	});
+    requestAnimationFrame(() => {
+      backdrop.style.opacity = "1";
+      modal.style.transform = "scale(1)";
+    });
+  });
 }
 
 function applyWideLayout() {
-	const width = wideLayoutWidth || "1200";
-	const maxWidthRule =
-		width === "unlimited"
-			? "max-width: none !important;"
-			: `max-width: ${width}px !important;`;
-	injectStyle(
-		"sclient-fluid-viewport",
-		`
+  const width = wideLayoutWidth || "1200";
+  const maxWidthRule =
+    width === "unlimited" ? "max-width: none !important;" : `max-width: ${width}px !important;`;
+  injectStyle(
+    "sclient-fluid-viewport",
+    `
     .l-container {
       min-width: 720px !important;
       ${maxWidthRule}
@@ -473,14 +472,14 @@ function applyWideLayout() {
       max-width: none !important;
       padding: 0 24px !important;
     }
-  `,
-	);
+  `
+  );
 }
 
 function applyLayoutFixes() {
-	injectStyle(
-		"sclient-layout-fixes",
-		`
+  injectStyle(
+    "sclient-layout-fixes",
+    `
     .mixedSelectionModule, .mixedSelectionGallery, .tileGallery,
     .tileGallery__sliderPeekContainer, .tileGallery__sliderPanel {
       height: auto !important; min-height: min-content !important;
@@ -494,14 +493,14 @@ function applyLayoutFixes() {
       margin-bottom: 0 !important;
     }
     .systemPlaylistTile { height: auto !important; }
-  `,
-	);
+  `
+  );
 }
 
 function applyCollapsibleSidebar() {
-	injectStyle(
-		"sclient-collapsible-sidebar",
-		`
+  injectStyle(
+    "sclient-collapsible-sidebar",
+    `
     .l-fluid-fixed .l-main { margin-right: 0 !important; }
     .l-sidebar-right {
       position: fixed !important; top: 46px !important; bottom: 46px !important;
@@ -515,14 +514,14 @@ function applyCollapsibleSidebar() {
     body.sclient-sidebar-open .l-sidebar-right { right: 0 !important; }
     #sclient-sidebar-toggle { display: none !important; top: 60px; }
     body:has(.l-sidebar-right) #sclient-sidebar-toggle { display: flex !important; }
-  `,
-	);
+  `
+  );
 }
 
 function injectFloatingButtonStyles() {
-	injectStyle(
-		"sclient-floating-btn-styles",
-		`
+  injectStyle(
+    "sclient-floating-btn-styles",
+    `
     .sclient-floating-btn {
       position: fixed; right: 20px; z-index: 101;
       background: var(--background-surface-color, #f2f2f2);
@@ -558,41 +557,38 @@ function injectFloatingButtonStyles() {
     .theme-dark body button.sclient-floating-btn.active svg {
       color: #f50 !important; stroke: #f50 !important;
     }
-  `,
-	);
+  `
+  );
 }
 
 function setupLazyScroll() {
-	if (document.getElementById("sclient-lazy-scroll")) return;
-	const btn = document.createElement("button");
-	btn.id = "sclient-lazy-scroll";
-	btn.className = "sclient-floating-btn";
-	btn.style.bottom = "68px";
-	btn.innerHTML =
-		'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg>';
+  if (document.getElementById("sclient-lazy-scroll")) return;
+  const btn = document.createElement("button");
+  btn.id = "sclient-lazy-scroll";
+  btn.className = "sclient-floating-btn";
+  btn.style.bottom = "68px";
+  btn.innerHTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg>';
 
-	let scrolling = false;
-	let interval = null;
+  let scrolling = false;
+  let interval = null;
 
-	btn.addEventListener("click", () => {
-		scrolling = !scrolling;
-		if (scrolling) {
-			btn.classList.add("active");
-			interval = setInterval(
-				() => window.scrollBy({ top: 300, behavior: "auto" }),
-				16,
-			);
-		} else {
-			btn.classList.remove("active");
-			clearInterval(interval);
-		}
-	});
-	document.body.appendChild(btn);
+  btn.addEventListener("click", () => {
+    scrolling = !scrolling;
+    if (scrolling) {
+      btn.classList.add("active");
+      interval = setInterval(() => window.scrollBy({ top: 300, behavior: "auto" }), 16);
+    } else {
+      btn.classList.remove("active");
+      clearInterval(interval);
+    }
+  });
+  document.body.appendChild(btn);
 }
 
 document.addEventListener("keydown", (e) => {
-	if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
-		e.preventDefault();
-		window.location.reload();
-	}
+  if (e.key === "F5" || (e.ctrlKey && e.key.toLowerCase() === "r")) {
+    e.preventDefault();
+    window.location.reload();
+  }
 });

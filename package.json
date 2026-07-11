@@ -8,7 +8,8 @@
     "start": "electron .",
     "build:linux": "electron-builder --linux",
     "build:win": "electron-builder --windows",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "format": "prettier --write ."
   },
   "build": {
     "appId": "com.vzpyr.sclient",
@@ -85,7 +86,8 @@
   "type": "commonjs",
   "devDependencies": {
     "electron": "github:castlabs/electron-releases#v43.0.0+wvcus",
-    "electron-builder": "^26.15.3"
+    "electron-builder": "^26.15.3",
+    "prettier": "^3.9.5"
   },
   "dependencies": {
     "@ghostery/adblocker-electron": "^2.18.1",
