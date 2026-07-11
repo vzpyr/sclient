@@ -24,17 +24,17 @@ if (!document.getElementById("sclient-lyrics-style")) {
 }
 
 function seekTo(seconds) {
-	// 1. Direct Approach (100% accurate, handles buffering natively)
+
 	const audios = document.querySelectorAll('audio');
 	for (const audio of audios) {
-		// Find the actual playing audio element (some might be empty/preloading)
+
 		if (audio.duration > 0 && Math.abs(audio.duration - currentDuration) < 5) {
 			audio.currentTime = seconds;
-			return; // Success!
+			return;
 		}
 	}
 
-	// 2. Fallback Ghost Click Approach
+
 	if (!currentDuration) return;
 	const progressWrapper = document.querySelector(".playbackTimeline__progressWrapper");
 	if (!progressWrapper) return;
@@ -110,7 +110,7 @@ function createLyricsSidebar() {
 	document.getElementById("sclient-lyrics-offset-slider").addEventListener("input", (e) => {
 		lyricsOffset = parseFloat(e.target.value);
 		document.getElementById("sclient-lyrics-offset-val").innerText = (lyricsOffset > 0 ? "+" : "") + lyricsOffset.toFixed(1) + "s";
-		currentHighlightedIndex = -999; // Force re-render
+		currentHighlightedIndex = -999;
 		let currentPos = isPlaying ? lastKnownPosition + (Date.now() - lastUpdateTime) / 1000 : lastKnownPosition;
 		updateLyricsUI(currentPos);
 	});
@@ -187,7 +187,7 @@ async function doFetch(artist, title) {
 							seekTo(targetPos);
 							lastKnownPosition = targetPos;
 							lastUpdateTime = Date.now();
-							currentHighlightedIndex = -999; // Force re-render immediately
+							currentHighlightedIndex = -999;
 							updateLyricsUI(targetPos);
 						}
 					}
@@ -291,9 +291,9 @@ if (typeof onPlaybackChange !== "undefined") {
 		if (lyricsOpen && evt.songUrl) {
 			if (evt.songUrl !== currentLyricsUrl) {
 				currentLyricsUrl = evt.songUrl;
-				lastTrack = ""; // Reset to allow a fresh fetch
+				lastTrack = "";
 			}
-			// Keep retrying until mediaSession metadata is fully ready and loaded
+
 			if (!lastTrack) {
 				fetchLyrics();
 			}

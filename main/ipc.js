@@ -299,7 +299,7 @@ function register({ ipcMain, session, app }) {
 						_e.sender.send("download_progress", { url: args.url, percent: match[1] });
 					}
 				}
-				// Since youtube-dl often ends with \r and doesn't flush \n immediately, also check the remaining buffer:
+
 				const matchEnd = stdoutBuf.match(/\[download\]\s+([\d\.]+)%/);
 				if (matchEnd && matchEnd[1]) {
 					_e.sender.send("download_progress", { url: args.url, percent: matchEnd[1] });

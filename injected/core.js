@@ -357,7 +357,7 @@ window.addEventListener("message", (event) => {
 	if (action && action.action === "seek") {
 		if (typeof seekTo === "function") seekTo(action.value);
 	}
-	// Force an immediate update so the bridge gets the new state immediately instead of waiting for the 2s loop
+
 	setTimeout(() => { if (typeof pollPlayback === "function") pollPlayback(); }, 50);
 });
 
