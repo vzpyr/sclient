@@ -14,6 +14,7 @@ SClient adds several enhancements and quality of life features to the standard w
 * **DRM Support**: Play DRM-protected tracks using proper Widevine DRM out of the box (Castlabs Electron).
 * **True Shuffle**: Fixes the default shuffle behavior by pre-loading the entire playlist or using an API-based shuffle engine.
 * **Region Bypass**: Experimental built-in proxy support to bypass geographic track restrictions. Use the free public proxy (accessible within the app) or self-host your own.
+  * **🚀 Usage:** The proxy server code can be found in `api/index.js` and is ready to be deployed.
   * **⚠️ Disclaimer:** Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. You should self-host it for maximum security (e.g. via Vercel).
 
 ### 🔌 Integrations & Tools
