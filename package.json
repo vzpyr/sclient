@@ -79,6 +79,12 @@
         "nsis",
         "portable"
       ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}-${os}-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     }
   },
   "author": "vzpyr <vzpyr@example.com>",
