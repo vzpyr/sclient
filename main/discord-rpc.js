@@ -38,10 +38,6 @@ async function updateRpc({ title, artist, isPlaying, artwork, timeStart, timeEnd
     instance: false,
   };
 
-  if (songUrl) {
-    activity.buttons = [{ label: "Listen on SoundCloud", url: songUrl }];
-  }
-
   if (timeStart && timeEnd) {
     activity.startTimestamp = Math.floor(timeStart / 1000) * 1000;
     activity.endTimestamp = Math.floor(timeEnd / 1000) * 1000;
