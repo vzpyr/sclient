@@ -87,7 +87,7 @@
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
     }
   },
-  "author": "vzpyr <vzpyr@example.com>",
+  "author": "vzpyr <107548344+vzpyr@users.noreply.github.com>",
   "homepage": "https://github.com/vzpyr/sclient",
   "license": "MIT",
   "type": "commonjs",
