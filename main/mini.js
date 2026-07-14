@@ -3,6 +3,8 @@ const { ipcRenderer } = require("electron");
 const $ = (id) => document.getElementById(id);
 
 let currentDuration = 0;
+let currentArtworkUrl = null;
+let artworkAccentLocked = false;
 
 function formatTime(secs) {
   if (!secs || isNaN(secs)) return "0:00";
@@ -11,12 +13,147 @@ function formatTime(secs) {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-// Window Controls
+let accentExtractionToken = 0;
+
+function rgbToHsl(r, g, b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  let s = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      default:
+        h = (r - g) / d + 4;
+    }
+    h /= 6;
+  }
+  return [h, s, l];
+}
+
+function hslToRgb(h, s, l) {
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l;
+  } else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+function rgbToHex(r, g, b) {
+  return (
+    "#" +
+    [r, g, b]
+      .map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+function extractAccentFromArtwork(url) {
+  const token = ++accentExtractionToken;
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    if (token !== accentExtractionToken) return;
+    try {
+      const SIZE = 48;
+      const canvas = document.createElement("canvas");
+      canvas.width = SIZE;
+      canvas.height = SIZE;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0, SIZE, SIZE);
+      const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
+
+      const buckets = new Map();
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+        if (a < 200) continue;
+        const [h, s, l] = rgbToHsl(r, g, b);
+        if (l < 0.12 || l > 0.9 || s < 0.18) continue;
+        const lWeight = 1 - Math.abs(l - 0.55) * 1.6;
+        const sWeight = s;
+        const weight = Math.max(0, lWeight) * sWeight;
+        if (weight <= 0) continue;
+        const key =
+          Math.round(h * 12) + "/" + Math.round(s * 4) + "/" + Math.round(l * 5);
+        const bucket = buckets.get(key);
+        if (bucket) {
+          bucket.r += r * weight;
+          bucket.g += g * weight;
+          bucket.b += b * weight;
+          bucket.weight += weight;
+        } else {
+          buckets.set(key, { r: r * weight, g: g * weight, b: b * weight, weight });
+        }
+      }
+
+      let best = null;
+      for (const bucket of buckets.values()) {
+        if (!best || bucket.weight > best.weight) best = bucket;
+      }
+      if (!best) return;
+
+      let r = Math.round(best.r / best.weight);
+      let g = Math.round(best.g / best.weight);
+      let b = Math.round(best.b / best.weight);
+
+      let [h, s, l] = rgbToHsl(r, g, b);
+      s = Math.max(s, 0.55);
+      l = Math.min(Math.max(l, 0.42), 0.62);
+      [r, g, b] = hslToRgb(h, s, l);
+
+      const hex = rgbToHex(r, g, b);
+      currentAccent = hex;
+      artworkAccentLocked = true;
+      document.documentElement.style.setProperty("--accent", hex);
+    } catch (e) {
+    }
+  };
+  img.onerror = () => {};
+  img.src = url;
+}
+
 $("btn-close").addEventListener("click", () => ipcRenderer.send("mini_close"));
+
+$("offset-slider").addEventListener("input", (e) => {
+  lyricsOffset = parseFloat(e.target.value);
+  $("offset-val").textContent = (lyricsOffset > 0 ? "+" : "") + lyricsOffset.toFixed(1) + "s";
+  currentHighlightedIndex = -999;
+  const currentPos = isPlayingLocal
+    ? lastKnownPosition + (Date.now() - lastUpdateTime) / 1000
+    : lastKnownPosition;
+  updateLyricsUI(currentPos);
+});
 $("btn-minimize").addEventListener("click", () => ipcRenderer.send("mini_minimize"));
 $("btn-fullscreen").addEventListener("click", () => ipcRenderer.send("mini_fullscreen"));
 
-// Playback Controls
 let isPlayingLocal = false;
 let isShuffledLocal = false;
 let isLikedLocal = false;
@@ -26,6 +163,8 @@ let currentAccent = "#f50";
 let lyricsOpenLocal = false;
 let currentSyncedLyrics = [];
 let lyricsTrack = "";
+let currentFetchAbort = null;
+let lyricsOffset = 0;
 let currentHighlightedIndex = -1;
 let currentArtist = "";
 let currentTitle = "";
@@ -53,6 +192,8 @@ $("btn-lyrics").addEventListener("click", () => {
   } else {
     ipcRenderer.send("resize_mini", 480, 180);
     content.classList.remove("with-lyrics");
+    $("offset-controls").classList.remove("visible");
+    currentSyncedLyrics = [];
   }
 });
 $("btn-loop").addEventListener("click", () => {
@@ -68,7 +209,6 @@ $("btn-like").addEventListener("click", () => {
   ipcRenderer.send("mini_action", "like");
 });
 
-// Seek Bar
 $("progress-bar").addEventListener("click", (e) => {
   const rect = $("progress-bar").getBoundingClientRect();
   const percent = (e.clientX - rect.left) / rect.width;
@@ -76,17 +216,15 @@ $("progress-bar").addEventListener("click", (e) => {
   ipcRenderer.send("mini_action", { action: "seek", value: seekTo });
 });
 
-// Global Keyboard Shortcuts
 document.addEventListener("keydown", (e) => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
 
   if (e.code === "Space") {
-    e.preventDefault(); // Prevents clicking the focused button or scrolling
+    e.preventDefault();
     $("btn-playpause").click();
   }
 });
 
-// State Updates
 let lastKnownPosition = 0;
 let lastUpdateTime = Date.now();
 
@@ -98,6 +236,7 @@ function updatePlayPauseUI(playing) {
     $("icon-play").style.display = "block";
     $("icon-pause").style.display = "none";
   }
+  $("eq-indicator").classList.toggle("paused", !playing);
 }
 
 function updateLikeUI(liked) {
@@ -136,8 +275,10 @@ ipcRenderer.on("mini_update", (_e, data) => {
     $("artist").textContent = currentArtist;
     if (data.trackData.artwork_url) {
       const url = data.trackData.artwork_url.replace("large", "t500x500");
+      currentArtworkUrl = url;
       $("artwork").style.backgroundImage = `url('${url}')`;
       $("bg").style.backgroundImage = `url('${url}')`;
+      extractAccentFromArtwork(url);
     }
 
     if (lyricsOpenLocal && (oldTitle !== currentTitle || oldArtist !== currentArtist)) {
@@ -146,6 +287,7 @@ ipcRenderer.on("mini_update", (_e, data) => {
   } else {
     $("artwork").style.backgroundImage = "none";
     $("bg").style.backgroundImage = "none";
+    currentArtworkUrl = null;
   }
 
   if (data.isPlaying !== undefined) {
@@ -175,13 +317,12 @@ ipcRenderer.on("mini_update", (_e, data) => {
     updateLoopUI(loopStateLocal);
   }
 
-  if (data.accent && data.accent !== currentAccent) {
+  if (data.accent && data.accent !== currentAccent && !artworkAccentLocked) {
     currentAccent = data.accent;
     document.documentElement.style.setProperty("--accent", currentAccent);
   }
 });
 
-// Lyrics Logic
 function esc(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -212,24 +353,37 @@ async function fetchLyrics(artist, title) {
   lyricsTrack = artist + " - " + title;
   const key = lyricsTrack;
   const safe = esc(title);
+  const safeArtist = esc(artist);
   const content = document.getElementById("lyrics-content");
-  content.innerHTML = `<div style="opacity:0.5; margin-top:40px;">Fetching lyrics for<br><b>${safe}</b>...</div>`;
+  content.innerHTML = `<div style="opacity:0.5; margin-top:40px;">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-mini-manual-now" style="margin-top:14px; padding:6px 16px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Enter manually</button></div>`;
   currentSyncedLyrics = [];
+
+  const abortCtrl = new AbortController();
+  currentFetchAbort = abortCtrl;
+  document.getElementById("sclient-mini-manual-now").addEventListener("click", () => {
+    abortCtrl.abort();
+    currentFetchAbort = null;
+    $("offset-controls").classList.remove("visible");
+    renderManual(artist, title);
+  });
 
   try {
     const res = await fetch(
-      `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`
+      `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`,
+      { signal: abortCtrl.signal }
     );
     if (!res.ok) throw new Error("Not found");
     const data = await res.json();
 
     if (lyricsTrack !== key) return;
     currentHighlightedIndex = -1;
+    lyricsOffset = 0;
+    $("offset-slider").value = 0;
+    $("offset-val").textContent = "0.0s";
 
     if (data.syncedLyrics) {
       const lines = data.syncedLyrics.split("\n");
-      let html = `<div style="font-weight:bold; margin-bottom: 30px; color:var(--accent); font-size: 18px;">${safe}<br><span style="font-size:13px; font-weight:normal; color:#aaa;">${esc(artist)}</span></div>`;
-      html += `<div id="lyrics-lines" style="display:flex; flex-direction:column; gap:12px; padding: 0 10px 50vh 10px;">`;
+      let html = `<div id="lyrics-lines" style="display:flex; flex-direction:column; gap:12px; padding: 50vh 10px 50vh 10px;">`;
       for (const line of lines) {
         const m = line.match(/^\[(\d{2}):(\d{2}\.\d{2,})\](.*)/);
         if (m) {
@@ -239,33 +393,46 @@ async function fetchLyrics(artist, title) {
         }
       }
       content.innerHTML = html + `</div>`;
+      $("offset-controls").classList.add("visible");
 
-      // Cache elements and add click listeners
       const lineElements = content.querySelectorAll(".lyric-line");
       lineElements.forEach((el, i) => {
         currentSyncedLyrics[i].element = el;
         el.addEventListener("click", () => {
-          ipcRenderer.send("mini_action", { action: "seek", value: currentSyncedLyrics[i].time });
+          const t = currentSyncedLyrics[i].time;
+          const seekTo = Math.max(0, t - lyricsOffset);
+          ipcRenderer.send("mini_action", { action: "seek", value: seekTo });
+          lastKnownPosition = seekTo;
+          lastUpdateTime = Date.now();
+          currentHighlightedIndex = -999;
+          updateLyricsUI(seekTo);
         });
       });
     } else if (data.plainLyrics) {
       const lines = data.plainLyrics.split("\n");
-      let html = `<div style="font-weight:bold; margin-bottom: 30px; color:var(--accent); font-size: 18px;">${safe}<br><span style="font-size:13px; font-weight:normal; color:#aaa;">${esc(artist)}</span></div>`;
+      let html = `<div style="display:flex; flex-direction:column; gap:12px; padding: 0 10px 20vh 10px;">`;
       for (const line of lines)
         html += `<div style="font-size: 15px; margin-bottom: 12px;">${esc(line.trim() || " ")}</div>`;
-      content.innerHTML = html;
+      content.innerHTML = html + `</div>`;
+      $("offset-controls").classList.remove("visible");
     } else {
+      $("offset-controls").classList.remove("visible");
       renderManual(artist, title);
     }
   } catch (e) {
-    if (lyricsTrack === key) renderManual(artist, title);
+    if (e && e.name === "AbortError") return;
+    if (lyricsTrack === key) {
+      $("offset-controls").classList.remove("visible");
+      renderManual(artist, title);
+    }
   }
 }
 
 function updateLyricsUI(pos) {
   if (!lyricsOpenLocal || !currentSyncedLyrics.length) return;
 
-  const activeIdx = currentSyncedLyrics.findLastIndex((l) => pos >= l.time - 0.2);
+  const effectivePos = pos + lyricsOffset;
+  const activeIdx = currentSyncedLyrics.findLastIndex((l) => effectivePos >= l.time - 0.2);
   if (activeIdx === currentHighlightedIndex) return;
   currentHighlightedIndex = activeIdx;
 
@@ -282,7 +449,6 @@ function updateLyricsUI(pos) {
   });
 }
 
-// Smooth Progress Rendering Loop
 function renderLoop() {
   if (currentDuration > 0) {
     let currentPos = lastKnownPosition;
@@ -301,18 +467,11 @@ function renderLoop() {
 }
 renderLoop();
 
-// ── Artwork size sync ──────────────────────────────────────────────────────
-// Both no-lyrics and with-lyrics must show the SAME artwork size.
-// We can't hardcode 152px because the actual viewport height varies by OS/DPI.
-// Solution: measure window.innerHeight - 28 (padding*2) when in mini mode
-// and store it as a CSS variable used by both layouts.
 function syncArtworkSize() {
-  // Only update while in mini (no-lyrics) mode — the 480×180 window.
-  // When lyrics are open the window is 700×480, which would give the wrong size.
-  if (!document.querySelector(".content.with-lyrics")) {
-    const size = Math.max(60, window.innerHeight - 28);
-    document.documentElement.style.setProperty("--mini-art-size", size + "px");
-  }
+  if (document.querySelector(".content.with-lyrics")) return;
+  if (window.innerHeight > 250) return;
+  const size = Math.max(60, window.innerHeight - 28);
+  document.documentElement.style.setProperty("--mini-art-size", size + "px");
 }
-syncArtworkSize(); // run immediately so there's no first-frame mismatch
+syncArtworkSize();
 window.addEventListener("resize", syncArtworkSize);

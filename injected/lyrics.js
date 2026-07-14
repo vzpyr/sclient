@@ -9,6 +9,7 @@ let lastKnownPosition = 0;
 let currentDuration = 0;
 let isPlaying = false;
 let lastUpdateTime = Date.now();
+let currentFetchAbort = null;
 
 if (!document.getElementById("sclient-lyrics-style")) {
   const style = document.createElement("style");
@@ -144,14 +145,26 @@ async function doFetch(artist, title) {
   const key = lyricsTrack;
   const accent = getAccent();
   const safe = esc(title);
+  const safeArtist = esc(artist);
 
   const content = document.getElementById("sclient-lyrics-content");
   if (content)
-    content.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safe}</b>...</div>`;
+    content.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-lyrics-manual-now" style="margin-top:14px; padding:6px 16px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Enter manually</button></div>`;
+
+  const abortCtrl = new AbortController();
+  currentFetchAbort = abortCtrl;
+  const manualNow = document.getElementById("sclient-lyrics-manual-now");
+  if (manualNow)
+    manualNow.addEventListener("click", () => {
+      abortCtrl.abort();
+      currentFetchAbort = null;
+      renderManual(artist, title);
+    });
 
   try {
     const res = await fetch(
-      `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`
+      `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`,
+      { signal: abortCtrl.signal }
     );
     if (!res.ok) throw new Error("Not found");
     const data = await res.json();
@@ -169,8 +182,7 @@ async function doFetch(artist, title) {
           document.getElementById("sclient-lyrics-offset-val").innerText = "0.0s";
         }
         const lines = data.syncedLyrics.split("\n");
-        let html = `<div style="font-weight:bold; margin-bottom: 30px; color:${accent}; font-size: 20px; text-align: center; padding: 0 10px;">${safe}<br><span style="font-size:14px; font-weight:normal; color:#aaa;">${esc(artist)}</span></div>`;
-        html += `<div id="sclient-lyrics-lines" style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 50vh 15px;">`;
+        let html = `<div id="sclient-lyrics-lines" style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 50vh 15px 50vh 15px;">`;
         for (const line of lines) {
           const m = line.match(/^\[(\d{2}):(\d{2}\.\d{2,})\](.*)/);
           if (m) {
@@ -196,8 +208,7 @@ async function doFetch(artist, title) {
         });
       } else if (data.plainLyrics) {
         const lines = data.plainLyrics.split("\n");
-        let html = `<div style="font-weight:bold; margin-bottom: 30px; color:${accent}; font-size: 20px; text-align: center; padding: 0 10px;">${safe}<br><span style="font-size:14px; font-weight:normal; color:#aaa;">${esc(artist)}</span></div>`;
-        html += `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">`;
+        let html = `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">`;
         for (const line of lines) {
           html += `<div style="font-size: 16px; color: #fff;">${esc(line.trim() || " ")}</div>`;
         }
@@ -209,6 +220,7 @@ async function doFetch(artist, title) {
       }
     }
   } catch (e) {
+    if (e && e.name === "AbortError") return;
     if (content && lyricsTrack === key) {
       const offsetContainer = document.getElementById("sclient-lyrics-offset-container");
       if (offsetContainer) offsetContainer.style.display = "none";
@@ -243,9 +255,20 @@ async function fetchLyrics() {
 
   let title = "";
   let artist = "";
-  if (navigator.mediaSession && navigator.mediaSession.metadata) {
-    title = navigator.mediaSession.metadata.title || "";
-    artist = navigator.mediaSession.metadata.artist || "";
+
+  if (typeof currentTrackData !== "undefined" && currentTrackData) {
+    title = currentTrackData.title || "";
+    artist =
+      (currentTrackData.publisher_metadata && currentTrackData.publisher_metadata.artist) ||
+      (currentTrackData.user && currentTrackData.user.username) ||
+      "";
+  }
+
+  if (!title || !artist) {
+    if (navigator.mediaSession && navigator.mediaSession.metadata) {
+      title = title || navigator.mediaSession.metadata.title || "";
+      artist = artist || navigator.mediaSession.metadata.artist || "";
+    }
   }
 
   if (!title || !artist) return;
