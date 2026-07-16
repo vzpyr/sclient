@@ -278,6 +278,8 @@ async function pollPlayback() {
     currentSongUrl = songUrl;
     currentTrackData = await fetchTrackData(songUrl);
     type = "track_start";
+  } else if (!currentTrackData) {
+    currentTrackData = await fetchTrackData(songUrl);
   }
 
   for (const cb of playbackListeners) {
