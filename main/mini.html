@@ -457,13 +457,12 @@
       .lyric-line.active {
         font-size: 16px;
         font-weight: 700;
-        background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #fff));
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
         transform: scale(1.1);
         opacity: 1;
         filter: blur(0px);
+      }
+      .lyric-word.sung {
+        color: var(--accent) !important;
       }
       .lyric-line.past {
         color: #888;

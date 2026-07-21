@@ -349,6 +349,15 @@ function renderManual(artist, title) {
   });
 }
 
+function renderLineWords(line) {
+  if (line.words && line.words.length > 0) {
+    return line.words
+      .map((w) => `<span class="lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`)
+      .join("");
+  }
+  return esc((line.text || "").trim() || " ");
+}
+
 async function fetchLyrics(artist, title) {
   lyricsTrack = artist + " - " + title;
   const key = lyricsTrack;
@@ -369,7 +378,7 @@ async function fetchLyrics(artist, title) {
 
   try {
     const res = await fetch(
-      `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`,
+      `https://api.lrcmux.dev/get?artist=${encodeURIComponent(artist)}&title=${encodeURIComponent(title)}&level=word&format=json`,
       { signal: abortCtrl.signal }
     );
     if (!res.ok) throw new Error("Not found");
@@ -381,16 +390,16 @@ async function fetchLyrics(artist, title) {
     $("offset-slider").value = 0;
     $("offset-val").textContent = "0.0s";
 
-    if (data.syncedLyrics) {
-      const lines = data.syncedLyrics.split("\n");
+    const hasSync = data.lines?.length > 0 && data.meta?.level !== "none";
+
+    if (hasSync) {
       let html = `<div id="lyrics-lines" style="display:flex; flex-direction:column; gap:12px; padding: 50vh 10px 50vh 10px;">`;
-      for (const line of lines) {
-        const m = line.match(/^\[(\d{2}):(\d{2}\.\d{2,})\](.*)/);
-        if (m) {
-          const time = parseInt(m[1]) * 60 + parseFloat(m[2]);
-          html += `<div class="lyric-line" data-time="${time}">${esc(m[3].trim() || " ")}</div>`;
-          currentSyncedLyrics.push({ time, element: null });
-        }
+      for (const line of data.lines) {
+        if (line.start === undefined || line.end === undefined) continue;
+        const start = line.start / 1000;
+        const end = line.end / 1000;
+        html += `<div class="lyric-line" data-start="${start}" data-end="${end}">${renderLineWords(line)}</div>`;
+        currentSyncedLyrics.push({ start, end, words: line.words || null, element: null });
       }
       content.innerHTML = html + `</div>`;
       $("offset-controls").classList.add("visible");
@@ -398,8 +407,9 @@ async function fetchLyrics(artist, title) {
       const lineElements = content.querySelectorAll(".lyric-line");
       lineElements.forEach((el, i) => {
         currentSyncedLyrics[i].element = el;
-        el.addEventListener("click", () => {
-          const t = currentSyncedLyrics[i].time;
+        el.addEventListener("click", (e) => {
+          const wordEl = e.target.closest(".lyric-word");
+          const t = wordEl ? parseFloat(wordEl.getAttribute("data-start")) : currentSyncedLyrics[i].start;
           const seekTo = Math.max(0, t - lyricsOffset);
           ipcRenderer.send("mini_action", { action: "seek", value: seekTo });
           lastKnownPosition = seekTo;
@@ -408,11 +418,10 @@ async function fetchLyrics(artist, title) {
           updateLyricsUI(seekTo);
         });
       });
-    } else if (data.plainLyrics) {
-      const lines = data.plainLyrics.split("\n");
+    } else if (data.lines && data.lines.length > 0) {
       let html = `<div style="display:flex; flex-direction:column; gap:12px; padding: 0 10px 20vh 10px;">`;
-      for (const line of lines)
-        html += `<div style="font-size: 15px; margin-bottom: 12px;">${esc(line.trim() || " ")}</div>`;
+      for (const line of data.lines)
+        html += `<div style="font-size: 15px; margin-bottom: 12px;">${esc((line.text || "").trim() || " ")}</div>`;
       content.innerHTML = html + `</div>`;
       $("offset-controls").classList.remove("visible");
     } else {
@@ -432,21 +441,74 @@ function updateLyricsUI(pos) {
   if (!lyricsOpenLocal || !currentSyncedLyrics.length) return;
 
   const effectivePos = pos + lyricsOffset;
-  const activeIdx = currentSyncedLyrics.findLastIndex((l) => effectivePos >= l.time - 0.2);
-  if (activeIdx === currentHighlightedIndex) return;
-  currentHighlightedIndex = activeIdx;
+  const activeIdx = currentSyncedLyrics.findLastIndex((l) => effectivePos >= l.start - 0.1);
+  const accent = currentAccent || "#f50";
 
-  currentSyncedLyrics.forEach((l, i) => {
-    if (!l.element) return;
-    if (i === activeIdx) {
-      l.element.className = "lyric-line active";
-      l.element.scrollIntoView({ behavior: "smooth", block: "center" });
-    } else if (i < activeIdx) {
-      l.element.className = "lyric-line past";
-    } else {
-      l.element.className = "lyric-line";
+  if (activeIdx !== currentHighlightedIndex) {
+    if (currentHighlightedIndex >= 0 && currentHighlightedIndex < currentSyncedLyrics.length) {
+      const oldEl = currentSyncedLyrics[currentHighlightedIndex].element;
+      if (oldEl) {
+        oldEl.querySelectorAll(".lyric-word").forEach((w) => {
+          w.classList.remove("sung");
+          w.style.background = "";
+          w.style.webkitBackgroundClip = "";
+          w.style.backgroundClip = "";
+          w.style.color = "";
+        });
+        oldEl.style.background = "";
+        oldEl.style.webkitBackgroundClip = "";
+        oldEl.style.backgroundClip = "";
+        oldEl.style.color = "";
+      }
     }
-  });
+    currentHighlightedIndex = activeIdx;
+    currentSyncedLyrics.forEach((l, i) => {
+      if (!l.element) return;
+      if (i === activeIdx) {
+        l.element.className = "lyric-line active";
+        l.element.style.color = l.element.querySelector(".lyric-word") ? "" : accent;
+        l.element.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (i < activeIdx) {
+        l.element.className = "lyric-line past";
+      } else {
+        l.element.className = "lyric-line";
+      }
+    });
+  }
+
+  if (activeIdx >= 0 && activeIdx < currentSyncedLyrics.length) {
+    const line = currentSyncedLyrics[activeIdx];
+    if (!line.element) return;
+    const wordEls = line.element.querySelectorAll(".lyric-word");
+
+    if (wordEls.length > 0) {
+      wordEls.forEach((wEl) => {
+        const wStart = parseFloat(wEl.getAttribute("data-start"));
+        const wEnd = parseFloat(wEl.getAttribute("data-end"));
+        if (effectivePos >= wEnd) {
+          wEl.classList.add("sung");
+          wEl.style.background = "";
+          wEl.style.webkitBackgroundClip = "";
+          wEl.style.backgroundClip = "";
+          wEl.style.color = "";
+        } else if (effectivePos >= wStart) {
+          wEl.classList.remove("sung");
+          const wp = Math.min(1, (effectivePos - wStart) / (wEnd - wStart));
+          const pct = (wp * 100).toFixed(1);
+          wEl.style.background = `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, #fff ${pct}%, #fff 100%)`;
+          wEl.style.webkitBackgroundClip = "text";
+          wEl.style.backgroundClip = "text";
+          wEl.style.color = "transparent";
+        } else {
+          wEl.classList.remove("sung");
+          wEl.style.background = "";
+          wEl.style.webkitBackgroundClip = "";
+          wEl.style.backgroundClip = "";
+          wEl.style.color = "";
+        }
+      });
+    }
+  }
 }
 
 function renderLoop() {
