@@ -594,3 +594,42 @@ document.addEventListener("keydown", (e) => {
     window.location.reload();
   }
 });
+
+document.addEventListener("click", (e) => {
+  const avatarLink = e.target.closest(".playbackSoundBadge__avatar");
+  if (avatarLink) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const span = avatarLink.querySelector("span.sc-artwork");
+    if (!span) return;
+
+    const bg = span.style.backgroundImage;
+    if (!bg) return;
+
+    let imgUrl = bg.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+
+    imgUrl = imgUrl.replace(/-(t50x50|badge|large|t120x120)\.jpg/i, '-t500x500.jpg');
+
+    const overlay = document.createElement("div");
+    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); z-index: 99999999; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(4px);";
+
+    const img = document.createElement("img");
+    img.src = imgUrl;
+    img.style.cssText = "max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); object-fit: contain; transform: scale(0.95); transition: transform 0.2s ease;";
+
+    overlay.appendChild(img);
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.style.opacity = "1";
+      img.style.transform = "scale(1)";
+    });
+
+    overlay.addEventListener("click", () => {
+      overlay.style.opacity = "0";
+      img.style.transform = "scale(0.95)";
+      setTimeout(() => overlay.remove(), 200);
+    });
+  }
+}, true);
