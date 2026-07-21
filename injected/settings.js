@@ -353,6 +353,11 @@ function createOverlay() {
         </div>
       </div>
 
+      <div style="margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
+        <span style="font-size:14px;font-weight:500;display:block;margin-bottom:12px;">Playlist Manager</span>
+        <button id="sclient-playlists-btn" style="flex:1;${S_BTN_SM}background:${accent};color:white;width:100%;">Open Playlist Manager</button>
+      </div>
+
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:14px;font-weight:500;">Enable True Shuffle (Fix native shuffle)</span>
@@ -642,6 +647,14 @@ function createOverlay() {
     overlay.style.right = "-450px";
     if (typeof toggleAnalytics === "function") setTimeout(() => toggleAnalytics(), 300);
   });
+
+  const playlistsBtn = overlay.querySelector("#sclient-playlists-btn");
+  if (playlistsBtn) {
+    playlistsBtn.addEventListener("click", () => {
+      overlay.style.right = "-450px";
+      if (typeof togglePlaylistManager === "function") setTimeout(() => togglePlaylistManager(), 300);
+    });
+  }
 
   overlay.querySelector("#sclient-stats-wipe-btn").addEventListener("click", () => {
     showConfirm("Delete all listening data? This cannot be undone.").then((ok) => {

@@ -75,6 +75,7 @@ function createWindow() {
       "lyrics.js",
       "scrobbler.js",
       "stats.js",
+      "playlists.js",
       "settings.js",
       "init.js",
     ];
