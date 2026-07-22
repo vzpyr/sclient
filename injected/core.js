@@ -44,6 +44,151 @@ function injectToIframes(id, css) {
   obs.observe(document.documentElement, { childList: true, subtree: true });
 }
 
+const scDesignSystem = `
+:root {
+  --sc-accent: #f50;
+  --sc-bg-surface: #1e1e1e;
+  --sc-bg-overlay: rgba(0, 0, 0, 0.75);
+  --sc-bg-elevated: #2a2a2a;
+  --sc-text-main: #ffffff;
+  --sc-text-muted: rgba(255, 255, 255, 0.65);
+  --sc-border: rgba(255, 255, 255, 0.12);
+  --sc-border-hover: rgba(255, 255, 255, 0.25);
+  --sc-btn-bg: rgba(255, 255, 255, 0.08);
+  --sc-btn-bg-hover: rgba(255, 255, 255, 0.16);
+  --sc-danger: #e53935;
+  --sc-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --sc-text-xs: 11px;
+  --sc-text-sm: 12px;
+  --sc-text-base: 13px;
+  --sc-text-lg: 16px;
+  --sc-text-xl: 18px;
+  --sc-text-xxl: 22px;
+  --sc-radius-sm: 4px;
+  --sc-radius-md: 6px;
+  --sc-radius-lg: 8px;
+  --sc-radius-xl: 12px;
+}
+body.theme-light {
+  --sc-bg-surface: #f2f2f2;
+  --sc-bg-overlay: rgba(255, 255, 255, 0.85);
+  --sc-bg-elevated: #ffffff;
+  --sc-text-main: #111111;
+  --sc-text-muted: rgba(0, 0, 0, 0.6);
+  --sc-border: rgba(0, 0, 0, 0.12);
+  --sc-border-hover: rgba(0, 0, 0, 0.25);
+  --sc-btn-bg: rgba(0, 0, 0, 0.06);
+  --sc-btn-bg-hover: rgba(0, 0, 0, 0.12);
+}
+.sc-text-h1 { font-family: var(--sc-font-sans); font-size: var(--sc-text-xxl); font-weight: 700; color: var(--sc-text-main); }
+.sc-text-h2 { font-family: var(--sc-font-sans); font-size: var(--sc-text-xl); font-weight: 600; color: var(--sc-text-main); }
+.sc-text-body { font-family: var(--sc-font-sans); font-size: var(--sc-text-base); color: var(--sc-text-main); line-height: 1.5; }
+.sc-text-sub { font-family: var(--sc-font-sans); font-size: var(--sc-text-sm); color: var(--sc-text-muted); }
+
+.sc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--sc-btn-bg);
+  color: var(--sc-text-main);
+  border: 1px solid var(--sc-border);
+  border-radius: var(--sc-radius-md);
+  cursor: pointer;
+  font-family: var(--sc-font-sans);
+  font-size: var(--sc-text-base);
+  font-weight: 500;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, filter 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+.sc-btn:hover {
+  background: var(--sc-btn-bg-hover);
+  border-color: var(--sc-border-hover);
+  filter: brightness(1.15);
+}
+.sc-btn:active {
+  transform: scale(0.97);
+}
+.sc-btn-primary {
+  background: var(--sc-accent);
+  color: #ffffff;
+  border-color: transparent;
+}
+.sc-btn-primary:hover {
+  background: var(--sc-accent);
+  border-color: transparent;
+  filter: brightness(1.15);
+}
+.sc-btn-danger {
+  background: var(--sc-danger);
+  color: #ffffff;
+  border-color: transparent;
+}
+.sc-btn-danger:hover {
+  background: var(--sc-danger);
+  border-color: transparent;
+  filter: brightness(1.15);
+}
+.sc-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.sc-btn-ghost:hover {
+  background: var(--sc-btn-bg-hover);
+  border-color: transparent;
+  filter: brightness(1.15);
+}
+
+.sc-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--sc-bg-overlay);
+  z-index: 9999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.sc-modal-surface {
+  background: var(--sc-bg-elevated);
+  color: var(--sc-text-main);
+  padding: 24px;
+  border-radius: var(--sc-radius-xl);
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid var(--sc-border);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  font-family: var(--sc-font-sans);
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+.sc-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--sc-bg-surface);
+  border: 1px solid var(--sc-border);
+  color: var(--sc-text-main);
+  border-radius: var(--sc-radius-md);
+  padding: 8px 12px;
+  font-family: var(--sc-font-sans);
+  font-size: var(--sc-text-base);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.sc-input:focus {
+  border-color: var(--sc-accent);
+}
+`;
+injectStyle("sclient-design-system", scDesignSystem);
+injectToIframes("sclient-design-system", scDesignSystem);
+
 const sclientScrollbarCss = `
   ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -367,17 +512,13 @@ window.addEventListener("message", (event) => {
 function showToast(message) {
   const toast = document.createElement("div");
   toast.textContent = message;
-  const isLight = document.body.classList.contains("theme-light");
+  toast.className = "sc-modal-surface";
   toast.style.cssText = `
-    position: fixed; bottom: 20px; left: 20px;
-    background: var(--background-surface-color, ${isLight ? "#f2f2f2" : "#1e1e1e"});
-    color: ${isLight ? "#333" : "#fff"}; border: 1px solid ${isLight ? "#ccc" : "#333"};
-    border-radius: 20px; min-height: 40px; box-sizing: border-box;
+    position: fixed; bottom: 20px; left: 20px; width: auto; max-width: 360px;
+    border-radius: var(--sc-radius-xl); min-height: 40px; box-sizing: border-box;
     display: flex; align-items: center; justify-content: center;
-    padding: 8px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    font-family: 'Inter', system-ui, sans-serif; font-size: 13px; font-weight: 500;
-    pointer-events: none; z-index: 9999999; opacity: 0; transform: translateY(10px);
-    transition: all 0.3s ease; white-space: pre-line; text-align: center;
+    padding: 10px 20px; pointer-events: none; z-index: 9999999; opacity: 0; transform: translateY(10px);
+    transition: all 0.3s ease; white-space: pre-line; text-align: center; font-size: var(--sc-text-base);
   `;
   document.body.appendChild(toast);
   requestAnimationFrame(() => {
@@ -393,20 +534,17 @@ function showToast(message) {
 
 function showConfirm(message, options) {
   return new Promise((resolve) => {
-    const isLight = document.body.classList.contains("theme-light");
-    const bg = isLight ? "#fff" : "#1e1e1e";
-    const textColor = isLight ? "#111" : "#fff";
-    const borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)";
-
     const backdrop = document.createElement("div");
-    backdrop.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; backdrop-filter: blur(2px);`;
+    backdrop.className = "sc-modal-backdrop";
 
     const modal = document.createElement("div");
-    modal.style.cssText = `background: ${bg}; color: ${textColor}; padding: 24px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; font-family: 'Inter', system-ui, sans-serif; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid ${borderColor}; transform: scale(0.9); transition: transform 0.2s;`;
+    modal.className = "sc-modal-surface";
+    modal.style.textAlign = "center";
 
     const msg = document.createElement("div");
     msg.textContent = message;
-    msg.style.cssText = "font-size: 16px; font-weight: 500; margin-bottom: 24px;";
+    msg.className = "sc-text-body";
+    msg.style.cssText = "font-weight: 500; margin-bottom: 24px; font-size: var(--sc-text-lg);";
     modal.appendChild(msg);
 
     const btnRow = document.createElement("div");
@@ -424,7 +562,7 @@ function showConfirm(message, options) {
 
     const cleanup = (res) => {
       backdrop.style.opacity = "0";
-      modal.style.transform = "scale(0.9)";
+      modal.style.transform = "scale(0.95)";
       setTimeout(() => {
         backdrop.remove();
         resolve(res);
@@ -434,13 +572,11 @@ function showConfirm(message, options) {
     buttons.forEach((b) => {
       const btn = document.createElement("button");
       btn.textContent = b.text;
+      btn.className = "sc-btn";
       if (b.type === "danger") {
-        btn.style.cssText =
-          "padding: 8px 16px; background: #d32f2f; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;";
+        btn.classList.add("sc-btn-danger");
       } else if (b.type === "primary") {
-        btn.style.cssText = `padding: 8px 16px; background: ${getAccent ? getAccent() : "#1976d2"}; border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;`;
-      } else {
-        btn.style.cssText = `padding: 8px 16px; background: transparent; border: 1px solid ${borderColor}; color: ${textColor}; border-radius: 6px; cursor: pointer; font-weight: 500;`;
+        btn.classList.add("sc-btn-primary");
       }
       btn.onclick = () => cleanup(b.id);
       btnRow.appendChild(btn);
@@ -507,7 +643,7 @@ function applyCollapsibleSidebar() {
     .l-sidebar-right {
       position: fixed !important; top: 46px !important; bottom: 46px !important;
       right: -360px !important; width: 360px !important;
-      background-color: var(--background-surface-color, #fff) !important;
+      background-color: var(--sc-bg-surface) !important;
       z-index: 100 !important; transition: right 0.3s ease !important;
       box-sizing: border-box !important; box-shadow: -5px 0 25px rgba(0,0,0,0.5) !important;
       overflow-y: auto !important; overflow-x: hidden !important;
@@ -526,38 +662,36 @@ function injectFloatingButtonStyles() {
     `
     .sclient-floating-btn {
       position: fixed; right: 20px; z-index: 101;
-      background: var(--background-surface-color, #f2f2f2);
-      color: #333; border: 1px solid #ccc !important;
+      background: var(--sc-bg-elevated);
+      color: var(--sc-text-main); border: 1px solid var(--sc-border) !important;
       border-radius: 50%; width: 40px; height: 40px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-      transition: right 0.3s ease, background 0.2s, color 0.2s, border-color 0.2s;
+      transition: right 0.3s ease, background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s ease, filter 0.2s ease;
       padding: 0; outline: none !important;
     }
     .sclient-floating-btn:focus { outline: none !important; }
-    .sclient-floating-btn:hover { background: #e0e0e0; }
-    .theme-dark .sclient-floating-btn { color: #fff; border: 1px solid #333 !important; }
-    .theme-dark .sclient-floating-btn:hover { background: #333; }
+    .sclient-floating-btn:hover { background: var(--sc-bg-elevated) !important; filter: brightness(1.25); border-color: var(--sc-border-hover) !important; }
+    .sclient-floating-btn:active { transform: scale(0.95); }
     .sclient-download-toast {
       position: fixed; bottom: 68px; z-index: 99999;
-      background: var(--background-surface-color, #f2f2f2);
-      color: #333; border: 1px solid #ccc; border-radius: 20px;
+      background: var(--sc-bg-elevated);
+      color: var(--sc-text-main); border: 1px solid var(--sc-border); border-radius: var(--sc-radius-xl);
       min-height: 40px; box-sizing: border-box;
       display: flex; align-items: center; justify-content: center;
       padding: 8px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
       transition: opacity 0.3s ease, right 0.3s ease;
-      font-family: 'Inter', system-ui, sans-serif; font-size: 13px;
+      font-family: var(--sc-font-sans); font-size: var(--sc-text-base);
       font-weight: 500; pointer-events: none; opacity: 0;
       white-space: pre-line; text-align: center;
     }
-    .theme-dark .sclient-download-toast { color: #fff; border: 1px solid #333; }
     body button.sclient-floating-btn.active,
     .theme-dark body button.sclient-floating-btn.active {
-      color: #f50 !important; border: 1px solid #f50 !important;
+      color: var(--sc-accent) !important; border: 1px solid var(--sc-accent) !important;
     }
     body button.sclient-floating-btn.active svg,
     .theme-dark body button.sclient-floating-btn.active svg {
-      color: #f50 !important; stroke: #f50 !important;
+      color: var(--sc-accent) !important; stroke: var(--sc-accent) !important;
     }
   `
   );
@@ -612,11 +746,11 @@ document.addEventListener("click", (e) => {
     imgUrl = imgUrl.replace(/-(t50x50|badge|large|t120x120)\.(jpg|png)/i, '-t500x500.$2');
 
     const overlay = document.createElement("div");
-    overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); z-index: 99999999; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(4px);";
+    overlay.className = "sc-modal-backdrop";
 
     const img = document.createElement("img");
     img.src = imgUrl;
-    img.style.cssText = "max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); object-fit: contain; transform: scale(0.95); transition: transform 0.2s ease;";
+    img.style.cssText = "max-width: 90vw; max-height: 90vh; border-radius: var(--sc-radius-lg); box-shadow: 0 10px 40px rgba(0,0,0,0.5); object-fit: contain; transform: scale(0.95); transition: transform 0.2s ease;";
 
     overlay.appendChild(img);
     document.body.appendChild(overlay);

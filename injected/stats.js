@@ -161,16 +161,15 @@ function setupStatsTracking() {
 }
 
 function renderFilterBar() {
-  const accent = getAccent();
   const btn = (label, source) => {
     const active = currentSource === source;
-    return `<button class="sclient-stats-filter-btn" data-source="${source}" style="padding: 6px 14px; background: ${active ? accent : "rgba(255,255,255,0.06)"}; color: ${active ? "#fff" : "#aaa"}; border: ${active ? "none" : "1px solid rgba(255,255,255,0.1)"}; border-radius: 6px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; font-weight: ${active ? "600" : "400"};">${label}</button>`;
+    return `<button class="sc-btn ${active ? "sc-btn-primary" : ""}" data-source="${source}">${label}</button>`;
   };
   return `<div style="display: flex; gap: 8px; margin-bottom: 20px;">${btn("All", "")}${btn("History", "api")}${btn("Local", "local")}</div>`;
 }
 
 function wireFilters() {
-  document.querySelectorAll(".sclient-stats-filter-btn").forEach((b) => {
+  document.querySelectorAll("#sclient-stats-content .sc-btn[data-source]").forEach((b) => {
     b.addEventListener("click", () => {
       currentSource = b.dataset.source;
       renderAnalytics();
@@ -308,19 +307,19 @@ async function renderAnalytics() {
 
   const html = `
     <style>
-      #sclient-stats-content { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+      #sclient-stats-content { scrollbar-width: thin; scrollbar-color: var(--sc-border) transparent; }
       #sclient-stats-content::-webkit-scrollbar { width: 6px; }
       #sclient-stats-content::-webkit-scrollbar-track { background: transparent; }
-      #sclient-stats-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
-      .stats-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 18px 20px; }
-      .stats-card-value { font-size: 28px; font-weight: 700; color: ${accent}; }
-      .stats-card-label { font-size: 12px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .stats-chart-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; }
-      .stats-chart-title { font-size: 14px; font-weight: 600; color: #ccc; margin-bottom: 14px; }
-      .stats-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-      .stats-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.08); color: #888; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .stats-table td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
-      .stats-table tr:hover td { background: rgba(255,255,255,0.02); }
+      #sclient-stats-content::-webkit-scrollbar-thumb { background: var(--sc-border); border-radius: 3px; }
+      .stats-card { background: var(--sc-btn-bg); border: 1px solid var(--sc-border); border-radius: var(--sc-radius-xl); padding: 18px 20px; }
+      .stats-card-value { font-size: 28px; font-weight: 700; color: var(--sc-accent); font-family: var(--sc-font-sans); }
+      .stats-card-label { font-size: var(--sc-text-xs); color: var(--sc-text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--sc-font-sans); }
+      .stats-chart-box { background: var(--sc-btn-bg); border: 1px solid var(--sc-border); border-radius: var(--sc-radius-xl); padding: 20px; }
+      .stats-chart-title { font-size: var(--sc-text-base); font-weight: 600; color: var(--sc-text-main); margin-bottom: 14px; font-family: var(--sc-font-sans); }
+      .stats-table { width: 100%; border-collapse: collapse; font-size: var(--sc-text-base); font-family: var(--sc-font-sans); }
+      .stats-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--sc-border); color: var(--sc-text-muted); font-weight: 600; font-size: var(--sc-text-xs); text-transform: uppercase; letter-spacing: 0.5px; }
+      .stats-table td { padding: 8px 12px; border-bottom: 1px solid var(--sc-border); }
+      .stats-table tr:hover td { background: var(--sc-btn-bg-hover); }
     </style>
     ${renderFilterBar()}
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
@@ -591,7 +590,7 @@ function createAnalyticsOverlay() {
         Listening Analytics
       </h2>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <select id="sclient-stats-days-select" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #aaa; border-radius: 6px; padding: 6px 10px; font-size: 12px; font-family: Inter, sans-serif; cursor: pointer; outline: none;">
+        <select id="sclient-stats-days-select" class="sc-select">
           <option value="">All time</option>
           <option value="1">Last 24h</option>
           <option value="3">Last 3 days</option>
@@ -600,15 +599,13 @@ function createAnalyticsOverlay() {
           <option value="30">Last 30 days</option>
           <option value="365">Last year</option>
         </select>
-        <button id="sclient-stats-export-btn" title="Export Stats DB" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #aaa; cursor: pointer; border-radius: 6px; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='#aaa';">
+        <button id="sclient-stats-export-btn" class="sc-btn" title="Export Stats DB">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-down"><path d="m16 19 3 3 3-3"/><path d="M19 16v6"/><path d="M21 12.536V5"/><path d="M3 12A9 3 0 0 0 15.182 14.806"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
         </button>
-        <button id="sclient-stats-import-btn" title="Import Stats DB" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #aaa; cursor: pointer; border-radius: 6px; padding: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='#aaa';">
+        <button id="sclient-stats-import-btn" class="sc-btn" title="Import Stats DB">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-up"><path d="M19 22v-6"/><path d="M21 12.536V5"/><path d="m22 19-3-3-3 3"/><path d="M3 12A9 3 0 0 0 14.457 14.886"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
         </button>
-        <button id="sclient-stats-close-btn" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #aaa; cursor: pointer; font-size: 18px; padding: 8px 14px; border-radius: 8px; transition: all 0.2s;"
-          onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';"
-          onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='#aaa';">&times; Close</button>
+        <button id="sclient-stats-close-btn" class="sc-btn">&times; Close</button>
       </div>
     </div>
     <div id="sclient-stats-content" style="flex: 1; overflow-y: auto; padding: 20px 30px 30px;">

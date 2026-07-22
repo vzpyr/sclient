@@ -428,16 +428,16 @@ function pmRenderDetailHeader() {
             }</span></div>
         </div>
         <div class="pm-d-actions">
-          <button id="pm-edit-btn" class="pm-btn pm-btn-primary">✎ Edit</button>
-          <button id="pm-export-btn" class="pm-btn">⬇ Export</button>
-          <button id="pm-delete-btn" class="pm-btn pm-btn-danger">🗑 Delete</button>
+          <button id="pm-edit-btn" class="sc-btn sc-btn-primary">✎ Edit</button>
+          <button id="pm-export-btn" class="sc-btn">⬇ Export</button>
+          <button id="pm-delete-btn" class="sc-btn sc-btn-danger">🗑 Delete</button>
         </div>
       </div>
       <div class="pm-d-toolbar">
-        <input id="pm-track-filter" class="pm-input" style="max-width:260px;" type="text" placeholder="Filter tracks by title or artist…" value="${_pmState.trackFilterText.replace(/"/g, "&quot;")}">
+        <input id="pm-track-filter" class="sc-input" style="max-width:260px;" type="text" placeholder="Filter tracks by title or artist…" value="${_pmState.trackFilterText.replace(/"/g, "&quot;")}">
         <div style="flex:1;"></div>
-        <button id="pm-select-all" class="pm-btn">Select all</button>
-        <button id="pm-clear-sel" class="pm-btn">Clear</button>
+        <button id="pm-select-all" class="sc-btn">Select all</button>
+        <button id="pm-clear-sel" class="sc-btn">Clear</button>
       </div>
       <div id="pm-d-bulk" class="pm-d-bulk" style="display:none;"></div>
       <div id="pm-track-scroll"></div>
@@ -500,10 +500,10 @@ function pmRenderBulkBar() {
   bar.style.display = "";
   bar.innerHTML = `
     <span style="font-size:12px;opacity:0.7;margin-right:auto;">${n} selected</span>
-    <button id="pm-bulk-move" class="pm-btn">↪ Move to…</button>
-    <button id="pm-bulk-copy" class="pm-btn">⧉ Copy to…</button>
-    <button id="pm-bulk-remove" class="pm-btn pm-btn-danger">✕ Remove</button>
-    <button id="pm-bulk-export" class="pm-btn">⬇ Export selected</button>
+    <button id="pm-bulk-move" class="sc-btn">↪ Move to…</button>
+    <button id="pm-bulk-copy" class="sc-btn">⧉ Copy to…</button>
+    <button id="pm-bulk-remove" class="sc-btn sc-btn-danger">✕ Remove</button>
+    <button id="pm-bulk-export" class="sc-btn">⬇ Export selected</button>
   `;
   bar.querySelector("#pm-bulk-move").addEventListener("click", () => pmMoveToDialog([..._pmState.selection]));
   bar.querySelector("#pm-bulk-copy").addEventListener("click", () => pmCopyToDialog([..._pmState.selection]));
@@ -884,7 +884,7 @@ function pmPickPlaylist(title, excludePid) {
       <div class="pm-picker-head">${title}</div>
       <div class="pm-picker-list"></div>
       <div class="pm-picker-foot">
-        <button class="pm-btn" id="pm-pk-cancel">Cancel</button>
+        <button class="sc-btn" id="pm-pk-cancel">Cancel</button>
       </div>
     `;
     back.appendChild(dlg);
@@ -1058,26 +1058,19 @@ function createPlaylistManagerOverlay() {
   injectStyle(
     "sclient-playlists-style",
     `
-    #sclient-playlists-overlay { position:fixed; inset:0; background:rgba(10,10,10,0.97); backdrop-filter:blur(15px); z-index:9999998; display:none; flex-direction:column; color:#fff; font-family:'Inter',system-ui,-apple-system,sans-serif; }
+    #sclient-playlists-overlay { position:fixed; inset:0; background:var(--sc-bg-overlay); backdrop-filter:blur(15px); z-index:9999998; display:none; flex-direction:column; color:var(--sc-text-main); font-family:var(--sc-font-sans); }
     #sclient-playlists-overlay * { box-sizing:border-box; }
-    .pm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; }
+    .pm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--sc-border); flex-shrink:0; }
     .pm-body { flex:1; display:flex; min-height:0; }
-    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; min-height:0; background:rgba(0,0,0,0.25); }
-    .pm-sidebar-tools { padding:14px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; flex-direction:column; gap:10px; }
+    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid var(--sc-border); display:flex; flex-direction:column; min-height:0; background:rgba(0,0,0,0.25); }
+    .pm-sidebar-tools { padding:14px; border-bottom:1px solid var(--sc-border); display:flex; flex-direction:column; gap:10px; }
     .pm-sidebar-list { flex:1; overflow-y:auto; padding:8px; }
-    .pm-pl:hover { background:rgba(255,255,255,0.06) !important; }
+    .pm-pl { transition:background 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important; }
+    .pm-pl:hover { background:var(--sc-btn-bg-hover) !important; transform:translateX(3px); }
     .pm-pl.pm-pl-active:hover { background:${accent}22 !important; }
     .pm-pl.pm-droptarget { box-shadow:inset 0 0 0 2px ${accent} !important; background:${accent}18 !important; }
     .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; }
-    .pm-input { width:100%; background:rgba(0,0,0,0.5); border:1px solid #333; color:#fff; border-radius:6px; padding:7px 10px; font-family:Inter,sans-serif; font-size:12px; outline:none; transition:border-color .2s; }
-    .pm-input:focus { border-color:${accent}; }
-    .pm-btn { padding:7px 12px; font-size:12px; font-family:Inter,sans-serif; cursor:pointer; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.06); color:#ddd; transition:all .15s; }
-    .pm-btn:hover { background:rgba(255,255,255,0.14); color:#fff; }
-    .pm-btn-primary { border:none; background:${accent}; color:#fff; }
-    .pm-btn-primary:hover { filter:brightness(1.1); color:#fff; }
-    .pm-btn-danger { border:1px solid #5a2020; background:#3a1515; color:#f88; }
-    .pm-btn-danger:hover { background:#5a2020; color:#fcc; }
-    .pm-select { background:rgba(0,0,0,0.5); border:1px solid #333; color:#ddd; border-radius:6px; padding:6px 8px; font-family:Inter,sans-serif; font-size:12px; outline:none; cursor:pointer; }
+    .sc-select { background:var(--sc-bg-surface); border:1px solid var(--sc-border); color:var(--sc-text-main); border-radius:var(--sc-radius-md); padding:6px 8px; font-family:var(--sc-font-sans); font-size:var(--sc-text-sm); outline:none; cursor:pointer; }
     `
   );
 
@@ -1086,32 +1079,32 @@ function createPlaylistManagerOverlay() {
 
   overlay.innerHTML = `
     <div class="pm-head">
-      <h2 style="margin:0;font-size:22px;font-weight:700;color:${accent};display:flex;align-items:center;gap:10px;">
+      <h2 style="margin:0;font-size:22px;font-weight:700;color:var(--sc-accent);display:flex;align-items:center;gap:10px;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
         Playlist Manager
       </h2>
       <div style="display:flex;align-items:center;gap:10px;">
-        <button id="pm-refresh-btn" class="pm-btn" title="Refresh">↻ Refresh</button>
-        <button id="pm-close-btn" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#aaa;cursor:pointer;font-size:18px;padding:8px 14px;border-radius:8px;" onmouseover="this.style.background='rgba(255,255,255,0.15)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='#aaa';">&times; Close</button>
+        <button id="pm-refresh-btn" class="sc-btn" title="Refresh">↻ Refresh</button>
+        <button id="pm-close-btn" class="sc-btn" title="Close">&times; Close</button>
       </div>
     </div>
     <div class="pm-body">
       <aside class="pm-sidebar">
         <div class="pm-sidebar-tools">
           <div style="display:flex;gap:8px;">
-            <input id="pm-filter" class="pm-input" placeholder="Filter playlists…" type="text">
+            <input id="pm-filter" class="sc-input" placeholder="Filter playlists…" type="text">
           </div>
           <div style="display:flex;gap:8px;">
-            <select id="pm-sort" class="pm-select" style="flex:1;">
+            <select id="pm-sort" class="sc-select" style="flex:1;">
               <option value="name">Name A–Z</option>
               <option value="modified">Recently modified</option>
               <option value="count">Track count</option>
             </select>
-            <button id="pm-new-btn" class="pm-btn-primary pm-btn" title="New playlist">+ New</button>
+            <button id="pm-new-btn" class="sc-btn sc-btn-primary" title="New playlist">+ New</button>
           </div>
           <div style="display:flex;gap:8px;">
-            <button id="pm-import-btn" class="pm-btn" style="flex:1;">⬇ Import</button>
-            <button id="pm-spotify-btn" class="pm-btn" style="flex:1;">⬇ Spotify CSV</button>
+            <button id="pm-import-btn" class="sc-btn" style="flex:1;">⬇ Import</button>
+            <button id="pm-spotify-btn" class="sc-btn" style="flex:1;">⬇ Spotify CSV</button>
           </div>
         </div>
         <div id="pm-sidebar-list" class="pm-sidebar-list"></div>
@@ -1216,14 +1209,14 @@ function pmOpenEditor() {
   dlg.innerHTML = `
     <div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:16px;font-weight:600;">Edit playlist details</div>
-      <button id="pm-ed-x" class="pm-btn" style="padding:4px 10px;">✕</button>
+      <button id="pm-ed-x" class="sc-btn sc-btn-ghost" style="padding:4px 10px;">✕</button>
     </div>
     <div style="padding:20px;overflow-y:auto;">
       <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Title</label>
-      <input id="pm-ed-title" class="pm-input" type="text" style="margin-bottom:14px;" value="${(pl.title || "").replace(/"/g, "&quot;")}">
+      <input id="pm-ed-title" class="sc-input" type="text" style="margin-bottom:14px;" value="${(pl.title || "").replace(/"/g, "&quot;")}">
 
       <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Description</label>
-      <textarea id="pm-ed-description" class="pm-input" style="margin-bottom:14px;min-height:70px;resize:vertical;font-family:Inter,sans-serif;" placeholder="Add a description…">${(pl.description || "").replace(/</g, "&lt;")}</textarea>
+      <textarea id="pm-ed-description" class="sc-input" style="margin-bottom:14px;min-height:70px;resize:vertical;font-family:Inter,sans-serif;" placeholder="Add a description…">${(pl.description || "").replace(/</g, "&lt;")}</textarea>
 
       <div id="pm-ed-adv-toggle" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;color:${accent};font-size:13px;font-weight:600;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);">
         <span>▸ Advanced details</span>
@@ -1231,7 +1224,7 @@ function pmOpenEditor() {
       <div id="pm-ed-adv" style="display:none;padding-top:14px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;">Sharing</label>
-          <select id="pm-ed-sharing" class="pm-select">
+          <select id="pm-ed-sharing" class="sc-select">
             <option value="public" ${pl.sharing === "public" ? "selected" : ""}>🌐 Public</option>
             <option value="private" ${pl.sharing === "private" ? "selected" : ""}>🔒 Private</option>
           </select>
@@ -1239,54 +1232,56 @@ function pmOpenEditor() {
         <div style="margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Tags (press Enter/space/comma to add)</label>
           <div id="pm-ed-tags" class="pm-tag-chips"></div>
-          <input id="pm-ed-tag-input" class="pm-input" style="margin-top:6px;" type="text" placeholder="tag">
+          <input id="pm-ed-tag-input" class="sc-input" style="margin-top:6px;" type="text" placeholder="tag">
         </div>
         <div style="margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Genre</label>
-          <input id="pm-ed-genre" class="pm-input" type="text" value="${(pl.genre || "").replace(/"/g, "&quot;")}">
+          <input id="pm-ed-genre" class="sc-input" type="text" value="${(pl.genre || "").replace(/"/g, "&quot;")}">
         </div>
         <div style="margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Label name</label>
-          <input id="pm-ed-label" class="pm-input" type="text" value="${(pl.label_name || "").replace(/"/g, "&quot;")}">
+          <input id="pm-ed-label" class="sc-input" type="text" value="${(pl.label_name || "").replace(/"/g, "&quot;")}">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">License</label>
-            <select id="pm-ed-license" class="pm-select" style="width:100%;">${PM_LICENSES.map((l) => `<option value="${l}" ${pl.license === l ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+            <select id="pm-ed-license" class="sc-select" style="width:100%;">${PM_LICENSES.map((l) => `<option value="${l}" ${pl.license === l ? "selected" : ""}>${l}</option>`).join("")}</select></div>
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Set type</label>
-            <select id="pm-ed-settype" class="pm-select" style="width:100%;">${PM_SET_TYPES.map((s) => `<option value="${s}" ${pl.set_type === s ? "selected" : ""}>${s || "(none)"}</option>`).join("")}</select></div>
+            <select id="pm-ed-settype" class="sc-select" style="width:100%;">${PM_SET_TYPES.map((s) => `<option value="${s}" ${pl.set_type === s ? "selected" : ""}>${s || "(none)"}</option>`).join("")}</select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Release date</label>
-            <input id="pm-ed-release" class="pm-input" type="date" value="${releaseDate}"></div>
+            <input id="pm-ed-release" class="sc-input" type="date" value="${releaseDate}"></div>
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Embeddable by</label>
-            <select id="pm-ed-embed" class="pm-select" style="width:100%;">${PM_EMBEDDABLE.map((e) => `<option value="${e}" ${pl.embeddable_by === e ? "selected" : ""}>${e}</option>`).join("")}</select></div>
+            <select id="pm-ed-embed" class="sc-select" style="width:100%;">${PM_EMBEDDABLE.map((e) => `<option value="${e}" ${pl.embeddable_by === e ? "selected" : ""}>${e}</option>`).join("")}</select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase URL</label>
-            <input id="pm-ed-purl" class="pm-input" type="text" value="${(pl.purchase_url || "").replace(/"/g, "&quot;")}"></div>
+            <input id="pm-ed-purl" class="sc-input" type="text" value="${(pl.purchase_url || "").replace(/"/g, "&quot;")}"></div>
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase title</label>
-            <input id="pm-ed-ptitle" class="pm-input" type="text" value="${(pl.purchase_title || "").replace(/"/g, "&quot;")}"></div>
+        </label>
+      </div>
+      <div style="display:flex;gap:14px;align-items:flex-start;">
+        <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#222;flex-shrink:0;">
+          <img id="pm-ed-art-preview" src="${pmPlaylistArt(pl)}" style="width:100%;height:100%;object-fit:cover;"/>
         </div>
-        <div style="margin-bottom:8px;">
-          <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Artwork</label>
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
-            <div style="width:48px;height:48px;border-radius:6px;overflow:hidden;background:#222;"><img id="pm-ed-art-preview" src="${pmPlaylistArt(pl)}" style="width:100%;height:100%;object-fit:cover;"/></div>
-            <button id="pm-ed-art-clear" class="pm-btn pm-btn-danger" type="button">Clear artwork</button>
-          </div>
-          <div style="font-size:11px;opacity:0.5;">Cover images can’t be changed in SClient yet — you can only clear the current one.</div>
-          <div id="pm-ed-secret-wrap" style="margin-top:10px;display:none;">
-            <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Secret share link</label>
-            <div style="display:flex;gap:8px;">
-              <input id="pm-ed-secret" class="pm-input" type="text" readonly>
-              <button id="pm-ed-secret-copy" class="pm-btn" type="button">Copy</button>
-            </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;font-weight:600;color:#aaa;">Artwork</span>
+          <div style="display:flex;gap:8px;margin-top:2px;">
+            <button id="pm-ed-art-clear" class="sc-btn sc-btn-danger" type="button">Clear artwork</button>
           </div>
         </div>
       </div>
+      <div id="pm-ed-secret-box" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;font-size:12px;">
+        <span style="color:#aaa;">Secret Token:</span> <code id="pm-ed-secret-val" style="color:var(--sc-accent);">${pl.secret_token || ""}</code>
+        <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
+          <input id="pm-ed-secret-url" class="sc-input" type="text" readonly style="font-size:11px;">
+          <button id="pm-ed-secret-copy" class="sc-btn" type="button">Copy</button>
+        </div>
+      </div>
     </div>
-    <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:flex-end;gap:10px;">
-      <button id="pm-ed-cancel" class="pm-btn" type="button">Cancel</button>
-      <button id="pm-ed-save" class="pm-btn pm-btn-primary" type="button">Save</button>
+    <div style="padding:14px 22px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:flex-end;gap:8px;">
+      <button id="pm-ed-cancel" class="sc-btn" type="button">Cancel</button>
+      <button id="pm-ed-save" class="sc-btn sc-btn-primary" type="button">Save</button>
     </div>
   `;
   back.appendChild(dlg);
@@ -1806,8 +1801,8 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
   dlg.innerHTML = `
     <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;gap:16px;">
       <div id="pm-sp-head" style="font-size:16px;font-weight:600;flex:1;">Spotify CSV Import · resolved 0 / ${resumedState ? resumedState.total : spotifyRows.length}</div>
-      <input type="text" id="pm-sp-title" class="pm-input" value="Spotify Import" style="width:200px;font-size:14px;padding:6px 10px;" />
-      <select id="pm-sp-sharing" class="pm-select" style="width:100px;font-size:14px;padding:6px 10px;">
+      <input type="text" id="pm-sp-title" class="sc-input" value="Spotify Import" style="width:200px;font-size:14px;padding:6px 10px;" />
+      <select id="pm-sp-sharing" class="sc-select" style="width:100px;font-size:14px;padding:6px 10px;">
         <option value="private">Private</option>
         <option value="public">Public</option>
       </select>
@@ -1821,8 +1816,8 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     <div id="pm-sp-list" style="flex:1;overflow-y:auto;min-height:0;"></div>
     <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:flex-end;align-items:center;">
       <div style="display:flex;gap:10px;">
-        <button id="pm-sp-cancel" class="pm-btn">Cancel</button>
-        <button id="pm-sp-confirm" class="pm-btn pm-btn-primary" disabled>Confirm: import 0 tracks</button>
+        <button id="pm-sp-cancel" class="sc-btn">Cancel</button>
+        <button id="pm-sp-confirm" class="sc-btn sc-btn-primary" disabled>Confirm: import 0 tracks</button>
       </div>
     </div>
   `;
@@ -2020,7 +2015,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     `;
 
     const actSelect = document.createElement("select");
-    actSelect.className = "pm-select";
+    actSelect.className = "sc-select";
     actSelect.style.width = "100%";
 
     if (r.action === "review") {
@@ -2063,10 +2058,10 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         searchUI.style.cssText = "display:flex;gap:4px;margin-top:6px;";
         const qInput = document.createElement("input");
         qInput.type = "text";
-        qInput.className = "pm-input";
+        qInput.className = "sc-input";
         qInput.value = `${r.original.artists[0] || ""} ${r.original.title}`.trim();
         const goBtn = document.createElement("button");
-        goBtn.className = "pm-btn";
+        goBtn.className = "sc-btn";
         goBtn.textContent = "Go";
         searchUI.appendChild(qInput);
         searchUI.appendChild(goBtn);

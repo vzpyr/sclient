@@ -1,13 +1,6 @@
-const S_CARD =
-  "display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);";
-const S_INPUT =
-  "width:100%;box-sizing:border-box;background:rgba(0,0,0,0.5);border:1px solid #333;color:white;border-radius:4px;padding:6px 10px;font-family:Inter,sans-serif;font-size:12px;outline:none;transition:border-color 0.2s;";
-const S_BTN_SM =
-  "padding:7px 12px;font-size:12px;font-family:Inter,sans-serif;cursor:pointer;border-radius:4px;border:none;";
-
 function toggleHtml({ label, toggleId, bgId, sliderId }) {
-  return `<div style="${S_CARD}">
-  <span style="font-size:14px;font-weight:500;">${label}</span>
+  return `<div class="sc-card">
+  <span style="font-size:var(--sc-text-base);font-weight:500;">${label}</span>
   ${toggleLabelHtml(toggleId, bgId, sliderId)}
 </div>`;
 }
@@ -146,8 +139,8 @@ function renderAccounts(overlay) {
             if (acc !== active) {
               const sw = document.createElement("button");
               sw.textContent = "Switch";
-              sw.style.cssText =
-                "padding:4px 8px;background:#333;color:white;border:none;border-radius:3px;cursor:pointer;";
+              sw.className = "sc-btn";
+              sw.style.padding = "4px 8px";
               sw.onclick = () =>
                 sendBridge("set_active_account", { name: acc })
                   .then(() => sendBridge("restart_app"))
@@ -161,8 +154,8 @@ function renderAccounts(overlay) {
             if (acc !== "main" && acc !== active) {
               const del = document.createElement("button");
               del.textContent = "Delete";
-              del.style.cssText =
-                "padding:4px 8px;background:#800;color:white;border:none;border-radius:3px;cursor:pointer;";
+              del.className = "sc-btn sc-btn-danger";
+              del.style.padding = "4px 8px";
               del.onclick = () =>
                 showConfirm("Delete account " + acc + "?").then((ok) => {
                   if (ok)
@@ -179,8 +172,8 @@ function renderAccounts(overlay) {
             if (acc === "main") {
               const rst = document.createElement("button");
               rst.textContent = "Reset";
-              rst.style.cssText =
-                "padding:4px 8px;background:#3a1515;color:#f88;border:1px solid #5a2020;border-radius:3px;cursor:pointer;";
+              rst.className = "sc-btn sc-btn-danger";
+              rst.style.padding = "4px 8px";
               rst.onclick = () => {
                 const msg =
                   acc === active
@@ -247,12 +240,12 @@ function createOverlay() {
   ).join("");
 
   overlay.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:10px;">
-      <h3 style="margin:0;font-size:18px;font-weight:600;color:${accent};display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid var(--sc-border);padding-bottom:10px;">
+      <h3 style="margin:0;font-size:var(--sc-text-xl);font-weight:600;color:var(--sc-accent);display:flex;align-items:center;gap:8px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
         SClient Settings
       </h3>
-      <button id="sclient-close-btn" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:20px;padding:5px;">&times;</button>
+      <button id="sclient-close-btn" class="sc-btn sc-btn-ghost" style="padding:4px 8px;font-size:var(--sc-text-xl);">&times;</button>
     </div>
 
     <style>
@@ -261,42 +254,44 @@ function createOverlay() {
       #sclient-settings-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2);border-radius:4px; }
       #sclient-settings-scroll::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.3); }
       #sclient-settings-scroll label { flex-shrink:0; }
+      .sc-card { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding:12px; background:var(--sc-btn-bg); border-radius:var(--sc-radius-lg); border:1px solid var(--sc-border); transition:background 0.2s ease, border-color 0.2s ease, transform 0.15s ease; }
+      .sc-card:hover { background:var(--sc-btn-bg-hover); border-color:var(--sc-border-hover); }
     </style>
 
     <div id="sclient-settings-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;padding-right:8px;display:flex;flex-direction:column;min-height:0;margin-bottom:15px;">
 
-      <div style="${S_CARD}">
+      <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Custom Accent Color</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-accent-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-accent-color-text" style="width:60px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
+          <input type="text" id="sclient-accent-color-text" class="sc-input" style="width:60px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
           ${toggleLabelHtml("sclient-accent-toggle", "sclient-toggle-bg-accent", "sclient-toggle-slider-accent")}
         </div>
       </div>
 
-      <div style="${S_CARD}">
+      <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Custom Background Color (Dark Mode)</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-bg-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-bg-color-text" style="width:60px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
+          <input type="text" id="sclient-bg-color-text" class="sc-input" style="width:60px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
           ${toggleLabelHtml("sclient-bg-color-toggle", "sclient-toggle-bg-bg-color", "sclient-toggle-slider-bg-color")}
         </div>
       </div>
 
-      <div style="${S_CARD}">
+      <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Custom Font</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="sclient-custom-font-text" placeholder="e.g. Roboto" style="width:120px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;">
+          <input type="text" id="sclient-custom-font-text" class="sc-input" placeholder="e.g. Roboto" style="width:120px;padding:4px;font-family:monospace;font-size:12px;">
           ${toggleLabelHtml("sclient-custom-font-toggle", "sclient-toggle-bg-custom-font", "sclient-toggle-slider-custom-font")}
         </div>
       </div>
 
       ${togglesHtml}
 
-      <div style="${S_CARD}">
+      <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Enable Wide Layout</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="sclient-wide-layout-width" placeholder="1200" style="width:50px;background:rgba(0,0,0,0.5);border:1px solid #333;color:#fff;border-radius:4px;padding:4px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
+          <input type="text" id="sclient-wide-layout-width" class="sc-input" placeholder="1200" style="width:50px;padding:4px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
           ${toggleLabelHtml("sclient-wide-layout-toggle", "sclient-toggle-bg-wide-layout", "sclient-toggle-slider-wide-layout")}
         </div>
       </div>
@@ -309,7 +304,7 @@ function createOverlay() {
             ${toggleLabelHtml("sclient-listenbrainz-toggle", "sclient-toggle-bg-listenbrainz", "sclient-toggle-slider-listenbrainz")}
           </div>
         </div>
-        <input type="password" id="sclient-listenbrainz-token-input" placeholder="Enter ListenBrainz User Token..." style="${S_INPUT}">
+        <input type="password" id="sclient-listenbrainz-token-input" class="sc-input" placeholder="Enter ListenBrainz User Token...">
         <div style="margin-top:5px;font-size:11px;color:#888;">Get your token from <a href="https://listenbrainz.org/settings/" target="_blank" style="color:#aaa;text-decoration:underline;">listenbrainz.org/settings</a></div>
       </div>
 
@@ -321,11 +316,11 @@ function createOverlay() {
             ${toggleLabelHtml("sclient-lastfm-toggle", "sclient-toggle-bg-lastfm", "sclient-toggle-slider-lastfm")}
           </div>
         </div>
-        <input type="text" id="sclient-lastfm-apikey-input" placeholder="API Key" style="${S_INPUT}margin-bottom:6px;">
-        <input type="password" id="sclient-lastfm-secret-input" placeholder="Shared Secret" style="${S_INPUT}margin-bottom:8px;">
+        <input type="text" id="sclient-lastfm-apikey-input" class="sc-input" placeholder="API Key" style="margin-bottom:6px;">
+        <input type="password" id="sclient-lastfm-secret-input" class="sc-input" placeholder="Shared Secret" style="margin-bottom:8px;">
         <div style="display:flex;gap:8px;align-items:center;">
-          <button id="sclient-lastfm-connect-btn" style="flex:1;${S_BTN_SM}background:${accent};color:white;">Connect Last.fm Account</button>
-          <button id="sclient-lastfm-disconnect-btn" style="${S_BTN_SM}background:rgba(255,255,255,0.08);color:#aaa;border:1px solid #444;display:none;">Disconnect</button>
+          <button id="sclient-lastfm-connect-btn" class="sc-btn sc-btn-primary" style="flex:1;">Connect Last.fm Account</button>
+          <button id="sclient-lastfm-disconnect-btn" class="sc-btn sc-btn-danger" style="display:none;">Disconnect</button>
         </div>
         <div id="sclient-lastfm-connected-info" style="margin-top:6px;font-size:11px;color:#888;display:none;">Connected as: <span id="sclient-lastfm-username" style="color:${accent};font-weight:600;"></span></div>
         <div style="margin-top:5px;font-size:11px;color:#888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color:#aaa;text-decoration:underline;">last.fm/api/account/create</a></div>
@@ -348,14 +343,14 @@ function createOverlay() {
           ${toggleLabelHtml("sclient-stats-local-toggle", "sclient-toggle-bg-stats-local", "sclient-toggle-slider-stats-local")}
         </div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <button id="sclient-stats-analytics-btn" style="flex:1;${S_BTN_SM}background:${accent};color:white;">Open Analytics</button>
-          <button id="sclient-stats-wipe-btn" style="${S_BTN_SM}background:rgba(255,255,255,0.08);color:#aaa;border:1px solid #444;">Wipe Data</button>
+          <button id="sclient-stats-analytics-btn" class="sc-btn sc-btn-primary" style="flex:1;">Open Analytics</button>
+          <button id="sclient-stats-wipe-btn" class="sc-btn sc-btn-danger">Wipe Data</button>
         </div>
       </div>
 
       <div style="margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
         <span style="font-size:14px;font-weight:500;display:block;margin-bottom:12px;">Playlist Manager</span>
-        <button id="sclient-playlists-btn" style="flex:1;${S_BTN_SM}background:${accent};color:white;width:100%;">Open Playlist Manager</button>
+        <button id="sclient-playlists-btn" class="sc-btn sc-btn-primary" style="width:100%;">Open Playlist Manager</button>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
@@ -380,15 +375,15 @@ function createOverlay() {
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
           <span style="font-size:12px;color:#888;white-space:nowrap;flex-shrink:0;">Proxy URL:</span>
           <input type="text" id="sclient-proxyurl-input" placeholder="https://example.com/" style="flex:1;min-width:0;background:rgba(0,0,0,0.5);border:1px solid #333;color:white;border-radius:4px;padding:4px 8px;font-family:Inter,sans-serif;font-size:12px;outline:none;transition:border-color 0.2s;">
-          <button id="sclient-proxyurl-public-btn" style="flex-shrink:0;white-space:nowrap;padding:4px 8px;background:#333;border:1px solid #444;color:#ccc;border-radius:4px;font-size:11px;font-family:Inter,sans-serif;cursor:pointer;transition:background 0.2s;">Use Public</button>
+          <button id="sclient-proxyurl-public-btn" class="sc-btn" style="flex-shrink:0;white-space:nowrap;padding:4px 8px;font-size:11px;">Use Public</button>
         </div>
         <div style="font-size:10px;color:#666;margin-top:2px;">Opening profile may geo-lock some songs</div>
         <div style="font-size:10px;color:#f88;margin-top:2px;">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic.</div>
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:15px;">
-        <button id="tab-css" style="flex:1;padding:8px;background:${accent};border:none;color:white;border-radius:4px;cursor:pointer;font-weight:500;">Custom CSS</button>
-        <button id="tab-js" style="flex:1;padding:8px;background:#333;border:none;color:#ccc;border-radius:4px;cursor:pointer;font-weight:500;">Custom JS</button>
+        <button id="tab-css" class="sc-btn sc-btn-primary" style="flex:1;">Custom CSS</button>
+        <button id="tab-js" class="sc-btn" style="flex:1;">Custom JS</button>
       </div>
 
       <div style="flex:1 0 400px;min-height:400px;display:flex;flex-direction:column;margin-bottom:20px;position:relative;border:1px solid #333;border-radius:4px;background:#0c0c0c;">
@@ -406,14 +401,14 @@ function createOverlay() {
         <span style="font-size:16px;font-weight:bold;margin-bottom:15px;display:block;">Accounts</span>
         <div id="sclient-accounts-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;"></div>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="sclient-new-account-name" placeholder="New Profile Name" style="flex:1;padding:8px;background:rgba(0,0,0,0.5);border:1px solid #333;color:white;border-radius:4px;font-family:monospace;">
-          <button id="sclient-add-account-btn" style="padding:8px 15px;background:#333;border:none;color:white;border-radius:4px;cursor:pointer;font-weight:bold;">+ Add Account</button>
+          <input type="text" id="sclient-new-account-name" class="sc-input" placeholder="New Profile Name" style="flex:1;padding:8px;font-family:monospace;">
+          <button id="sclient-add-account-btn" class="sc-btn sc-btn-primary">+ Add Account</button>
         </div>
       </div>
     </div>
 
     <div style="display:flex;gap:10px;margin-bottom:10px;">
-      <button id="sclient-save-btn" style="flex:1;padding:12px;background:${accent};border:none;color:white;border-radius:4px;font-weight:bold;cursor:pointer;transition:background 0.2s;">Save &amp; Apply</button>
+      <button id="sclient-save-btn" class="sc-btn sc-btn-primary" style="flex:1;padding:12px;font-weight:bold;">Save &amp; Apply</button>
     </div>
     <div style="margin-top:10px;text-align:center;font-size:11px;color:#666;">
       Press <kbd style="background:#333;padding:2px 5px;border-radius:3px;color:#ccc;">Ctrl + I</kbd> to toggle this menu

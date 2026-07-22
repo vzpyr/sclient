@@ -28,16 +28,16 @@ function injectDownloadButton() {
     toast.innerHTML = `
 			<div style="display:flex; flex-direction:column; width:200px;">
 				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<span class="sclient-toast-title" style="font-weight:600; font-size:13px;">Downloading...</span>
-					<button class="sclient-toast-close" style="background:transparent; border:none; color:inherit; cursor:pointer; padding:0; display:flex; align-items:center; justify-content:center;">
+					<span class="sclient-toast-title" style="font-weight:600; font-size:var(--sc-text-base);">Downloading...</span>
+					<button class="sclient-toast-close sc-btn sc-btn-ghost" style="padding:2px 4px;">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
 					</button>
 				</div>
 				<div style="display:flex; align-items:center; gap:8px;">
-					<div style="flex-grow:1; height:6px; background-color:#333; border-radius:10px; overflow:hidden; display:flex;">
-						<div class="sclient-toast-progress" style="width: 0%; background-color: #ffffff; transition: width 0.2s;"></div>
+					<div style="flex-grow:1; height:6px; background-color:var(--sc-border); border-radius:10px; overflow:hidden; display:flex;">
+						<div class="sclient-toast-progress" style="width: 0%; background-color: var(--sc-accent); transition: width 0.2s;"></div>
 					</div>
-					<span class="sclient-toast-percent" style="font-size:12px; min-width:32px; text-align:right;">0%</span>
+					<span class="sclient-toast-percent" style="font-size:var(--sc-text-sm); min-width:32px; text-align:right; color:var(--sc-text-muted);">0%</span>
 				</div>
 			</div>
 		`;
@@ -86,7 +86,7 @@ function injectDownloadButton() {
       .catch((err) => {
         window.removeEventListener("message", progressHandler);
         titleText.textContent = "Failed: " + (err.message || err);
-        titleText.style.color = "#F44336";
+        titleText.style.color = "var(--sc-danger)";
       });
   });
 

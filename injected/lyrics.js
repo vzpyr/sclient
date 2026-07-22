@@ -129,17 +129,17 @@ function createLyricsSidebar() {
   `;
 
   sidebar.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
-      <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: ${accent};">Lyrics</h3>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--sc-border); padding-bottom: 10px;">
+      <h3 style="margin: 0; font-size: var(--sc-text-xl); font-weight: 600; color: var(--sc-accent);">Lyrics</h3>
       <div style="display: flex; align-items: center; gap: 15px;">
-        <div id="sclient-lyrics-offset-container" style="display: none; align-items: center; gap: 8px; font-size: 12px; color: #aaa;">
+        <div id="sclient-lyrics-offset-container" style="display: none; align-items: center; gap: 8px; font-size: var(--sc-text-sm); color: var(--sc-text-muted);">
            <span id="sclient-lyrics-offset-val" style="min-width: 32px; text-align: right;">0.0s</span>
-           <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0" style="width: 70px; accent-color: ${accent}; cursor: pointer;">
+           <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0" style="width: 70px; accent-color: var(--sc-accent); cursor: pointer;">
         </div>
-        <button id="sclient-lyrics-close-btn" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 20px; padding: 5px;">&times;</button>
+        <button id="sclient-lyrics-close-btn" class="sc-btn sc-btn-ghost" style="padding: 4px 8px; font-size: var(--sc-text-xl);">&times;</button>
       </div>
     </div>
-    <div id="sclient-lyrics-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; color: #e0e0e0;">
+    <div id="sclient-lyrics-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; font-size: var(--sc-text-base); line-height: 1.6; white-space: pre-wrap; color: var(--sc-text-main);">
       <div style="opacity:0.5; text-align:center; margin-top:20px;">Open a song to load lyrics</div>
     </div>
   `;
@@ -198,7 +198,7 @@ async function doFetch(artist, title) {
 
   const content = document.getElementById("sclient-lyrics-content");
   if (content)
-    content.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-lyrics-manual-now" style="margin-top:14px; padding:6px 16px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Enter manually</button></div>`;
+    content.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-lyrics-manual-now" class="sc-btn sc-btn-primary" style="margin-top:14px;">Enter manually</button></div>`;
 
   const abortCtrl = new AbortController();
   currentFetchAbort = abortCtrl;
@@ -285,9 +285,9 @@ function renderManual(artist, title) {
     <div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>
     <div style="margin-top: 15px; text-align: center;">
       <div style="margin-bottom: 8px; font-size: 12px; color: #aaa;">Try manually:</div>
-      <input type="text" id="sclient-lyrics-manual-artist" placeholder="Artist" value="${esc(artist)}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
-      <input type="text" id="sclient-lyrics-manual-title" placeholder="Title" value="${esc(title)}" style="width: 90%; margin-bottom: 5px; padding: 5px; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; border-radius: 4px; outline: none;">
-      <button id="sclient-lyrics-manual-search" style="width: 90%; padding: 6px; background: #333; color: #fff; border: 1px solid #555; border-radius: 4px; cursor: pointer; transition: background 0.2s;">Search</button>
+      <input type="text" id="sclient-lyrics-manual-artist" class="sc-input" placeholder="Artist" value="${esc(artist)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sc-text-sm);">
+      <input type="text" id="sclient-lyrics-manual-title" class="sc-input" placeholder="Title" value="${esc(title)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sc-text-sm);">
+      <button id="sclient-lyrics-manual-search" class="sc-btn sc-btn-primary" style="width: 90%;">Search</button>
     </div>
   `;
 
