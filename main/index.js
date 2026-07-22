@@ -143,11 +143,16 @@ function createWindow() {
     const payload = config.buildConfigPayload();
 
     win.webContents.executeJavaScript(`
-(function() {
-  window.__SCLIENT_CONFIG__ = ${JSON.stringify(payload)};
-  ${chartJs}
-  ${injectedJs}
-})()`);
+try {
+  (function() {
+    window.__SCLIENT_CONFIG__ = ${JSON.stringify(payload)};
+    ${chartJs}
+    ${injectedJs}
+  })()
+} catch (e) {
+  console.error('[SClient Injected JS Error]:', e);
+}
+`).catch((err) => console.error('[SClient executeJavaScript Rejection]:', err));
   });
 
   win.on("close", (e) => {

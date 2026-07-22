@@ -1070,7 +1070,7 @@ function createPlaylistManagerOverlay() {
     .pm-pl.pm-pl-active:hover { background:${accent}22 !important; }
     .pm-pl.pm-droptarget { box-shadow:inset 0 0 0 2px ${accent} !important; background:${accent}18 !important; }
     .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--sc-bg-surface); }
-    .sc-select { background:var(--sc-bg-surface); border:1px solid var(--sc-border); color:var(--sc-text-main); border-radius:var(--sc-radius-md); padding:6px 8px; font-family:var(--sc-font-sans); font-size:var(--sc-text-sm); outline:none; cursor:pointer; }
+    .sc-select { background:var(--sc-bg-surface); border:1px solid var(--sc-border); color:var(--sc-text-main); border-radius:var(--sc-radius-md); padding:8px 12px; font-family:var(--sc-font-sans); font-size:var(--sc-text-base); height:37px; box-sizing:border-box; outline:none; cursor:pointer; }
     `
   );
 
