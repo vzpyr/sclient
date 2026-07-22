@@ -11,6 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    environment: EVS
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
@@ -40,9 +41,21 @@ jobs:
         env:
           DEBUG: "@malept/flatpak-bundler,electron-installer-flatpak,electron-builder*"
 
+      - uses: actions/setup-python@v5
+        if: matrix.os == 'windows-latest'
+        with:
+          python-version: '3.12'
+
+      - name: Install EVS
+        if: matrix.os == 'windows-latest'
+        run: python -m pip install --upgrade castlabs-evs
+
       - name: Build Windows
         if: matrix.os == 'windows-latest'
         run: npm run build:win -- --publish never
+        env:
+          EVS_ACCOUNT_NAME: ${{ secrets.EVS_ACCOUNT_NAME }}
+          EVS_PASSWD: ${{ secrets.EVS_PASSWD }}
 
       - name: Upload
         uses: softprops/action-gh-release@v2
