@@ -204,49 +204,55 @@ injectStyle(
   "sclient-light-theme-overlays",
   `
   body.theme-light #sclient-settings-overlay,
-  body.theme-light #sclient-lyrics-sidebar {
-    background: rgba(250, 250, 250, 0.95) !important;
-    color: #222 !important;
-    border-left: 1px solid rgba(0,0,0,0.1) !important;
+  body.theme-light #sclient-lyrics-sidebar,
+  body.theme-light #sclient-stats-overlay,
+  body.theme-light #sclient-playlists-overlay {
+    background: var(--sc-bg-surface) !important;
+    color: var(--sc-text-main) !important;
   }
-  body.theme-light #sclient-lyrics-content { color: #444 !important; }
-  body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"] {
-    background: rgba(0,0,0,0.05) !important;
-    border-color: rgba(0,0,0,0.1) !important;
+  body.theme-light .pm-sidebar {
+    background: var(--sc-bg-elevated) !important;
+    border-right: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light #sclient-lyrics-content {
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"],
+  body.theme-light .stats-card,
+  body.theme-light .stats-chart-box {
+    background: var(--sc-bg-elevated) !important;
+    border: 1px solid var(--sc-border) !important;
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light .stats-chart-title {
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light .stats-table th {
+    color: var(--sc-text-muted) !important;
+    border-bottom: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light .stats-table td {
+    color: var(--sc-text-main) !important;
+    border-bottom: 1px solid var(--sc-border) !important;
   }
   body.theme-light #sclient-accounts-list > div {
-    background: rgba(0,0,0,0.05) !important;
-    border: 1px solid rgba(0,0,0,0.1) !important;
-  }
-  body.theme-light #sclient-add-account-btn,
-  body.theme-light #sclient-accounts-list button {
-    background: #eee !important; color: #333 !important;
-    border: 1px solid #ddd !important;
-  }
-  body.theme-light button#tab-css[style*="rgb(51, 51, 51)"],
-  body.theme-light button#tab-css[style*="#333"],
-  body.theme-light button#tab-js[style*="rgb(51, 51, 51)"],
-  body.theme-light button#tab-js[style*="#333"] {
-    background: #eee !important; color: #111 !important;
-  }
-  body.theme-light input[type="text"],
-  body.theme-light textarea:not(#sclient-css-editor):not(#sclient-js-editor) {
-    background: #fff !important; color: #333 !important;
-    border: 1px solid #ccc !important;
+    background: var(--sc-bg-elevated) !important;
+    border: 1px solid var(--sc-border) !important;
   }
   body.theme-light #sclient-css-container,
   body.theme-light #sclient-js-container {
-    border-top: 1px solid rgba(0,0,0,0.1) !important;
+    border-top: 1px solid var(--sc-border) !important;
   }
-  body.theme-light #sclient-trueshuffle-engine,
-  body.theme-light #sclient-proxyurl-input {
-    background: #fff !important; color: #333 !important;
-    border: 1px solid #ccc !important;
+  body.theme-light .pm-picker,
+  body.theme-light .pm-picker-item {
+    background: var(--sc-bg-elevated) !important;
+    color: var(--sc-text-main) !important;
+    border-color: var(--sc-border) !important;
   }
-  body.theme-light #sclient-trueshuffle-engine option {
-    background: #fff; color: #333;
+  body.theme-light .pm-track-row:hover {
+    background: var(--sc-btn-bg-hover) !important;
   }
-`
+  `
 );
 
 const cfg = window.__SCLIENT_CONFIG__ || {};
@@ -636,6 +642,7 @@ function applyLayoutFixes() {
 }
 
 function applyCollapsibleSidebar() {
+  const bgStyle = customBgColorOn ? bgColor : "var(--surface-color, var(--sc-bg-surface))";
   injectStyle(
     "sclient-collapsible-sidebar",
     `
@@ -643,7 +650,7 @@ function applyCollapsibleSidebar() {
     .l-sidebar-right {
       position: fixed !important; top: 46px !important; bottom: 46px !important;
       right: -360px !important; width: 360px !important;
-      background-color: var(--sc-bg-surface) !important;
+      background-color: ${bgStyle} !important;
       z-index: 100 !important; transition: right 0.3s ease !important;
       box-sizing: border-box !important; box-shadow: -5px 0 25px rgba(0,0,0,0.5) !important;
       overflow-y: auto !important; overflow-x: hidden !important;
@@ -657,12 +664,13 @@ function applyCollapsibleSidebar() {
 }
 
 function injectFloatingButtonStyles() {
+  const bgStyle = customBgColorOn ? bgColor : "var(--sc-bg-elevated)";
   injectStyle(
     "sclient-floating-btn-styles",
     `
     .sclient-floating-btn {
       position: fixed; right: 20px; z-index: 101;
-      background: var(--sc-bg-elevated);
+      background: ${bgStyle};
       color: var(--sc-text-main); border: 1px solid var(--sc-border) !important;
       border-radius: 50%; width: 40px; height: 40px;
       display: flex; align-items: center; justify-content: center;
@@ -671,11 +679,11 @@ function injectFloatingButtonStyles() {
       padding: 0; outline: none !important;
     }
     .sclient-floating-btn:focus { outline: none !important; }
-    .sclient-floating-btn:hover { background: var(--sc-bg-elevated) !important; filter: brightness(1.25); border-color: var(--sc-border-hover) !important; }
+    .sclient-floating-btn:hover { background: ${bgStyle} !important; filter: brightness(1.25); border-color: var(--sc-border-hover) !important; }
     .sclient-floating-btn:active { transform: scale(0.95); }
     .sclient-download-toast {
       position: fixed; bottom: 68px; z-index: 99999;
-      background: var(--sc-bg-elevated);
+      background: ${bgStyle};
       color: var(--sc-text-main); border: 1px solid var(--sc-border); border-radius: var(--sc-radius-xl);
       min-height: 40px; box-sizing: border-box;
       display: flex; align-items: center; justify-content: center;

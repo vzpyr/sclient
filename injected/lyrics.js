@@ -68,12 +68,12 @@ function updateLyricsUI(pos) {
     lineEls.forEach((el, i) => {
       if (i === activeIdx) {
         const hasWords = el.querySelector(".sclient-lyric-word");
-        el.style.cssText = `transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; transform-origin: center; color: ${hasWords ? "#fff" : accent}; font-weight: bold; transform: scale(1.1); opacity: 1; filter: blur(0px);`;
+        el.style.cssText = `transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; transform-origin: center; color: ${hasWords ? "var(--sc-text-main)" : accent}; font-weight: bold; transform: scale(1.1); opacity: 1; filter: blur(0px);`;
         el.scrollIntoView({ behavior: "smooth", block: "center" });
       } else if (i < activeIdx) {
-        el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: #888; font-weight: normal; transform: scale(0.95); opacity: 0.4; filter: blur(2px);`;
+        el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sc-text-muted); font-weight: normal; transform: scale(0.95); opacity: 0.4; filter: blur(2px);`;
       } else {
-        el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: #fff; font-weight: normal; transform: scale(0.95); opacity: 1; filter: blur(0px);`;
+        el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sc-text-main); font-weight: normal; transform: scale(0.95); opacity: 1; filter: blur(0px);`;
       }
     });
   }
@@ -96,7 +96,7 @@ function updateLyricsUI(pos) {
           wEl.classList.remove("sung");
           const wp = Math.min(1, (effectivePos - wStart) / (wEnd - wStart));
           const pct = (wp * 100).toFixed(1);
-          wEl.style.background = `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, #fff ${pct}%, #fff 100%)`;
+          wEl.style.background = `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, var(--sc-text-main) ${pct}%, var(--sc-text-main) 100%)`;
           wEl.style.webkitBackgroundClip = "text";
           wEl.style.backgroundClip = "text";
           wEl.style.color = "transparent";
@@ -237,7 +237,7 @@ async function doFetch(artist, title) {
           if (line.start === undefined || line.end === undefined) continue;
           const start = line.start / 1000;
           const end = line.end / 1000;
-          html += `<div class="sclient-lyric-line" data-start="${start}" data-end="${end}" style="transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; color: #fff; transform: scale(0.95); transform-origin: center; cursor: pointer;">${renderLineWords(line)}</div>`;
+          html += `<div class="sclient-lyric-line" data-start="${start}" data-end="${end}" style="transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; color: var(--sc-text-main); transform: scale(0.95); transform-origin: center; cursor: pointer;">${renderLineWords(line)}</div>`;
           currentSyncedLyrics.push({ start, end, words: line.words || null });
         }
         content.innerHTML = html + `</div>`;
@@ -258,7 +258,7 @@ async function doFetch(artist, title) {
         });
       } else if (data.lines && data.lines.length > 0) {
         const linesHtml = data.lines
-          .map((l) => `<div style="font-size: 16px; color: #fff;">${esc((l.text || "").trim() || " ")}</div>`)
+          .map((l) => `<div style="font-size: 16px; color: var(--sc-text-main);">${esc((l.text || "").trim() || " ")}</div>`)
           .join("");
         content.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">${linesHtml}</div>`;
         if (offsetContainer) offsetContainer.style.display = "none";

@@ -383,8 +383,9 @@ async function renderAnalytics() {
 
   if (typeof Chart === "undefined") return;
 
-  Chart.defaults.color = "#888";
-  Chart.defaults.borderColor = "rgba(255,255,255,0.06)";
+  const isLight = document.body.classList.contains("theme-light");
+  Chart.defaults.color = isLight ? "#444" : "#888";
+  Chart.defaults.borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.06)";
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
 
   upsertChart("sclient-chart-artists", 0, {

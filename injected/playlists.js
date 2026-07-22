@@ -1062,7 +1062,7 @@ function createPlaylistManagerOverlay() {
     #sclient-playlists-overlay * { box-sizing:border-box; }
     .pm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--sc-border); flex-shrink:0; }
     .pm-body { flex:1; display:flex; min-height:0; }
-    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid var(--sc-border); display:flex; flex-direction:column; min-height:0; background:rgba(0,0,0,0.25); }
+    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid var(--sc-border); display:flex; flex-direction:column; min-height:0; background:var(--sc-bg-elevated); }
     .pm-sidebar-tools { padding:14px; border-bottom:1px solid var(--sc-border); display:flex; flex-direction:column; gap:10px; }
     .pm-sidebar-list { flex:1; overflow-y:auto; padding:8px; }
     .pm-pl { transition:background 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important; }
