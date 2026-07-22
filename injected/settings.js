@@ -273,7 +273,7 @@ function createOverlay() {
         <span style="font-size:14px;font-weight:500;">Custom Background Color (Dark Mode)</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-bg-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-bg-color-text" class="sc-input" style="width:60px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
+          <input type="text" id="sclient-bg-color-text" class="sc-input" style="width:60px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
           ${toggleLabelHtml("sclient-bg-color-toggle", "sclient-toggle-bg-bg-color", "sclient-toggle-slider-bg-color")}
         </div>
       </div>
@@ -281,7 +281,7 @@ function createOverlay() {
       <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Custom Font</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="sclient-custom-font-text" class="sc-input" placeholder="e.g. Roboto" style="width:120px;padding:4px;font-family:monospace;font-size:12px;">
+          <input type="text" id="sclient-custom-font-text" class="sc-input" placeholder="e.g. Roboto" style="width:140px;font-family:monospace;font-size:12px;">
           ${toggleLabelHtml("sclient-custom-font-toggle", "sclient-toggle-bg-custom-font", "sclient-toggle-slider-custom-font")}
         </div>
       </div>
@@ -291,7 +291,7 @@ function createOverlay() {
       <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Enable Wide Layout</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="sclient-wide-layout-width" class="sc-input" placeholder="1200" style="width:50px;padding:4px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
+          <input type="text" id="sclient-wide-layout-width" class="sc-input" placeholder="1200" style="width:60px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
           ${toggleLabelHtml("sclient-wide-layout-toggle", "sclient-toggle-bg-wide-layout", "sclient-toggle-slider-wide-layout")}
         </div>
       </div>

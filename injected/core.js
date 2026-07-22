@@ -271,9 +271,10 @@ body.theme-light {
   border: 1px solid var(--sc-border);
   color: var(--sc-text-main);
   border-radius: var(--sc-radius-md);
-  padding: 8px 12px;
+  padding: 6px 10px;
   font-family: var(--sc-font-sans);
   font-size: var(--sc-text-base);
+  height: 32px;
   outline: none;
   transition: border-color 0.2s ease;
 }
