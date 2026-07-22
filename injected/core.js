@@ -609,7 +609,7 @@ document.addEventListener("click", (e) => {
 
     let imgUrl = bg.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
 
-    imgUrl = imgUrl.replace(/-(t50x50|badge|large|t120x120)\.jpg/i, '-t500x500.jpg');
+    imgUrl = imgUrl.replace(/-(t50x50|badge|large|t120x120)\.(jpg|png)/i, '-t500x500.$2');
 
     const overlay = document.createElement("div");
     overlay.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); z-index: 99999999; display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(4px);";
