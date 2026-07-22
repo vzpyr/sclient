@@ -21,8 +21,9 @@ SClient adds several enhancements and quality of life features to the standard w
 
 ### 🔌 Integrations & Tools
 
+- **Playlist Manager**: Manage your playlists with a dedicated overlay, making it easy to organize and edit your collections.
 - **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`, featuring a sleek UI toast with a live download progress bar.
-- **Lyrics Integration**: Access lyrics for the current song directly from the playback bar. Includes a dedicated sidebar with manual artist and title search fallbacks.
+- **Lyrics Integration**: Access synced lyrics for the current song directly from the playback bar. Includes a dedicated sidebar with manual artist and title search fallbacks.
 - **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Any sensitive information is securely stored and encrypted using your OS's native keyring (safeStorage).
 - **Discord Rich Presence**: Show what you are currently listening to on your Discord profile.
 - **Listening Stats & Analytics**: Track your listening history locally with an SQLite database. View detailed analytics with charts for top artists, tracks, genres, and listening hours. You can securely export, import, or merge your local database to seamlessly migrate your data.
