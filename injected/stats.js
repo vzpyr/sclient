@@ -579,9 +579,9 @@ function createAnalyticsOverlay() {
   overlay.id = "sclient-stats-overlay";
   overlay.style.cssText = `
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(10, 10, 10, 0.97); backdrop-filter: blur(15px);
+    background: var(--sc-bg-surface); backdrop-filter: blur(15px);
     z-index: 9999998; display: none; flex-direction: column;
-    color: #fff; font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--sc-text-main); font-family: var(--sc-font-sans);
   `;
 
   overlay.innerHTML = `

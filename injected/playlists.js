@@ -1058,18 +1058,18 @@ function createPlaylistManagerOverlay() {
   injectStyle(
     "sclient-playlists-style",
     `
-    #sclient-playlists-overlay { position:fixed; inset:0; background:var(--sc-bg-overlay); backdrop-filter:blur(15px); z-index:9999998; display:none; flex-direction:column; color:var(--sc-text-main); font-family:var(--sc-font-sans); }
+    #sclient-playlists-overlay { position:fixed; inset:0; background:var(--sc-bg-surface); backdrop-filter:blur(15px); z-index:9999998; display:none; flex-direction:column; color:var(--sc-text-main); font-family:var(--sc-font-sans); }
     #sclient-playlists-overlay * { box-sizing:border-box; }
-    .pm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--sc-border); flex-shrink:0; }
-    .pm-body { flex:1; display:flex; min-height:0; }
-    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid var(--sc-border); display:flex; flex-direction:column; min-height:0; background:var(--sc-bg-elevated); }
+    .pm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--sc-border); flex-shrink:0; background:var(--sc-bg-surface); }
+    .pm-body { flex:1; display:flex; min-height:0; background:var(--sc-bg-surface); }
+    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid var(--sc-border); display:flex; flex-direction:column; min-height:0; background:var(--sc-bg-surface); }
     .pm-sidebar-tools { padding:14px; border-bottom:1px solid var(--sc-border); display:flex; flex-direction:column; gap:10px; }
     .pm-sidebar-list { flex:1; overflow-y:auto; padding:8px; }
     .pm-pl { transition:background 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important; }
     .pm-pl:hover { background:var(--sc-btn-bg-hover) !important; transform:translateX(3px); }
     .pm-pl.pm-pl-active:hover { background:${accent}22 !important; }
     .pm-pl.pm-droptarget { box-shadow:inset 0 0 0 2px ${accent} !important; background:${accent}18 !important; }
-    .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; }
+    .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--sc-bg-surface); }
     .sc-select { background:var(--sc-bg-surface); border:1px solid var(--sc-border); color:var(--sc-text-main); border-radius:var(--sc-radius-md); padding:6px 8px; font-family:var(--sc-font-sans); font-size:var(--sc-text-sm); outline:none; cursor:pointer; }
     `
   );
@@ -1203,7 +1203,7 @@ function pmOpenEditor() {
   back.className = "pm-picker-back";
   back.style.zIndex = "9999999";
   const dlg = document.createElement("div");
-  dlg.style.cssText = `background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:12px;width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);`;
+  dlg.style.cssText = `background:var(--sc-bg-elevated);border:1px solid var(--sc-border);border-radius:12px;width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);`;
 
   const releaseDate = pl.release_date ? String(pl.release_date).slice(0, 10) : "";
   dlg.innerHTML = `
@@ -1796,7 +1796,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
   back.style.zIndex = "9999999";
 
   const dlg = document.createElement("div");
-  dlg.style.cssText = `background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:12px;width:90vw;max-width:900px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);`;
+  dlg.style.cssText = `background:var(--sc-bg-elevated);border:1px solid var(--sc-border);border-radius:12px;width:90vw;max-width:900px;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);`;
 
   dlg.innerHTML = `
     <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;gap:16px;">

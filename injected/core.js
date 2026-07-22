@@ -44,12 +44,107 @@ function injectToIframes(id, css) {
   obs.observe(document.documentElement, { childList: true, subtree: true });
 }
 
+const sclientScrollbarCss = `
+  ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
+`;
+
+injectStyle("sclient-scrollbar", sclientScrollbarCss);
+injectToIframes("sclient-scrollbar", sclientScrollbarCss);
+
+injectStyle(
+  "sclient-light-theme-overlays",
+  `
+  body.theme-light #sclient-settings-overlay,
+  body.theme-light #sclient-lyrics-sidebar,
+  body.theme-light #sclient-stats-overlay,
+  body.theme-light #sclient-playlists-overlay {
+    background: var(--sc-bg-surface) !important;
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light .pm-sidebar {
+    background: var(--sc-bg-elevated) !important;
+    border-right: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light #sclient-lyrics-content {
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"],
+  body.theme-light .stats-card,
+  body.theme-light .stats-chart-box {
+    background: var(--sc-bg-elevated) !important;
+    border: 1px solid var(--sc-border) !important;
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light .stats-chart-title {
+    color: var(--sc-text-main) !important;
+  }
+  body.theme-light .stats-table th {
+    color: var(--sc-text-muted) !important;
+    border-bottom: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light .stats-table td {
+    color: var(--sc-text-main) !important;
+    border-bottom: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light #sclient-accounts-list > div {
+    background: var(--sc-bg-elevated) !important;
+    border: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light #sclient-css-container,
+  body.theme-light #sclient-js-container {
+    border-top: 1px solid var(--sc-border) !important;
+  }
+  body.theme-light .pm-picker,
+  body.theme-light .pm-picker-item {
+    background: var(--sc-bg-elevated) !important;
+    color: var(--sc-text-main) !important;
+    border-color: var(--sc-border) !important;
+  }
+  body.theme-light .pm-track-row:hover {
+    background: var(--sc-btn-bg-hover) !important;
+  }
+  `
+);
+
+const cfg = window.__SCLIENT_CONFIG__ || {};
+const customAccentOn = cfg.custom_accent || false;
+const accentColor = cfg.accent_color || "#FF0000";
+const customFontOn = cfg.custom_font || false;
+const customFontFamily = cfg.custom_font_family || "";
+
+if (customFontOn && customFontFamily) {
+  const familyUrl = customFontFamily.trim().replace(/\s+/g, "+");
+  const css = `
+  @import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;700&display=swap');
+  html, body, * {
+    font-family: '${customFontFamily}', monospace !important;
+  }
+`;
+  injectStyle("sclient-global-font", css);
+  injectToIframes("sclient-global-font", css);
+}
+
+const lazyScrollOn = cfg.lazy_scroll || false;
+const hideDecorationsOn = cfg.hide_decorations || false;
+const wideLayoutOn = cfg.wide_layout || false;
+const wideLayoutWidth = cfg.wide_layout_width || "1200";
+const collapsibleSidebarOn = cfg.collapsible_sidebar || false;
+const customBgColorOn = cfg.custom_bg_color || false;
+const bgColor = cfg.bg_color || "#000000";
+
+const bgSurfaceVal = customBgColorOn ? bgColor : "#1e1e1e";
+const bgElevatedVal = customBgColorOn ? bgColor : "#2a2a2a";
+
 const scDesignSystem = `
 :root {
   --sc-accent: #f50;
-  --sc-bg-surface: #1e1e1e;
+  --sc-bg-surface: ${bgSurfaceVal};
   --sc-bg-overlay: rgba(0, 0, 0, 0.75);
-  --sc-bg-elevated: #2a2a2a;
+  --sc-bg-elevated: ${bgElevatedVal};
   --sc-text-main: #ffffff;
   --sc-text-muted: rgba(255, 255, 255, 0.65);
   --sc-border: rgba(255, 255, 255, 0.12);
@@ -188,98 +283,6 @@ body.theme-light {
 `;
 injectStyle("sclient-design-system", scDesignSystem);
 injectToIframes("sclient-design-system", scDesignSystem);
-
-const sclientScrollbarCss = `
-  ::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
-  * { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
-`;
-
-injectStyle("sclient-scrollbar", sclientScrollbarCss);
-injectToIframes("sclient-scrollbar", sclientScrollbarCss);
-
-injectStyle(
-  "sclient-light-theme-overlays",
-  `
-  body.theme-light #sclient-settings-overlay,
-  body.theme-light #sclient-lyrics-sidebar,
-  body.theme-light #sclient-stats-overlay,
-  body.theme-light #sclient-playlists-overlay {
-    background: var(--sc-bg-surface) !important;
-    color: var(--sc-text-main) !important;
-  }
-  body.theme-light .pm-sidebar {
-    background: var(--sc-bg-elevated) !important;
-    border-right: 1px solid var(--sc-border) !important;
-  }
-  body.theme-light #sclient-lyrics-content {
-    color: var(--sc-text-main) !important;
-  }
-  body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"],
-  body.theme-light .stats-card,
-  body.theme-light .stats-chart-box {
-    background: var(--sc-bg-elevated) !important;
-    border: 1px solid var(--sc-border) !important;
-    color: var(--sc-text-main) !important;
-  }
-  body.theme-light .stats-chart-title {
-    color: var(--sc-text-main) !important;
-  }
-  body.theme-light .stats-table th {
-    color: var(--sc-text-muted) !important;
-    border-bottom: 1px solid var(--sc-border) !important;
-  }
-  body.theme-light .stats-table td {
-    color: var(--sc-text-main) !important;
-    border-bottom: 1px solid var(--sc-border) !important;
-  }
-  body.theme-light #sclient-accounts-list > div {
-    background: var(--sc-bg-elevated) !important;
-    border: 1px solid var(--sc-border) !important;
-  }
-  body.theme-light #sclient-css-container,
-  body.theme-light #sclient-js-container {
-    border-top: 1px solid var(--sc-border) !important;
-  }
-  body.theme-light .pm-picker,
-  body.theme-light .pm-picker-item {
-    background: var(--sc-bg-elevated) !important;
-    color: var(--sc-text-main) !important;
-    border-color: var(--sc-border) !important;
-  }
-  body.theme-light .pm-track-row:hover {
-    background: var(--sc-btn-bg-hover) !important;
-  }
-  `
-);
-
-const cfg = window.__SCLIENT_CONFIG__ || {};
-const customAccentOn = cfg.custom_accent || false;
-const accentColor = cfg.accent_color || "#FF0000";
-const customFontOn = cfg.custom_font || false;
-const customFontFamily = cfg.custom_font_family || "";
-
-if (customFontOn && customFontFamily) {
-  const familyUrl = customFontFamily.trim().replace(/\s+/g, "+");
-  const css = `
-  @import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;700&display=swap');
-  html, body, * {
-    font-family: '${customFontFamily}', monospace !important;
-  }
-`;
-  injectStyle("sclient-global-font", css);
-  injectToIframes("sclient-global-font", css);
-}
-
-const lazyScrollOn = cfg.lazy_scroll || false;
-const hideDecorationsOn = cfg.hide_decorations || false;
-const wideLayoutOn = cfg.wide_layout || false;
-const wideLayoutWidth = cfg.wide_layout_width || "1200";
-const collapsibleSidebarOn = cfg.collapsible_sidebar || false;
-const customBgColorOn = cfg.custom_bg_color || false;
-const bgColor = cfg.bg_color || "#000000";
 const currentCss = cfg.css || "";
 const currentJs = cfg.js || "";
 const adblockOn = cfg.adblock || false;

@@ -210,11 +210,11 @@ function createOverlay() {
   overlay.id = "sclient-settings-overlay";
   overlay.style.cssText = `
     position:fixed;top:0;right:-450px;width:400px;height:100%;
-    background:rgba(18,18,18,0.95);backdrop-filter:blur(10px);
-    border-left:1px solid rgba(255,255,255,0.1);
+    background:var(--sc-bg-surface);backdrop-filter:blur(10px);
+    border-left:1px solid var(--sc-border);
     box-shadow:-5px 0 25px rgba(0,0,0,0.5);z-index:999999;
     transition:right 0.3s ease;display:flex;flex-direction:column;
-    color:#fff;font-family:'Inter',system-ui,-apple-system,sans-serif;
+    color:var(--sc-text-main);font-family:var(--sc-font-sans);
     padding:20px;box-sizing:border-box;
   `;
 

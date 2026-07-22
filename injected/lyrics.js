@@ -120,11 +120,11 @@ function createLyricsSidebar() {
   sidebar.id = "sclient-lyrics-sidebar";
   sidebar.style.cssText = `
     position: fixed; top: 20px; bottom: 70px; left: -400px; width: 350px;
-    background: rgba(18, 18, 18, 0.95); backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+    background: var(--sc-bg-surface); backdrop-filter: blur(10px);
+    border: 1px solid var(--sc-border); border-radius: 12px;
     box-shadow: 5px 5px 25px rgba(0,0,0,0.5); z-index: 999999;
     transition: left 0.3s ease; display: flex; flex-direction: column;
-    color: #fff; font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--sc-text-main); font-family: var(--sc-font-sans);
     padding: 20px; box-sizing: border-box;
   `;
 
