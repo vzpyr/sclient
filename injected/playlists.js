@@ -129,15 +129,8 @@ let _pmState = {
   anchorId: null,
   dragging: null,
   contextMenu: null,
-  editor: null,
   dropTargetId: null,
 };
-
-const PLACEHOLDER_ART =
-  "data:image/svg+xml;utf8," +
-  encodeURIComponent(
-    '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'120\' height=\'120\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#444\' stroke-width=\'1\'><rect width=\'24\' height=\'24\' fill=\'#1a1a1a\'/><path d=\'M9 18V5l12-2v13\'/><circle cx=\'6\' cy=\'18\' r=\'3\'/><circle cx=\'18\' cy=\'16\' r=\'3\'/></svg>'
-  );
 
 function pmFmtDur(ms) {
   if (!ms || ms < 0) return "0:00";
@@ -159,11 +152,11 @@ function pmPlaylistArt(pl) {
   if (pl && pl.artwork_url) return pl.artwork_url;
   const t = pl && pl.tracks && pl.tracks[0];
   if (t && t.artwork_url) return t.artwork_url;
-  return PLACEHOLDER_ART;
+  return "";
 }
 
 function pmTrackArt(t) {
-  return (t && t.artwork_url) || PLACEHOLDER_ART;
+  return (t && t.artwork_url) || "";
 }
 
 function pmCurrent() {
@@ -1976,7 +1969,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
 
     let matchTitle = "(skip)";
     let matchMeta = "";
-    let thumb = PLACEHOLDER_ART;
+    let thumb = "";
 
     if (r.match) {
       matchTitle = `${r.match.title} · ${getArtistFromTrack(r.match)}`;
