@@ -606,7 +606,7 @@ function createAnalyticsOverlay() {
         <button id="sclient-stats-import-btn" class="sc-btn" title="Import Stats DB">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-up"><path d="M19 22v-6"/><path d="M21 12.536V5"/><path d="m22 19-3-3-3 3"/><path d="M3 12A9 3 0 0 0 14.457 14.886"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
         </button>
-        <button id="sclient-stats-close-btn" class="sc-btn">&times; Close</button>
+        <button id="sclient-stats-close-btn" class="sc-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
       </div>
     </div>
     <div id="sclient-stats-content" style="flex: 1; overflow-y: auto; padding: 20px 30px 30px;">

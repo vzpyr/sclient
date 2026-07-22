@@ -251,7 +251,7 @@ function pmRenderSidebar() {
 
   if (_pmState.playlists.length === 0) {
     list.innerHTML = `<div style="padding:24px 16px;text-align:center;opacity:0.6;line-height:1.6;">
-      You have no playlists yet. Create one with the <b>+ New</b> button above.
+      You have no playlists yet. Create one with the <b>New</b> button above.
     </div>`;
     return;
   }
@@ -265,7 +265,9 @@ function pmRenderSidebar() {
       const active = p.id === _pmState.selectedId;
       const count = pmTrackCount(p);
       const total = p.duration || 0;
-      const badge = p.sharing === "private" ? "🔒" : "🌐";
+      const badge = p.sharing === "private" 
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
       const subtitle =
         count === 0
           ? "empty"
@@ -278,7 +280,7 @@ function pmRenderSidebar() {
       }">
         <div style="width:40px;height:40px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#222;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/></div>
         <div style="min-width:0;flex:1;">
-          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${badge} ${(p.title || "Untitled").replace(/</g, "&lt;")}</div>
+          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${badge}${(p.title || "Untitled").replace(/</g, "&lt;")}</div>
           <div style="font-size:11px;opacity:0.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${subtitle}</div>
         </div>
       </div>`;
@@ -397,7 +399,9 @@ function pmRenderDetailHeader() {
   const accent = getAccent();
   const count = pmTrackCount(pl);
   const total = pl.duration || (pl.tracks || []).reduce((s, t) => s + (t.duration || 0), 0);
-  const badge = pl.sharing === "private" ? "🔒" : "🌐";
+  const badge = pl.sharing === "private" 
+    ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+    : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
   const plPermalink = pl.user && pl.permalink ? `/${pl.user.permalink}/sets/${pl.permalink}` : pl.permalink_url || "";
   const secretLink =
     pl.sharing === "private" && pl.secret_token && pl.permalink_url
@@ -409,7 +413,7 @@ function pmRenderDetailHeader() {
       <div class="pm-d-header">
         <div class="pm-d-art"><img src="${pmPlaylistArt(pl)}"/></div>
         <div style="min-width:0;flex:1;">
-          <div class="pm-d-title">${badge} ${(pl.title || "Untitled").replace(/</g, "&lt;")}</div>
+          <div class="pm-d-title">${badge}${(pl.title || "Untitled").replace(/</g, "&lt;")}</div>
           <div class="pm-d-meta">${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}${
             secretLink ? ` · <span id="pm-secret-link-btn" style="opacity:.85;cursor:pointer;text-decoration:underline;" title="Copy to clipboard">secret link</span>` : ""
           }</div>
@@ -421,9 +425,9 @@ function pmRenderDetailHeader() {
             }</span></div>
         </div>
         <div class="pm-d-actions">
-          <button id="pm-edit-btn" class="sc-btn sc-btn-primary">✎ Edit</button>
-          <button id="pm-export-btn" class="sc-btn">⬇ Export</button>
-          <button id="pm-delete-btn" class="sc-btn sc-btn-danger">🗑 Delete</button>
+          <button id="pm-edit-btn" class="sc-btn sc-btn-primary" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg> Edit</button>
+          <button id="pm-export-btn" class="sc-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export</button>
+          <button id="pm-delete-btn" class="sc-btn sc-btn-danger" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</button>
         </div>
       </div>
       <div class="pm-d-toolbar">
@@ -493,10 +497,10 @@ function pmRenderBulkBar() {
   bar.style.display = "";
   bar.innerHTML = `
     <span style="font-size:12px;opacity:0.7;margin-right:auto;">${n} selected</span>
-    <button id="pm-bulk-move" class="sc-btn">↪ Move to…</button>
-    <button id="pm-bulk-copy" class="sc-btn">⧉ Copy to…</button>
-    <button id="pm-bulk-remove" class="sc-btn sc-btn-danger">✕ Remove</button>
-    <button id="pm-bulk-export" class="sc-btn">⬇ Export selected</button>
+    <button id="pm-bulk-move" class="sc-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-corner-down-right-icon lucide-corner-down-right"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg> Move to…</button>
+    <button id="pm-bulk-copy" class="sc-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy to…</button>
+    <button id="pm-bulk-remove" class="sc-btn sc-btn-danger" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove</button>
+    <button id="pm-bulk-export" class="sc-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export selected</button>
   `;
   bar.querySelector("#pm-bulk-move").addEventListener("click", () => pmMoveToDialog([..._pmState.selection]));
   bar.querySelector("#pm-bulk-copy").addEventListener("click", () => pmCopyToDialog([..._pmState.selection]));
@@ -525,13 +529,13 @@ function pmRenderTracks() {
         const handlePath = `/${(t.user && t.user.permalink) || ""}/${t.permalink || ""}`;
         return `<div class="pm-track${sel ? " pm-track-selected" : ""}" data-id="${t.id}" data-index="${i}" draggable="true">
           <span class="pm-track-idx">${i + 1}</span>
-          <span class="pm-track-art"><img src="${pmTrackArt(t)}" loading="lazy"/><button class="pm-track-play" data-url="${t.permalink_url || ""}" title="Play on SoundCloud (opens in a new tab)">▶</button></span>
+          <span class="pm-track-art"><img src="${pmTrackArt(t)}" loading="lazy"/><button class="pm-track-play" data-url="${t.permalink_url || ""}" title="Play on SoundCloud (opens in a new tab)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button></span>
           <span class="pm-track-body">
             <span class="pm-track-title" data-loop-data="${t.permalink_url || ""}">${(t.title || "Unknown").replace(/</g, "&lt;")}</span>
             <span class="pm-track-artist">${(getArtistFromTrack(t) || "").replace(/</g, "&lt;")} · ${handlePath}</span>
           </span>
           <span class="pm-track-dur">${pmFmtDur(t.duration)}</span>
-          <span class="pm-track-handle" title="Drag to reorder">⋮⋮</span>
+          <span class="pm-track-handle" title="Drag to reorder" style="display:flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical-icon lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
         </div>`;
       })
       .join("");
@@ -889,7 +893,7 @@ function pmPickPlaylist(title, excludePid) {
     list.forEach((p) => {
       const it = document.createElement("div");
       it.className = "pm-picker-item";
-      it.innerHTML = `<span style="width:30px;height:30px;border-radius:5px;overflow:hidden;background:#222;flex-shrink:0;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;"/></span><span style="min-width:0;"><span style="font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(p.sharing === "private" ? "🔒 " : "🌐 ") + (p.title || "Untitled").replace(/</g, "&lt;")}</span><span style="font-size:11px;opacity:0.6;">${(p.tracks || []).length} tracks</span></span>`;
+      it.innerHTML = `<span style="width:30px;height:30px;border-radius:5px;overflow:hidden;background:#222;flex-shrink:0;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;"/></span><span style="min-width:0;"><span style="font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(p.title || "Untitled").replace(/</g, "&lt;")}</span><span style="font-size:11px;opacity:0.6;">${(p.tracks || []).length} tracks</span></span>`;
       it.addEventListener("click", () => { back.remove(); resolve(p.id); });
       listEl.appendChild(it);
     });
@@ -1063,7 +1067,7 @@ function createPlaylistManagerOverlay() {
     .pm-pl.pm-pl-active:hover { background:${accent}22 !important; }
     .pm-pl.pm-droptarget { box-shadow:inset 0 0 0 2px ${accent} !important; background:${accent}18 !important; }
     .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--sc-bg-surface); }
-    .sc-select { background:var(--sc-bg-surface); border:1px solid var(--sc-border); color:var(--sc-text-main); border-radius:var(--sc-radius-md); padding:8px 12px; font-family:var(--sc-font-sans); font-size:var(--sc-text-base); height:37px; box-sizing:border-box; outline:none; cursor:pointer; }
+    .sc-select { -webkit-appearance:none; appearance:none; background:var(--sc-bg-surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 10px center / 16px 16px; border:1px solid var(--sc-border); color:var(--sc-text-main); border-radius:var(--sc-radius-md); padding:8px 32px 8px 12px; font-family:var(--sc-font-sans); font-size:var(--sc-text-base); height:37px; box-sizing:border-box; outline:none; cursor:pointer; }
     `
   );
 
@@ -1073,12 +1077,12 @@ function createPlaylistManagerOverlay() {
   overlay.innerHTML = `
     <div class="pm-head">
       <h2 style="margin:0;font-size:22px;font-weight:700;color:var(--sc-accent);display:flex;align-items:center;gap:10px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music-icon lucide-music"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
         Playlist Manager
       </h2>
       <div style="display:flex;align-items:center;gap:10px;">
-        <button id="pm-refresh-btn" class="sc-btn" title="Refresh">↻ Refresh</button>
-        <button id="pm-close-btn" class="sc-btn" title="Close">&times; Close</button>
+        <button id="pm-refresh-btn" class="sc-btn" title="Refresh" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw-icon lucide-rotate-cw"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Refresh</button>
+        <button id="pm-close-btn" class="sc-btn" title="Close" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
       </div>
     </div>
     <div class="pm-body">
@@ -1093,11 +1097,11 @@ function createPlaylistManagerOverlay() {
               <option value="modified">Recently modified</option>
               <option value="count">Track count</option>
             </select>
-            <button id="pm-new-btn" class="sc-btn sc-btn-primary" title="New playlist">+ New</button>
+            <button id="pm-new-btn" class="sc-btn sc-btn-primary" title="New playlist" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> New</button>
           </div>
           <div style="display:flex;gap:8px;">
-            <button id="pm-import-btn" class="sc-btn" style="flex:1;">⬇ Import</button>
-            <button id="pm-spotify-btn" class="sc-btn" style="flex:1;">⬇ Spotify CSV</button>
+            <button id="pm-import-btn" class="sc-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Import</button>
+            <button id="pm-spotify-btn" class="sc-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Spotify CSV</button>
           </div>
         </div>
         <div id="pm-sidebar-list" class="pm-sidebar-list"></div>
@@ -1202,7 +1206,7 @@ function pmOpenEditor() {
   dlg.innerHTML = `
     <div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:16px;font-weight:600;">Edit playlist details</div>
-      <button id="pm-ed-x" class="sc-btn sc-btn-ghost" style="padding:4px 10px;">✕</button>
+      <button id="pm-ed-x" class="sc-btn sc-btn-ghost" style="padding:4px 10px;display:flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
     <div style="padding:20px;overflow-y:auto;">
       <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Title</label>
@@ -1218,8 +1222,8 @@ function pmOpenEditor() {
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;">Sharing</label>
           <select id="pm-ed-sharing" class="sc-select">
-            <option value="public" ${pl.sharing === "public" ? "selected" : ""}>🌐 Public</option>
-            <option value="private" ${pl.sharing === "private" ? "selected" : ""}>🔒 Private</option>
+            <option value="public" ${pl.sharing === "public" ? "selected" : ""}>Public</option>
+            <option value="private" ${pl.sharing === "private" ? "selected" : ""}>Private</option>
           </select>
         </div>
         <div style="margin-bottom:14px;">
@@ -1260,7 +1264,7 @@ function pmOpenEditor() {
         <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
           <span style="font-size:12px;font-weight:600;color:#aaa;">Artwork</span>
           <div style="display:flex;gap:8px;margin-top:2px;">
-            <button id="pm-ed-art-clear" class="sc-btn sc-btn-danger" type="button">Clear artwork</button>
+            <button id="pm-ed-art-clear" class="sc-btn sc-btn-danger" type="button" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear artwork</button>
           </div>
         </div>
       </div>
@@ -1298,7 +1302,7 @@ function pmOpenEditor() {
   const renderChips = () => {
     const wrap = dlg.querySelector("#pm-ed-tags");
     wrap.innerHTML = chips
-      .map((c, i) => `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}">✕</span></span>`)
+      .map((c, i) => `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`)
       .join("");
     wrap.querySelectorAll(".pm-chip-x").forEach((x) => {
       x.addEventListener("click", () => {
@@ -1885,7 +1889,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       back.remove();
     } catch (e) {
       showToast("Error during import: " + (e.message || e));
-      console.error(e);
+      console.error("[SClient] Playlist chunk creation error:", e);
       confirmBtn.disabled = false;
       confirmBtn.textContent = "Confirm (Error)";
     }
@@ -1921,7 +1925,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
 
     let headText = `Spotify CSV Import · resolved ${resolvedCount} / ${_pmSpotifyState.total}`;
     if (resolvedCount === _pmSpotifyState.total) {
-      headText = `Spotify CSV Import · ❗ ${needReview} need review · ⏭ ${skippedCount} skipped · ✓ ${readyCount} ready`;
+      headText = `Spotify CSV Import · ${needReview} need review · ${skippedCount} skipped · ${readyCount} ready`;
     }
     dlg.querySelector("#pm-sp-head").textContent = headText;
 
@@ -1986,7 +1990,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       if (r.match.artwork_url) thumb = r.match.artwork_url;
     }
 
-    const confEmoji = r.confidence === "high" ? "🟢" : (r.confidence === "review" ? "🟡" : "🔴");
+    const confEmoji = "";
 
     existing.innerHTML = `
       <div class="pm-sp-left">

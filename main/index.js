@@ -150,9 +150,9 @@ try {
     ${injectedJs}
   })()
 } catch (e) {
-  console.error('[SClient Injected JS Error]:', e);
+  console.error("[SClient] Injected JS error:", e);
 }
-`).catch((err) => console.error('[SClient executeJavaScript Rejection]:', err));
+`).catch((err) => console.error("[SClient] Script execution failed:", err));
   });
 
   win.on("close", (e) => {

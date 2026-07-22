@@ -82,7 +82,7 @@ async function syncPlayHistory() {
       }
       url = data.next_href || null;
     }
-    if (total > 0) console.log(`[SClient] Stats sync done — ${total} new entries.`);
+    if (total > 0) console.log(`[SClient] Stats sync complete (${total} new entries)`);
   } catch (e) {
     console.error("[SClient] Stats sync error:", e);
   } finally {

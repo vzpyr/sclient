@@ -57,7 +57,7 @@ export default async function handler(req, res) {
     }
     finalUrl = tu.toString();
   } catch {
-    console.error("[SClient] Proxy: invalid URL:", target);
+    console.error("[SClient] Proxy invalid URL:", target);
     setCors();
     res.statusCode = 400;
     return res.end("Invalid URL");
@@ -103,7 +103,7 @@ export default async function handler(req, res) {
       res.write(value);
     }
   } catch (e) {
-    console.error("[SClient] Proxy: fetch failed:", finalUrl, e.message);
+    console.error("[SClient] Proxy fetch failed:", finalUrl, e);
     setCors();
     res.statusCode = 502;
     res.end();

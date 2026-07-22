@@ -360,7 +360,7 @@ function createOverlay() {
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:12px;color:#888;">Engine:</span>
-          <select id="sclient-trueshuffle-engine" style="-webkit-appearance:none;appearance:none;background:rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid #333;color:white;border-radius:6px;font-family:Inter,sans-serif;font-size:12px;outline:none;cursor:pointer;transition:border-color 0.2s;">
+          <select id="sclient-trueshuffle-engine" style="-webkit-appearance:none;appearance:none;background:rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 class=%22lucide lucide-chevron-down-icon lucide-chevron-down%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid #333;color:white;border-radius:6px;font-family:Inter,sans-serif;font-size:12px;outline:none;cursor:pointer;transition:border-color 0.2s;">
             <option value="native" style="background:#1e1e1e;color:white;">Native (song ~1-50 won't be shuffled)</option>
             <option value="api" style="background:#1e1e1e;color:white;">API (overrides full order in the UI)</option>
           </select>
