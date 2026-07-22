@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SClient — Open Track</title>
+<title>SClient</title>
 <style>@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");*{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;background:#0a0a0c;color:#fff;font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}.wrap{width:100%;max-width:900px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:4px}.wrap iframe{display:block;width:100%;height:166px;border:0}a.btn{padding:10px 20px;background:#f50;color:#fff;border-radius:4px;text-decoration:none;font-weight:600;font-size:14px}a.btn:hover{background:#e04800}.hint{opacity:0.4;font-size:13px}.hint a{color:#f50}</style></head>
 <body>
 <div class="wrap" id="embed"></div>
