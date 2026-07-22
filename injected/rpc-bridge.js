@@ -41,6 +41,7 @@ function setupDiscordRpc() {
 
       if (changed) {
         last = { title, artist, playing, artwork, timeStart };
+        const td = evt.trackData;
         sendBridge("update_rpc", {
           title,
           artist,
@@ -49,6 +50,9 @@ function setupDiscordRpc() {
           timeStart,
           timeEnd,
           songUrl: evt.songUrl,
+          trackId: td && td.id ? td.id : null,
+          artistSlug: td && td.user ? td.user.permalink : null,
+          trackSlug: td ? td.permalink : null,
         });
       }
     } catch (e) {

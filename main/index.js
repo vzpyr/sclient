@@ -15,6 +15,51 @@ app.on("before-quit", () => {
   isQuitting = true;
 });
 
+let pendingSclientUrl = null;
+
+function sanitizeSclientUrl(raw) {
+  if (!raw) return null;
+  let url = raw;
+  if (url.startsWith('sclient://')) url = url.slice('sclient://'.length);
+  if (url.startsWith('sclient:')) url = url.slice('sclient:'.length);
+  const match = url.match(/^redirect\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$/);
+  if (!match) return null;
+  return 'https://soundcloud.com/' + match[1] + '/' + match[2];
+}
+
+function handleSclientUrl(raw) {
+  const clean = sanitizeSclientUrl(raw);
+  if (!clean) return;
+  if (win && !win.isDestroyed()) {
+    win.show();
+    win.focus();
+    win.loadURL(clean);
+  } else {
+    pendingSclientUrl = clean;
+  }
+}
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  handleSclientUrl(url);
+});
+
+const gotSingleInstanceLock = app.requestSingleInstanceLock();
+if (!gotSingleInstanceLock) {
+  app.quit();
+} else {
+  app.on('second-instance', (_event, argv) => {
+    const raw = (argv || []).find(a => typeof a === 'string' && (a.startsWith('sclient://') || a.startsWith('sclient:')));
+    if (raw) handleSclientUrl(raw);
+  });
+}
+
+(function () {
+  const raw = process.argv.find(a => typeof a === 'string' && (a.startsWith('sclient://') || a.startsWith('sclient:')));
+  if (raw) pendingSclientUrl = sanitizeSclientUrl(raw);
+})();
+app.setAsDefaultProtocolClient('sclient');
+
 function createWindow() {
   const hideFrame = config.isEnabled("features.hide_decorations");
   const account = config.getActiveAccount();
@@ -114,6 +159,7 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
+  if (!gotSingleInstanceLock) return;
   console.log(`[SClient] Starting v${app.getVersion()}...`);
   await components.whenReady();
 
@@ -191,6 +237,11 @@ app.whenReady().then(async () => {
   });
 
   createWindow();
+
+  if (pendingSclientUrl && win && !win.isDestroyed()) {
+    win.loadURL(pendingSclientUrl);
+    pendingSclientUrl = null;
+  }
 
   if (config.isEnabled("features.tray_icon")) {
     try {

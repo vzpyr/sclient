@@ -1,4 +1,24 @@
 export default async function handler(req, res) {
+  const url = new URL(req.url, `https://${req.headers.host}`);
+
+  if (url.pathname === '/redirect') {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.end(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SClient — Open Track</title>
+<style>@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");*{box-sizing:border-box;margin:0;padding:0}html,body{width:100%;height:100%;background:#0a0a0c;color:#fff;font-family:Inter,system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px}.wrap{width:100%;max-width:900px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:4px;padding:4px}.wrap iframe{display:block;width:100%;height:166px;border:0}a.btn{padding:10px 20px;background:#f50;color:#fff;border-radius:4px;text-decoration:none;font-weight:600;font-size:14px}a.btn:hover{background:#e04800}.hint{opacity:0.4;font-size:13px}.hint a{color:#f50}</style></head>
+<body>
+<div class="wrap" id="embed"></div>
+<a class="btn" id="openBtn" href="#">Open in SClient</a>
+<span class="hint">Don't have SClient? <a href="https://github.com/vzpyr/sclient">Get it here</a></span>
+<script>(function(){var q=new URLSearchParams(window.location.search);var id=q.get('id');var artist=q.get('artist');var track=q.get('track');var embed=document.getElementById('embed');var btn=document.getElementById('openBtn');if(id){embed.innerHTML='<iframe allow="autoplay" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/'+encodeURIComponent(id)+'"></iframe>'}else{embed.innerHTML='<p style="opacity:0.4;text-align:center;padding:20px">No track specified</p>'}if(artist&&track){var protoUrl='sclient://redirect/'+encodeURIComponent(artist)+'/'+encodeURIComponent(track);btn.href=protoUrl;window.location=protoUrl}else{btn.textContent='Missing track info';btn.style.opacity='0.4'}})()</script>
+</body>
+</html>`);
+  }
+
   const origin = req.headers.origin || "*";
 
   const setCors = () => {
@@ -19,7 +39,6 @@ export default async function handler(req, res) {
     return res.end();
   }
 
-  const url = new URL(req.url, `https://${req.headers.host}`);
   const target = url.searchParams.get("url");
   if (!target) {
     setCors();
