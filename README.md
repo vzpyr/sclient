@@ -64,9 +64,19 @@ Requirements: Node.js and npm installed on your system.
 3. Build the application for your operating system:
 
 - Linux: `npm run build:linux`
-- Windows: `npm run build:windows`
+- Windows: `npm run build:win` (see Windows DRM section below before building)
 
 All compiled binaries will go to the `dist` directory.
+
+### Windows DRM (Widevine VMP)
+
+Windows enforces VMP (Verified Media Path) for Widevine DRM, which requires a production signature on the executable. This is handled automatically during `npm run build:win` via the `afterSign` hook.
+
+**One-time setup:**
+
+1. `python3 -m pip install castlabs-evs`
+2. `python3 -m castlabs_evs.account signup`
+3. `npm run vmp:sign` (re-run after `npm install` updates the electron binary)
 
 ## Usage
 

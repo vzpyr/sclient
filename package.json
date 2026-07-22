@@ -8,10 +8,17 @@
     "start": "electron .",
     "build:linux": "electron-builder --linux",
     "build:win": "electron-builder --windows",
+    "vmp:sign": "python3 -m castlabs_evs.vmp sign-pkg node_modules/electron/dist",
     "postinstall": "electron-builder install-app-deps",
     "format": "prettier --write ."
   },
   "build": {
+    "files": [
+      "assets/**",
+      "injected/**",
+      "main/**",
+      "preload.js"
+    ],
     "appId": "com.vzpyr.sclient",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "productName": "SClient",
@@ -85,7 +92,8 @@
     },
     "portable": {
       "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
-    }
+    },
+    "afterSign": "afterSign.js"
   },
   "author": "vzpyr <107548344+vzpyr@users.noreply.github.com>",
   "homepage": "https://github.com/vzpyr/sclient",
