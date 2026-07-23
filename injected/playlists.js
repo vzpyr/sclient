@@ -1409,13 +1409,33 @@ function pmOpenEditor() {
 }
 
 function pmBuildExport(pl, onlyIds) {
-  const allIds = (pl.tracks || []).map((t) => t.id);
-  const ids = onlyIds && onlyIds.length ? onlyIds : allIds;
+  const allTracks = pl.tracks || [];
+  const selectedSet = onlyIds && onlyIds.length ? new Set(onlyIds) : null;
+  const filteredTracks = selectedSet
+    ? allTracks.filter((t) => selectedSet.has(t.id))
+    : allTracks;
+
+  const tracksExport = filteredTracks.map((t) => {
+    const artist = getArtistFromTrack(t);
+    const publisher =
+      (t.publisher_metadata && (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
+      (t.user && (t.user.username || t.user.full_name)) ||
+      t.label_name ||
+      (t.publisher_metadata && t.publisher_metadata.artist) ||
+      null;
+    return {
+      id: t.id,
+      title: t.title || null,
+      artist: artist !== "Unknown" ? artist : null,
+      publisher: publisher,
+    };
+  });
+
   return {
     title: pl.title || "Untitled",
     sharing: pl.sharing || "private",
     description: pl.description || "",
-    tracks: ids,
+    tracks: tracksExport,
   };
 }
 
@@ -1479,6 +1499,8 @@ async function pmImport() {
     let id;
     if (typeof t === "number" && Number.isFinite(t)) id = t;
     else if (typeof t === "string" && /^\d+$/.test(t.trim())) id = Number(t.trim());
+    else if (t && typeof t === "object" && typeof t.id === "number" && Number.isFinite(t.id)) id = t.id;
+    else if (t && typeof t === "object" && typeof t.id === "string" && /^\d+$/.test(t.id.trim())) id = Number(t.id.trim());
     else { dropped++; continue; }
     if (!seen.has(id)) { trackIds.push(id); seen.add(id); }
   }
