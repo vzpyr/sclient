@@ -34,6 +34,7 @@
         color: #fff;
         user-select: none;
         -webkit-font-smoothing: antialiased;
+        -webkit-app-region: drag;
       }
       *:focus {
         outline: none !important;
@@ -61,17 +62,6 @@
           radial-gradient(120% 90% at 50% 0%, transparent 40%, rgba(0, 0, 0, 0.45) 100%),
           linear-gradient(160deg, rgba(255, 85, 0, 0.06), rgba(10, 10, 14, 0.2) 60%);
       }
-
-      .drag-region {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 40px;
-        -webkit-app-region: drag;
-        z-index: 10;
-      }
-
       .top-right {
         position: absolute;
         top: 10px;
@@ -166,7 +156,6 @@
         padding: 14px;
         box-sizing: border-box;
         width: 100%;
-        -webkit-app-region: no-drag;
         overflow: hidden;
       }
 
@@ -352,6 +341,10 @@
         align-items: center;
         justify-content: space-between;
         width: 100%;
+        -webkit-app-region: no-drag;
+      }
+
+      #lyrics-content {
         -webkit-app-region: no-drag;
       }
       .btn {
@@ -653,7 +646,6 @@
   </head>
   <body>
     <div id="bg"></div>
-    <div class="drag-region"></div>
 
     <div class="top-right">
       <div class="offset-controls" id="offset-controls">
