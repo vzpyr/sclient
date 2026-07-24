@@ -127,7 +127,7 @@ function renderAccounts(overlay) {
               "display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:4px;";
 
             const name = document.createElement("span");
-            name.textContent = acc;
+            name.textContent = acc === "main" ? "Main" : acc;
             if (acc === active) {
               name.style.cssText = `color:${getAccent()};font-weight:bold;`;
               name.textContent += " (Active)";
@@ -178,7 +178,7 @@ function renderAccounts(overlay) {
                 const msg =
                   acc === active
                     ? "Clear all cookies and browser data? The app will restart."
-                    : "Clear all cookies and browser data for main profile?";
+                    : "Clear all cookies and browser data for Main profile?";
                 showConfirm(msg).then((ok) => {
                   if (ok) sendBridge(acc === active ? "clear_data_and_restart" : "clear_data");
                 });
@@ -219,13 +219,13 @@ function createOverlay() {
   `;
 
   const TOGGLES = [
-    { label: "Enable Enhanced Header", id: "enhanced-header" },
-    { label: "Enable Collapsible Sidebar", id: "collapsible-sidebar" },
-    { label: "Enable Discord Rich Presence", id: "rpc" },
-    { label: "Enable System Tray (Minimize to background)", id: "tray" },
-    { label: "Enable Adblocker", id: "adblock" },
-    { label: "Enable Lazy Scroll Button", id: "lazy-scroll" },
-    { label: "Disable Window Decorations", id: "decorations" },
+    { label: "Enhanced Header", id: "enhanced-header" },
+    { label: "Collapsible Sidebar", id: "collapsible-sidebar" },
+    { label: "Discord Rich Presence", id: "rpc" },
+    { label: "System Tray (Run in background)", id: "tray" },
+    { label: "Adblocker", id: "adblock" },
+    { label: "Lazy Scroll Button", id: "lazy-scroll" },
+    { label: "No Window Decorations", id: "decorations" },
     { label: "Hide Subscription Upsell", id: "upsell" },
     { label: "Hide Artist Features", id: "artists" },
   ];
@@ -264,16 +264,16 @@ function createOverlay() {
         <span style="font-size:14px;font-weight:500;">Custom Accent Color</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-accent-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-accent-color-text" class="sc-input" style="width:60px;padding:4px;font-family:monospace;font-size:12px;text-transform:uppercase;">
+          <input type="text" id="sclient-accent-color-text" class="sc-input" style="width:60px;padding:4px 6px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
           ${toggleLabelHtml("sclient-accent-toggle", "sclient-toggle-bg-accent", "sclient-toggle-slider-accent")}
         </div>
       </div>
 
       <div class="sc-card">
-        <span style="font-size:14px;font-weight:500;">Custom Background Color (Dark Mode)</span>
+        <span style="font-size:14px;font-weight:500;">Custom Background Color (Dark Mode only)</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-bg-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-bg-color-text" class="sc-input" style="width:60px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
+          <input type="text" id="sclient-bg-color-text" class="sc-input" style="width:60px;padding:4px 6px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
           ${toggleLabelHtml("sclient-bg-color-toggle", "sclient-toggle-bg-bg-color", "sclient-toggle-slider-bg-color")}
         </div>
       </div>
@@ -289,7 +289,7 @@ function createOverlay() {
       ${togglesHtml}
 
       <div class="sc-card">
-        <span style="font-size:14px;font-weight:500;">Enable Wide Layout</span>
+        <span style="font-size:14px;font-weight:500;">Wide Layout</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="text" id="sclient-wide-layout-width" class="sc-input" placeholder="1200" style="width:60px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
           ${toggleLabelHtml("sclient-wide-layout-toggle", "sclient-toggle-bg-wide-layout", "sclient-toggle-slider-wide-layout")}
@@ -305,7 +305,7 @@ function createOverlay() {
           </div>
         </div>
         <input type="password" id="sclient-listenbrainz-token-input" class="sc-input" placeholder="Enter ListenBrainz User Token...">
-        <div style="margin-top:5px;font-size:11px;color:#888;">Get your token from <a href="https://listenbrainz.org/settings/" target="_blank" style="color:#aaa;text-decoration:underline;">listenbrainz.org/settings</a></div>
+        <div style="margin-top:5px;font-size:11px;color:#888;"><a href="https://listenbrainz.org/settings/" target="_blank" style="color:#aaa;text-decoration:underline;">listenbrainz.org/settings</a></div>
       </div>
 
       <div style="margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
@@ -323,7 +323,7 @@ function createOverlay() {
           <button id="sclient-lastfm-disconnect-btn" class="sc-btn sc-btn-danger" style="display:none;">Disconnect</button>
         </div>
         <div id="sclient-lastfm-connected-info" style="margin-top:6px;font-size:11px;color:#888;display:none;">Connected as: <span id="sclient-lastfm-username" style="color:${accent};font-weight:600;"></span></div>
-        <div style="margin-top:5px;font-size:11px;color:#888;">Get your API key from <a href="https://www.last.fm/api/account/create" target="_blank" style="color:#aaa;text-decoration:underline;">last.fm/api/account/create</a></div>
+        <div style="margin-top:5px;font-size:11px;color:#888;"><a href="https://www.last.fm/api/account/create" target="_blank" style="color:#aaa;text-decoration:underline;">last.fm/api/account/create</a></div>
       </div>
 
       <div style="margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
@@ -355,21 +355,21 @@ function createOverlay() {
 
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:14px;font-weight:500;">Enable True Shuffle (Fix native shuffle)</span>
+          <span style="font-size:14px;font-weight:500;">True Shuffle</span>
           ${toggleLabelHtml("sclient-trueshuffle-toggle", "sclient-toggle-bg-trueshuffle", "sclient-toggle-slider-trueshuffle")}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:12px;color:#888;">Engine:</span>
           <select id="sclient-trueshuffle-engine" style="-webkit-appearance:none;appearance:none;background:rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 class=%22lucide lucide-chevron-down-icon lucide-chevron-down%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid #333;color:white;border-radius:6px;font-family:Inter,sans-serif;font-size:12px;outline:none;cursor:pointer;transition:border-color 0.2s;">
-            <option value="native" style="background:#1e1e1e;color:white;">Native (song ~1-50 won't be shuffled)</option>
-            <option value="api" style="background:#1e1e1e;color:white;">API (overrides full order in the UI)</option>
+            <option value="native" style="background:#1e1e1e;color:white;">Native (pre-scroll before shuffling)</option>
+            <option value="api" style="background:#1e1e1e;color:white;">API (shuffle at API level)</option>
           </select>
         </div>
       </div>
 
       <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;padding:12px;background:rgba(255,255,255,0.05);border-radius:8px;border:1px solid rgba(255,255,255,0.1);">
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:14px;font-weight:500;">Enable Region Bypass Proxy</span>
+          <span style="font-size:14px;font-weight:500;">Proxy (Region Bypass)</span>
           ${toggleLabelHtml("sclient-regionbypass-toggle", "sclient-toggle-bg-regionbypass", "sclient-toggle-slider-regionbypass")}
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
@@ -377,8 +377,7 @@ function createOverlay() {
           <input type="text" id="sclient-proxyurl-input" placeholder="https://example.com/" style="flex:1;min-width:0;background:rgba(0,0,0,0.5);border:1px solid #333;color:white;border-radius:4px;padding:4px 8px;font-family:Inter,sans-serif;font-size:12px;outline:none;transition:border-color 0.2s;">
           <button id="sclient-proxyurl-public-btn" class="sc-btn" style="flex-shrink:0;white-space:nowrap;padding:4px 8px;font-size:11px;">Use Public</button>
         </div>
-        <div style="font-size:10px;color:#666;margin-top:2px;">Opening profile may geo-lock some songs</div>
-        <div style="font-size:10px;color:#f88;margin-top:2px;">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic.</div>
+        <div style="font-size:10px;color:#f88;margin-top:2px;">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. Opening your profile may temporarily geo-lock songs again.</div>
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:15px;">
@@ -401,7 +400,7 @@ function createOverlay() {
         <span style="font-size:16px;font-weight:bold;margin-bottom:15px;display:block;">Accounts</span>
         <div id="sclient-accounts-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;"></div>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="sclient-new-account-name" class="sc-input" placeholder="New Profile Name" style="flex:1;padding:8px;font-family:monospace;">
+          <input type="text" id="sclient-new-account-name" class="sc-input" placeholder="New Profile Name" style="flex:1;height:auto;padding:8px 10px;font-family:monospace;">
           <button id="sclient-add-account-btn" class="sc-btn sc-btn-primary">+ Add Account</button>
         </div>
       </div>
