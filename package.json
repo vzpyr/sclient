@@ -32,7 +32,8 @@
     },
     "asarUnpack": [
       "node_modules/youtube-dl-exec/**",
-      "node_modules/better-sqlite3/**"
+      "node_modules/better-sqlite3/**",
+      "node_modules/keytar/**"
     ],
     "linux": {
       "target": [
@@ -71,6 +72,7 @@
         "--filesystem=xdg-run/snap.discord:ro",
         "--talk-name=org.kde.StatusNotifierWatcher",
         "--talk-name=org.freedesktop.Notifications",
+        "--talk-name=org.freedesktop.secrets",
         "--own-name=org.mpris.MediaPlayer2.chromium",
         "--own-name=org.mpris.MediaPlayer2.chromium.*"
       ],
@@ -110,11 +112,13 @@
     "better-sqlite3": "^12.11.1",
     "chart.js": "^4.5.1",
     "cross-fetch": "^4.1.0",
+    "keytar": "^7.9.0",
     "youtube-dl-exec": "^3.1.9"
   },
   "allowScripts": {
     "better-sqlite3@12.11.1": true,
     "electron-winstaller@5.4.0": true,
-    "youtube-dl-exec@3.1.9": true
+    "youtube-dl-exec@3.1.9": true,
+    "keytar@7.9.0": true
   }
 }

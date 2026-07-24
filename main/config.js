@@ -1,9 +1,18 @@
 const path = require("path");
 const fs = require("fs");
-const { app, safeStorage } = require("electron");
+const { app } = require("electron");
+const keytar = require("keytar");
 
 const DIR = path.join(app.getPath("userData"), "SClient");
 const FILE = path.join(DIR, "config.json");
+const SERVICE = "SClient";
+
+const SECURE_KEYS = [
+  "integrations.listenbrainz.token",
+  "integrations.lastfm.api_key",
+  "integrations.lastfm.secret",
+  "integrations.lastfm.session_key",
+];
 
 if (!fs.existsSync(DIR)) fs.mkdirSync(DIR, { recursive: true });
 
@@ -14,6 +23,34 @@ if (fs.existsSync(FILE)) {
     store = JSON.parse(fs.readFileSync(FILE, "utf8"));
   } catch (e) {
     console.error("[SClient] Failed to parse config.json, starting fresh.");
+  }
+}
+
+const secureCache = {};
+
+async function initSecure() {
+  for (const key of SECURE_KEYS) {
+    try {
+      const fromKeychain = await keytar.getPassword(SERVICE, key);
+      if (fromKeychain !== null) {
+        secureCache[key] = fromKeychain;
+        continue;
+      }
+    } catch (e) {
+      console.error("[SClient] keytar read failed:", key, e);
+    }
+
+    const raw = resolvePath(key);
+    if (raw !== undefined && raw !== null && raw !== "") {
+      secureCache[key] = raw;
+      try {
+        await keytar.setPassword(SERVICE, key, raw);
+        assignPath(key, undefined);
+        save();
+      } catch (e) {
+        console.error("[SClient] keytar migrate failed:", key, e);
+      }
+    }
   }
 }
 
@@ -56,29 +93,19 @@ function isEnabled(key) {
 }
 
 function getSecure(key, fallback = "") {
-  const raw = resolvePath(key);
-  if (raw === undefined || raw === null) return fallback;
-  try {
-    if (safeStorage.isEncryptionAvailable()) {
-      return safeStorage.decryptString(Buffer.from(raw, "base64"));
-    }
-    return raw;
-  } catch (e) {
-    console.error("[SClient] Failed to decrypt:", key, e);
-    return fallback;
-  }
+  const val = secureCache[key];
+  return val !== undefined && val !== null && val !== "" ? val : fallback;
 }
 
 function setSecure(key, val) {
-  try {
-    if (safeStorage.isEncryptionAvailable()) {
-      assignPath(key, safeStorage.encryptString(val).toString("base64"));
-    } else {
-      assignPath(key, val);
-    }
-    save();
-  } catch (e) {
-    console.error("[SClient] Failed to encrypt:", key, e);
+  if (val === "" || val === null || val === undefined) {
+    delete secureCache[key];
+    keytar.deletePassword(SERVICE, key).catch(() => {});
+  } else {
+    secureCache[key] = val;
+    keytar.setPassword(SERVICE, key, val).catch((e) => {
+      console.error("[SClient] keytar write failed:", key, e);
+    });
   }
 }
 
@@ -153,6 +180,7 @@ module.exports = {
   getFile,
   setFile,
   isEnabled,
+  initSecure,
   getActiveAccount,
   setActiveAccount,
   buildConfigPayload: buildPayload,

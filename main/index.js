@@ -165,6 +165,7 @@ try {
 
 app.whenReady().then(async () => {
   if (!gotSingleInstanceLock) return;
+  await config.initSecure();
   console.log(`[SClient] Starting v${app.getVersion()}...`);
   await components.whenReady();
 
