@@ -646,7 +646,7 @@ function applyLayoutFixes() {
 }
 
 function applyCollapsibleSidebar() {
-  const bgStyle = customBgColorOn ? bgColor : "var(--surface-color, var(--sc-bg-surface))";
+  const bgStyle = "var(--surface-color, var(--sc-bg-surface))";
   injectStyle(
     "sclient-collapsible-sidebar",
     `
@@ -661,14 +661,14 @@ function applyCollapsibleSidebar() {
       padding-top: 20px !important;
     }
     body.sclient-sidebar-open .l-sidebar-right { right: 0 !important; }
-    #sclient-sidebar-toggle { display: none !important; top: 60px; }
+    #sclient-sidebar-toggle { display: none !important; top: 60px; right: 15px !important; }
     body:has(.l-sidebar-right) #sclient-sidebar-toggle { display: flex !important; }
   `
   );
 }
 
 function injectFloatingButtonStyles() {
-  const bgStyle = customBgColorOn ? bgColor : "var(--sc-bg-elevated)";
+  const bgStyle = "var(--sc-bg-elevated)";
   injectStyle(
     "sclient-floating-btn-styles",
     `

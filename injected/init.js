@@ -48,7 +48,6 @@ function injectSidebarToggle() {
     document.body.classList.toggle("sclient-sidebar-open");
     const open = document.body.classList.contains("sclient-sidebar-open");
     btn.classList.toggle("active", open);
-    btn.style.right = open ? "360px" : "20px";
     btn.innerHTML = open ? openIcon : closeIcon;
   });
 
