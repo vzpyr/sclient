@@ -122,6 +122,7 @@ function createWindow() {
       "stats.js",
       "playlists.js",
       "settings.js",
+      "contextmenu.js",
       "init.js",
     ];
 

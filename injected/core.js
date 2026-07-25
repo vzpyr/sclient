@@ -661,7 +661,7 @@ function applyCollapsibleSidebar() {
       padding-top: 20px !important;
     }
     body.sclient-sidebar-open .l-sidebar-right { right: 0 !important; }
-    #sclient-sidebar-toggle { display: none !important; top: 60px; right: 15px !important; }
+    #sclient-sidebar-toggle { display: none !important; top: 60px; right: 15px; }
     body:has(.l-sidebar-right) #sclient-sidebar-toggle { display: flex !important; }
   `
   );
@@ -673,7 +673,7 @@ function injectFloatingButtonStyles() {
     "sclient-floating-btn-styles",
     `
     .sclient-floating-btn {
-      position: fixed; right: 20px; z-index: 101;
+      position: fixed; right: 15px; z-index: 101;
       background: ${bgStyle};
       color: var(--sc-text-main); border: 1px solid var(--sc-border) !important;
       border-radius: 50%; width: 40px; height: 40px;

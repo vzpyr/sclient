@@ -222,7 +222,7 @@ function createOverlay() {
     { label: "Enhanced Header", id: "enhanced-header" },
     { label: "Collapsible Sidebar", id: "collapsible-sidebar" },
     { label: "Discord Rich Presence", id: "rpc" },
-    { label: "System Tray (Run in background)", id: "tray" },
+    { label: "Run in System Tray", id: "tray" },
     { label: "Adblocker", id: "adblock" },
     { label: "Lazy Scroll Button", id: "lazy-scroll" },
     { label: "No Window Decorations", id: "decorations" },

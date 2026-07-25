@@ -2,7 +2,7 @@ const crypto = require("crypto");
 const fetch = require("cross-fetch");
 const path = require("path");
 const fs = require("fs");
-const { BrowserWindow, dialog } = require("electron");
+const { BrowserWindow, dialog, clipboard } = require("electron");
 const config = require("./config");
 const rpc = require("./discord-rpc");
 const stats = require("./stats");
@@ -54,6 +54,34 @@ function register({ ipcMain, session, app }) {
       enabled: config.isEnabled("features.region_bypass"),
       url: config.get("features.proxy_url"),
     };
+  });
+
+  ipcMain.handle("clipboard_readText", () => {
+    return clipboard.readText() || "";
+  });
+
+  ipcMain.handle("clipboard_writeText", (_e, args) => {
+    clipboard.writeText(args.text || "");
+  });
+
+  ipcMain.handle("webcontents_paste", (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    if (w && !w.isDestroyed()) w.webContents.paste();
+  });
+
+  ipcMain.handle("webcontents_copy", (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    if (w && !w.isDestroyed()) w.webContents.copy();
+  });
+
+  ipcMain.handle("webcontents_cut", (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    if (w && !w.isDestroyed()) w.webContents.cut();
+  });
+
+  ipcMain.handle("webcontents_selectAll", (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender);
+    if (w && !w.isDestroyed()) w.webContents.selectAll();
   });
 
   ipcMain.handle("get_custom_files", () => config.buildConfigPayload());
