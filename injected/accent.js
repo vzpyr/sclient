@@ -11,6 +11,10 @@ function applyCustomAccentColor(newColor) {
   const rgbVal = hexToRgb(newColor);
 
   async function processCss(cssText, originalNode) {
+    const selCss = `::selection { background: ${newColor} !important; color: #fff !important; }`;
+    if (typeof injectStyle === "function") injectStyle("sclient-selection-accent", selCss);
+    if (typeof injectToIframes === "function") injectToIframes("sclient-selection-accent", selCss);
+
     if (!cssText) return;
     let modified = false;
     let newText = cssText;

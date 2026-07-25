@@ -53,6 +53,58 @@
     img.src = url;
     img.style.cssText = 'max-width:90vw;max-height:90vh;border-radius:var(--sc-radius-lg);box-shadow:0 10px 40px rgba(0,0,0,0.5);object-fit:contain;transform:scale(0.95);transition:transform 0.2s ease;';
     overlay.appendChild(img);
+
+    var btnContainer = doc.createElement("div");
+    btnContainer.style.cssText = "position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;";
+
+    var copyBtn = doc.createElement("button");
+    copyBtn.className = "sclient-floating-btn";
+    copyBtn.style.cssText = "position: static !important; backdrop-filter: blur(4px);";
+    copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+    copyBtn.onclick = function(ev) {
+      ev.stopPropagation();
+      fetch(url).then(function(r) { return r.blob(); }).then(function(blob) {
+        var canvas = doc.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        var imgObj = new Image();
+        imgObj.onload = function() {
+          canvas.width = imgObj.width;
+          canvas.height = imgObj.height;
+          ctx.drawImage(imgObj, 0, 0);
+          canvas.toBlob(function(pngBlob) {
+            var item = {};
+            item[pngBlob.type] = pngBlob;
+            navigator.clipboard.write([new ClipboardItem(item)])
+              .then(function() { showToast("Image copied to clipboard."); })
+              .catch(function(e) { showToast("Copy failed: " + e.message); });
+          }, "image/png");
+        };
+        imgObj.src = URL.createObjectURL(blob);
+      }).catch(function(e) { showToast("Fetch failed: " + e.message); });
+    };
+
+    var saveBtn = doc.createElement("button");
+    saveBtn.className = "sclient-floating-btn";
+    saveBtn.style.cssText = "position: static !important; backdrop-filter: blur(4px);";
+    saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`;
+    saveBtn.onclick = function(ev) {
+      ev.stopPropagation();
+      fetch(url).then(function(r) { return r.blob(); }).then(function(blob) {
+        var objUrl = URL.createObjectURL(blob);
+        var a = doc.createElement("a");
+        a.href = objUrl;
+        a.download = url.split('/').pop().split('?')[0] || "soundcloud_image.jpg";
+        doc.body.appendChild(a);
+        a.click();
+        doc.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(objUrl); }, 1000);
+      }).catch(function(e) { showToast("Download failed: " + e.message); });
+    };
+
+    btnContainer.appendChild(copyBtn);
+    btnContainer.appendChild(saveBtn);
+    overlay.appendChild(btnContainer);
+
     doc.body.appendChild(overlay);
     requestAnimationFrame(function() {
       overlay.style.opacity = '1';
@@ -121,6 +173,7 @@
 
     var imageEl = null;
     try { imageEl = findImageEl(doc, e.target); } catch(err) { imageEl = null; }
+    if (e.target.closest('.sc-modal-backdrop')) { imageEl = null; }
 
     var win = doc.defaultView || doc.parentWindow;
     var sel = win.getSelection().toString().trim();
