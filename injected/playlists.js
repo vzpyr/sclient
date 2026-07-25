@@ -431,7 +431,7 @@ function pmRenderDetailHeader() {
         </div>
       </div>
       <div class="pm-d-toolbar">
-        <input id="pm-track-filter" class="sc-input" style="max-width:260px;" type="text" placeholder="Filter tracks by title or artist…" value="${_pmState.trackFilterText.replace(/"/g, "&quot;")}">
+        <input id="pm-track-filter" class="sclient-input" style="max-width:260px;" type="text" placeholder="Filter tracks by title or artist…" value="${_pmState.trackFilterText.replace(/"/g, "&quot;")}">
         <div style="flex:1;"></div>
         <button id="pm-select-all" class="sc-btn">Select all</button>
         <button id="pm-clear-sel" class="sc-btn">Clear</button>
@@ -1089,7 +1089,7 @@ function createPlaylistManagerOverlay() {
       <aside class="pm-sidebar">
         <div class="pm-sidebar-tools">
           <div style="display:flex;gap:8px;">
-            <input id="pm-filter" class="sc-input" placeholder="Filter playlists…" type="text">
+            <input id="pm-filter" class="sclient-input" placeholder="Filter playlists…" type="text">
           </div>
           <div style="display:flex;gap:8px;">
             <select id="pm-sort" class="sc-select" style="flex:1;">
@@ -1210,10 +1210,10 @@ function pmOpenEditor() {
     </div>
     <div style="padding:20px;overflow-y:auto;">
       <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Title</label>
-      <input id="pm-ed-title" class="sc-input" type="text" style="margin-bottom:14px;" value="${(pl.title || "").replace(/"/g, "&quot;")}">
+      <input id="pm-ed-title" class="sclient-input" type="text" style="margin-bottom:14px;" value="${(pl.title || "").replace(/"/g, "&quot;")}">
 
       <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Description</label>
-      <textarea id="pm-ed-description" class="sc-input" style="margin-bottom:14px;min-height:70px;resize:vertical;font-family:Inter,sans-serif;" placeholder="Add a description…">${(pl.description || "").replace(/</g, "&lt;")}</textarea>
+      <textarea id="pm-ed-description" class="sclient-input" style="margin-bottom:14px;min-height:70px;resize:vertical;font-family:Inter,sans-serif;" placeholder="Add a description…">${(pl.description || "").replace(/</g, "&lt;")}</textarea>
 
       <div id="pm-ed-adv-toggle" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;color:${accent};font-size:13px;font-weight:600;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);">
         <span>▸ Advanced details</span>
@@ -1229,15 +1229,15 @@ function pmOpenEditor() {
         <div style="margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Tags (press Enter/space/comma to add)</label>
           <div id="pm-ed-tags" class="pm-tag-chips"></div>
-          <input id="pm-ed-tag-input" class="sc-input" style="margin-top:6px;" type="text" placeholder="tag">
+          <input id="pm-ed-tag-input" class="sclient-input" style="margin-top:6px;" type="text" placeholder="tag">
         </div>
         <div style="margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Genre</label>
-          <input id="pm-ed-genre" class="sc-input" type="text" value="${(pl.genre || "").replace(/"/g, "&quot;")}">
+          <input id="pm-ed-genre" class="sclient-input" type="text" value="${(pl.genre || "").replace(/"/g, "&quot;")}">
         </div>
         <div style="margin-bottom:14px;">
           <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Label name</label>
-          <input id="pm-ed-label" class="sc-input" type="text" value="${(pl.label_name || "").replace(/"/g, "&quot;")}">
+          <input id="pm-ed-label" class="sclient-input" type="text" value="${(pl.label_name || "").replace(/"/g, "&quot;")}">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">License</label>
@@ -1247,13 +1247,13 @@ function pmOpenEditor() {
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Release date</label>
-            <input id="pm-ed-release" class="sc-input" type="date" value="${releaseDate}"></div>
+            <input id="pm-ed-release" class="sclient-input" type="date" value="${releaseDate}"></div>
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Embeddable by</label>
             <select id="pm-ed-embed" class="sc-select" style="width:100%;">${PM_EMBEDDABLE.map((e) => `<option value="${e}" ${pl.embeddable_by === e ? "selected" : ""}>${e}</option>`).join("")}</select></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase URL</label>
-            <input id="pm-ed-purl" class="sc-input" type="text" value="${(pl.purchase_url || "").replace(/"/g, "&quot;")}"></div>
+            <input id="pm-ed-purl" class="sclient-input" type="text" value="${(pl.purchase_url || "").replace(/"/g, "&quot;")}"></div>
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase title</label>
         </label>
       </div>
@@ -1271,7 +1271,7 @@ function pmOpenEditor() {
       <div id="pm-ed-secret-box" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;font-size:12px;">
         <span style="color:#aaa;">Secret Token:</span> <code id="pm-ed-secret-val" style="color:var(--sc-accent);">${pl.secret_token || ""}</code>
         <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
-          <input id="pm-ed-secret-url" class="sc-input" type="text" readonly style="font-size:11px;">
+          <input id="pm-ed-secret-url" class="sclient-input" type="text" readonly style="font-size:11px;">
           <button id="pm-ed-secret-copy" class="sc-btn" type="button">Copy</button>
         </div>
       </div>
@@ -1820,7 +1820,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
   dlg.innerHTML = `
     <div style="padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;gap:16px;">
       <div id="pm-sp-head" style="font-size:16px;font-weight:600;flex:1;">Spotify CSV Import · resolved 0 / ${resumedState ? resumedState.total : spotifyRows.length}</div>
-      <input type="text" id="pm-sp-title" class="sc-input" value="Spotify Import" style="width:200px;font-size:14px;padding:6px 10px;" />
+      <input type="text" id="pm-sp-title" class="sclient-input" value="Spotify Import" style="width:200px;font-size:14px;padding:6px 10px;" />
       <select id="pm-sp-sharing" class="sc-select" style="width:100px;font-size:14px;padding:6px 10px;">
         <option value="private">Private</option>
         <option value="public">Public</option>
@@ -2076,7 +2076,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         searchUI.style.cssText = "display:flex;gap:4px;margin-top:6px;";
         const qInput = document.createElement("input");
         qInput.type = "text";
-        qInput.className = "sc-input";
+        qInput.className = "sclient-input";
         qInput.value = `${r.original.artists[0] || ""} ${r.original.title}`.trim();
         const goBtn = document.createElement("button");
         goBtn.className = "sc-btn";

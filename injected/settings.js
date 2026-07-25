@@ -266,7 +266,7 @@ function createOverlay() {
         <span style="font-size:14px;font-weight:500;">Custom Accent Color</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-accent-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-accent-color-text" class="sc-input" style="width:60px;padding:4px 6px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
+          <input type="text" id="sclient-accent-color-text" class="sclient-input" style="width:60px;padding:4px 6px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
           ${toggleLabelHtml("sclient-accent-toggle", "sclient-toggle-bg-accent", "sclient-toggle-slider-accent")}
         </div>
       </div>
@@ -275,7 +275,7 @@ function createOverlay() {
         <span style="font-size:14px;font-weight:500;">Custom Background Color (Dark Mode only)</span>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="color" id="sclient-bg-color-picker" style="width:24px;height:24px;padding:0;border:none;border-radius:4px;cursor:pointer;background:transparent;">
-          <input type="text" id="sclient-bg-color-text" class="sc-input" style="width:60px;padding:4px 6px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
+          <input type="text" id="sclient-bg-color-text" class="sclient-input" style="width:60px;padding:4px 6px;font-family:monospace;font-size:12px;text-transform:uppercase;text-align:center;">
           ${toggleLabelHtml("sclient-bg-color-toggle", "sclient-toggle-bg-bg-color", "sclient-toggle-slider-bg-color")}
         </div>
       </div>
@@ -283,7 +283,7 @@ function createOverlay() {
       <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Custom Font</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="sclient-custom-font-text" class="sc-input" placeholder="e.g. Roboto" style="width:140px;font-family:monospace;font-size:12px;">
+          <input type="text" id="sclient-custom-font-text" class="sclient-input" placeholder="e.g. Roboto" style="width:140px;font-family:monospace;font-size:12px;">
           ${toggleLabelHtml("sclient-custom-font-toggle", "sclient-toggle-bg-custom-font", "sclient-toggle-slider-custom-font")}
         </div>
       </div>
@@ -293,7 +293,7 @@ function createOverlay() {
       <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Wide Layout</span>
         <div style="display:flex;align-items:center;gap:10px;">
-          <input type="text" id="sclient-wide-layout-width" class="sc-input" placeholder="1200" style="width:60px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
+          <input type="text" id="sclient-wide-layout-width" class="sclient-input" placeholder="1200" style="width:60px;font-family:monospace;font-size:12px;text-align:center;" title="Max width in px (min 960)">
           ${toggleLabelHtml("sclient-wide-layout-toggle", "sclient-toggle-bg-wide-layout", "sclient-toggle-slider-wide-layout")}
         </div>
       </div>
@@ -306,7 +306,7 @@ function createOverlay() {
             ${toggleLabelHtml("sclient-listenbrainz-toggle", "sclient-toggle-bg-listenbrainz", "sclient-toggle-slider-listenbrainz")}
           </div>
         </div>
-        <input type="password" id="sclient-listenbrainz-token-input" class="sc-input" placeholder="Enter ListenBrainz User Token...">
+        <input type="password" id="sclient-listenbrainz-token-input" class="sclient-input" placeholder="Enter ListenBrainz User Token...">
         <div style="margin-top:5px;font-size:11px;color:#888;"><a href="https://listenbrainz.org/settings/" target="_blank" style="color:#aaa;text-decoration:underline;">listenbrainz.org/settings</a></div>
       </div>
 
@@ -318,8 +318,8 @@ function createOverlay() {
             ${toggleLabelHtml("sclient-lastfm-toggle", "sclient-toggle-bg-lastfm", "sclient-toggle-slider-lastfm")}
           </div>
         </div>
-        <input type="text" id="sclient-lastfm-apikey-input" class="sc-input" placeholder="API Key" style="margin-bottom:6px;">
-        <input type="password" id="sclient-lastfm-secret-input" class="sc-input" placeholder="Shared Secret" style="margin-bottom:8px;">
+        <input type="text" id="sclient-lastfm-apikey-input" class="sclient-input" placeholder="API Key" style="margin-bottom:6px;">
+        <input type="password" id="sclient-lastfm-secret-input" class="sclient-input" placeholder="Shared Secret" style="margin-bottom:8px;">
         <div style="display:flex;gap:8px;align-items:center;">
           <button id="sclient-lastfm-connect-btn" class="sc-btn sc-btn-primary" style="flex:1;">Connect Last.fm Account</button>
           <button id="sclient-lastfm-disconnect-btn" class="sc-btn sc-btn-danger" style="display:none;">Disconnect</button>
@@ -402,7 +402,7 @@ function createOverlay() {
         <span style="font-size:16px;font-weight:bold;margin-bottom:15px;display:block;">Accounts</span>
         <div id="sclient-accounts-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;"></div>
         <div style="display:flex;gap:8px;">
-          <input type="text" id="sclient-new-account-name" class="sc-input" placeholder="New Profile Name" style="flex:1;height:auto;padding:8px 10px;font-family:monospace;">
+          <input type="text" id="sclient-new-account-name" class="sclient-input" placeholder="New Profile Name" style="flex:1;height:auto;padding:8px 10px;font-family:monospace;">
           <button id="sclient-add-account-btn" class="sc-btn sc-btn-primary">+ Add Account</button>
         </div>
       </div>

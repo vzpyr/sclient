@@ -264,7 +264,7 @@ body.theme-light {
   transform: scale(0.95);
   transition: transform 0.2s ease;
 }
-.sc-input {
+.sclient-input {
   width: 100%;
   box-sizing: border-box;
   background: var(--sc-bg-surface);
@@ -278,7 +278,7 @@ body.theme-light {
   outline: none;
   transition: border-color 0.2s ease;
 }
-.sc-input:focus {
+.sclient-input:focus {
   border-color: var(--sc-accent);
 }
 `;

@@ -287,8 +287,8 @@ function renderManual(artist, title) {
     <div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>
     <div style="margin-top: 15px; text-align: center;">
       <div style="margin-bottom: 8px; font-size: 12px; color: #aaa;">Try manually:</div>
-      <input type="text" id="sclient-lyrics-manual-artist" class="sc-input" placeholder="Artist" value="${esc(artist)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sc-text-sm);">
-      <input type="text" id="sclient-lyrics-manual-title" class="sc-input" placeholder="Title" value="${esc(title)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sc-text-sm);">
+      <input type="text" id="sclient-lyrics-manual-artist" class="sclient-input" placeholder="Artist" value="${esc(artist)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sc-text-sm);">
+      <input type="text" id="sclient-lyrics-manual-title" class="sclient-input" placeholder="Title" value="${esc(title)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sc-text-sm);">
       <button id="sclient-lyrics-manual-search" class="sc-btn sc-btn-primary" style="width: 90%;">Search</button>
     </div>
   `;
