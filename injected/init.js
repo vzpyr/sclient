@@ -37,9 +37,9 @@ function injectSidebarToggle() {
   btn.title = "Toggle Sidebar";
 
   const openIcon =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>';
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-open-icon lucide-panel-right-open"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>';
   const closeIcon =
-    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m10 15-3-3 3-3"/></svg>';
+    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-panel-right-close-icon lucide-panel-right-close"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/><path d="m8 9 3 3-3 3"/></svg>';
 
   btn.innerHTML = closeIcon;
 
@@ -260,7 +260,7 @@ function applyFeatureStyles() {
     injectStyle(
       "sclient-header-reorder",
       `
-      .header__right { display: flex !important; align-items: center !important; }
+      .header__right { display: flex !important; }
       .header__userNav { display: contents !important; }
       .header__upsellWrapper { order: 1 !important; }
       .header__forArtistsButton { order: 2 !important; margin-right: 0 !important; }
@@ -272,7 +272,7 @@ function applyFeatureStyles() {
       .header__userNavUsernameButton { order: 7 !important; margin-left: 8px !important; margin-right: 8px !important; display: flex !important; align-items: center !important; }
       .header__right > ul:has(.header__moreButton:not(#sclient-settings-btn)) { order: 8 !important; }
       .headerSearch__input { border-radius: 50px !important; }
-      .header__search .headerSearch { margin: 0 8px !important; }
+      .header__search { align-self: center !important; margin: 0 8px !important; }
     `
     );
   }

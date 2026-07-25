@@ -136,7 +136,9 @@ function createLyricsSidebar() {
            <span id="sclient-lyrics-offset-val" style="min-width: 32px; text-align: right;">0.0s</span>
            <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0" style="width: 70px; accent-color: var(--sc-accent); cursor: pointer;">
         </div>
-        <button id="sclient-lyrics-close-btn" class="sc-btn sc-btn-ghost" style="padding: 4px 8px; font-size: var(--sc-text-xl);">&times;</button>
+        <button id="sclient-lyrics-close-btn" class="sc-btn sc-btn-ghost" title="Close" style="padding:4px; display:flex; align-items:center; justify-content:center;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
       </div>
     </div>
     <div id="sclient-lyrics-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; font-size: var(--sc-text-base); line-height: 1.6; white-space: pre-wrap; color: var(--sc-text-main);">

@@ -2006,7 +2006,6 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       } else {
         const deltaS = (deltaMs / 1000).toFixed(1);
         deltaStr = deltaMs > 0 ? `+${deltaS}s` : `${deltaS}s`;
-        if (Math.abs(deltaMs) > 2000) deltaStr += " ⚠";
       }
       matchMeta = `${pmFmtDur(r.match.duration)} · ${deltaStr}`;
       if (r.match.artwork_url) thumb = r.match.artwork_url;
