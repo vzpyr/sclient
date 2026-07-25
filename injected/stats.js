@@ -13,8 +13,10 @@ function fmtDuration(ms) {
   const s = Math.floor(ms / 1000);
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${m}m ${sec}s`;
+  if (m > 0) return `${m}m ${sec}s`;
+  return `${sec}s`;
 }
 
 function fmtCount(n) {
@@ -116,10 +118,25 @@ function setupStatsTracking() {
 
   async function record(t, ts) {
     try {
+      const artist = getArtistFromTrack(t);
+      const publisher =
+        (t.publisher_metadata && (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
+        (t.user && (t.user.username || t.user.full_name)) ||
+        t.label_name ||
+        (t.publisher_metadata && t.publisher_metadata.artist) ||
+        null;
+        
       await sendBridge("stats_record_listen", {
         played_at: ts,
         track_id: t.id,
-        track: t,
+        track: {
+          id: t.id,
+          title: t.title || null,
+          genre: getGenre(t),
+          duration: t.duration || 0,
+          artist: artist !== "Unknown" ? artist : null,
+          publisher: publisher
+        },
       });
       setStatus("Recorded!", "#5f5");
     } catch (e) {
@@ -149,7 +166,7 @@ function setupStatsTracking() {
 
     if (trackData && evt.isPlaying) {
       if (!hasRecorded && evt.timestamp - startTime >= threshold) {
-        record(trackData, Math.floor(startTime / 1000));
+        record(trackData, Date.now());
         hasRecorded = true;
       } else if (!hasRecorded) {
         setStatus("Listening...", "#789cff");

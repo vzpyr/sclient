@@ -347,6 +347,7 @@ function sendBridge(cmd, args = {}) {
 }
 
 function getArtistFromTrack(track) {
+  if (track.artist) return track.artist;
   if (
     track.publisher_metadata &&
     track.publisher_metadata.artist &&
