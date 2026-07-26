@@ -113,6 +113,10 @@
     "chart.js": "^4.5.1",
     "cross-fetch": "^4.1.0",
     "keytar": "^7.9.0",
+    "kuromoji": "^0.1.2",
+    "kuroshiro": "^1.2.0",
+    "pinyin": "^4.0.0",
+    "transliteration": "^2.6.1",
     "youtube-dl-exec": "^3.1.9"
   },
   "allowScripts": {

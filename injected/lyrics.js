@@ -10,6 +10,7 @@ let currentDuration = 0;
 let isPlaying = false;
 let lastUpdateTime = Date.now();
 let currentFetchAbort = null;
+let romanizeEnabled = false;
 
 if (!document.getElementById("sclient-lyrics-style")) {
   const style = document.createElement("style");
@@ -22,6 +23,16 @@ if (!document.getElementById("sclient-lyrics-style")) {
 		}
 		.sclient-lyric-word.sung {
 			color: var(--sclient-accent, #f50) !important;
+		}
+		#sclient-lyrics-romanize-btn {
+			color: rgba(255,255,255,0.5);
+			background: transparent;
+		}
+		#sclient-lyrics-romanize-btn:hover {
+			background: rgba(255,255,255,0.1);
+		}
+		#sclient-lyrics-romanize-btn.active {
+			color: var(--sc-accent);
 		}
 	`;
   document.head.appendChild(style);
@@ -131,7 +142,10 @@ function createLyricsSidebar() {
   sidebar.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--sc-border); padding-bottom: 10px;">
       <h3 style="margin: 0; font-size: var(--sc-text-xl); font-weight: 600; color: var(--sc-accent);">Lyrics</h3>
-      <div style="display: flex; align-items: center; gap: 15px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button id="sclient-lyrics-romanize-btn" title="Romanize lyrics" style="display:none; border: none; border-radius: 50%; width: 28px; height: 28px; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.18s;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+        </button>
         <div id="sclient-lyrics-offset-container" style="display: none; align-items: center; gap: 8px; font-size: var(--sc-text-sm); color: var(--sc-text-muted);">
            <span id="sclient-lyrics-offset-val" style="min-width: 32px; text-align: right;">0.0s</span>
            <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0" style="width: 70px; accent-color: var(--sc-accent); cursor: pointer;">
@@ -159,6 +173,69 @@ function createLyricsSidebar() {
       ? lastKnownPosition + (Date.now() - lastUpdateTime) / 1000
       : lastKnownPosition;
     updateLyricsUI(currentPos);
+  });
+
+  document.getElementById("sclient-lyrics-romanize-btn").addEventListener("click", async () => {
+    romanizeEnabled = !romanizeEnabled;
+    document.getElementById("sclient-lyrics-romanize-btn").classList.toggle("active", romanizeEnabled);
+    await romanizeAllLines();
+  });
+}
+
+async function romanizeAllLines() {
+  const content = document.getElementById("sclient-lyrics-content");
+  if (!content) return;
+  const lineEls = content.querySelectorAll(".sclient-lyric-line");
+  if (!lineEls.length) return;
+
+  if (!romanizeEnabled) {
+    lineEls.forEach((el) => {
+      const wordEls = el.querySelectorAll(".sclient-lyric-word");
+      if (wordEls.length > 0) {
+        wordEls.forEach((wEl) => {
+          const orig = wEl.getAttribute("data-orig-text");
+          if (orig != null) { wEl.textContent = orig; wEl.removeAttribute("data-orig-text"); }
+        });
+      } else {
+        const origText = el.getAttribute("data-orig-text");
+        if (origText != null) {
+          el.textContent = origText;
+          el.removeAttribute("data-orig-text");
+        }
+      }
+    });
+    return;
+  }
+
+  const items = [];
+  lineEls.forEach((el) => {
+    const wordEls = el.querySelectorAll(".sclient-lyric-word");
+    if (wordEls.length > 0) {
+      wordEls.forEach((wEl) => {
+        const orig = wEl.getAttribute("data-orig-text") != null ? wEl.getAttribute("data-orig-text") : wEl.textContent;
+        wEl.setAttribute("data-orig-text", orig);
+        items.push({ wEl, text: orig });
+      });
+    } else {
+      const origText = el.getAttribute("data-orig-text") != null ? el.getAttribute("data-orig-text") : el.textContent;
+      el.setAttribute("data-orig-text", origText);
+      items.push({ el, text: origText });
+    }
+  });
+
+  if (!items.length) return;
+
+  let results;
+  try {
+    results = await sendBridge("romanize", { texts: items.map((it) => it.text) });
+  } catch (e) {
+    results = items.map((it) => it.text);
+  }
+
+  items.forEach((it, i) => {
+    const out = (results && results[i] != null) ? results[i] : it.text;
+    if (it.wEl) it.wEl.textContent = out;
+    else it.el.textContent = out;
   });
 }
 
@@ -234,6 +311,8 @@ async function doFetch(artist, title) {
           document.getElementById("sclient-lyrics-offset-slider").value = 0;
           document.getElementById("sclient-lyrics-offset-val").innerText = "0.0s";
         }
+        const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
+        if (rBtn) rBtn.style.display = "flex";
         let html = `<div id="sclient-lyrics-lines" style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 50vh 15px 50vh 15px;">`;
         for (const line of data.lines) {
           if (line.start === undefined || line.end === undefined) continue;
@@ -258,15 +337,20 @@ async function doFetch(artist, title) {
             updateLyricsUI(targetPos);
           }
         });
+        if (romanizeEnabled) romanizeAllLines();
       } else if (data.lines && data.lines.length > 0) {
         const linesHtml = data.lines
           .map((l) => `<div style="font-size: 16px; color: var(--sc-text-main);">${esc((l.text || "").trim() || " ")}</div>`)
           .join("");
         content.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">${linesHtml}</div>`;
         if (offsetContainer) offsetContainer.style.display = "none";
+        const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
+        if (rBtn) rBtn.style.display = "none";
       } else {
         renderManual(artist, title);
         if (offsetContainer) offsetContainer.style.display = "none";
+        const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
+        if (rBtn) rBtn.style.display = "none";
       }
     }
   } catch (e) {
@@ -274,6 +358,8 @@ async function doFetch(artist, title) {
     if (content && lyricsTrack === key) {
       const offsetContainer = document.getElementById("sclient-lyrics-offset-container");
       if (offsetContainer) offsetContainer.style.display = "none";
+      const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
+      if (rBtn) rBtn.style.display = "none";
       renderManual(artist, title);
     }
   }

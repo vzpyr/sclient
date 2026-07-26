@@ -6,6 +6,7 @@ const { BrowserWindow, dialog, clipboard } = require("electron");
 const config = require("./config");
 const rpc = require("./discord-rpc");
 const stats = require("./stats");
+const romanize = require("./romanize");
 
 function lastfmSig(params, secret) {
   const str =
@@ -394,6 +395,11 @@ function register({ ipcMain, session, app }) {
     await session.fromPartition(partitionName(config.getActiveAccount())).clearStorageData();
     app.relaunch({ args: [path.join(__dirname, "..")] });
     app.exit(0);
+  });
+
+  ipcMain.handle("romanize", async (_e, args) => {
+    const texts = (args && args.texts) || [];
+    return romanize.romanizeLines(texts);
   });
 }
 

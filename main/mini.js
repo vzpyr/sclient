@@ -1,4 +1,5 @@
 const { ipcRenderer } = require("electron");
+const { romanizeLines } = require("./romanize");
 
 const $ = (id) => document.getElementById(id);
 
@@ -168,6 +169,7 @@ let lyricsOffset = 0;
 let currentHighlightedIndex = -1;
 let currentArtist = "";
 let currentTitle = "";
+let romanizeEnabled = false;
 
 $("btn-playpause").addEventListener("click", () => {
   isPlayingLocal = !isPlayingLocal;
@@ -323,6 +325,78 @@ ipcRenderer.on("mini_update", (_e, data) => {
   }
 });
 
+async function romanizeAllLines() {
+  if (!lyricsOpenLocal || !currentSyncedLyrics.length) return;
+  const content = document.getElementById("lyrics-content");
+  if (!content) return;
+
+  const lineEls = content.querySelectorAll(".lyric-line");
+  if (!lineEls.length) return;
+
+  if (!romanizeEnabled) {
+    lineEls.forEach((el) => {
+      const wordEls = el.querySelectorAll(".lyric-word");
+      if (wordEls.length > 0) {
+        wordEls.forEach((wEl) => {
+          const orig = wEl.getAttribute("data-orig-text");
+          if (orig != null) {
+            wEl.textContent = orig;
+            wEl.removeAttribute("data-orig-text");
+          }
+        });
+      } else {
+        const origText = el.getAttribute("data-orig-text");
+        if (origText != null) {
+          el.textContent = origText;
+          el.removeAttribute("data-orig-text");
+        }
+      }
+    });
+    return;
+  }
+
+  const items = [];
+  lineEls.forEach((el) => {
+    const wordEls = el.querySelectorAll(".lyric-word");
+    if (wordEls.length > 0) {
+      wordEls.forEach((wEl) => {
+        const orig = wEl.getAttribute("data-orig-text") != null
+          ? wEl.getAttribute("data-orig-text")
+          : wEl.textContent;
+        wEl.setAttribute("data-orig-text", orig);
+        items.push({ wEl, text: orig });
+      });
+    } else {
+      const origText = el.getAttribute("data-orig-text") != null
+        ? el.getAttribute("data-orig-text")
+        : el.textContent;
+      el.setAttribute("data-orig-text", origText);
+      items.push({ el, text: origText });
+    }
+  });
+
+  if (!items.length) return;
+
+  let results;
+  try {
+    results = await romanizeLines(items.map((it) => it.text));
+  } catch (e) {
+    results = items.map((it) => it.text);
+  }
+
+  items.forEach((it, i) => {
+    const out = results && results[i] != null ? results[i] : it.text;
+    if (it.wEl) it.wEl.textContent = out;
+    else it.el.textContent = out;
+  });
+}
+
+$("btn-romanize").addEventListener("click", async () => {
+  romanizeEnabled = !romanizeEnabled;
+  $("btn-romanize").classList.toggle("active", romanizeEnabled);
+  await romanizeAllLines();
+});
+
 function esc(str) {
   return String(str)
     .replace(/&/g, "&amp;")
@@ -418,6 +492,8 @@ async function fetchLyrics(artist, title) {
           updateLyricsUI(seekTo);
         });
       });
+
+      if (romanizeEnabled) romanizeAllLines();
     } else if (data.lines && data.lines.length > 0) {
       let html = `<div style="display:flex; flex-direction:column; gap:12px; padding: 0 10px 20vh 10px;">`;
       for (const line of data.lines)

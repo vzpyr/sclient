@@ -98,6 +98,25 @@
         accent-color: var(--accent);
         cursor: pointer;
       }
+      #btn-romanize {
+        display: none;
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(10px);
+        border-radius: 999px;
+      }
+      .top-right:has(#offset-controls.visible) #btn-romanize {
+        display: flex;
+      }
+      #btn-romanize.active {
+        color: var(--accent);
+      }
+      #btn-romanize svg {
+        width: 13px;
+        height: 13px;
+      }
 
       .window-controls {
         display: flex;
@@ -648,6 +667,9 @@
     <div id="bg"></div>
 
     <div class="top-right">
+      <button class="window-btn romanize-btn" id="btn-romanize" title="Romanize lyrics">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages-icon lucide-languages"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+      </button>
       <div class="offset-controls" id="offset-controls">
         <input type="range" id="offset-slider" class="offset-slider" min="-2" max="2" step="0.1" value="0" title="Lyrics timing offset">
         <span id="offset-val" class="offset-val">0.0s</span>
