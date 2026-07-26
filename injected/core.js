@@ -675,9 +675,7 @@ function applyCollapsibleSidebar() {
 
 function injectFloatingButtonStyles() {
   const bgStyle = "var(--sc-bg-elevated)";
-  injectStyle(
-    "sclient-floating-btn-styles",
-    `
+  const css = `
     .sclient-floating-btn {
       position: fixed; right: 15px; z-index: 101;
       background: ${bgStyle};
@@ -711,8 +709,9 @@ function injectFloatingButtonStyles() {
     .theme-dark body button.sclient-floating-btn.active svg {
       color: var(--sc-accent) !important; stroke: var(--sc-accent) !important;
     }
-  `
-  );
+  `;
+  injectStyle("sclient-floating-btn-styles", css);
+  injectToIframes("sclient-floating-btn-styles", css);
 }
 
 function setupLazyScroll() {
