@@ -46,6 +46,75 @@
     return url;
   }
 
+  function navigateToUrlModal(doc) {
+    var overlay = doc.createElement('div');
+    overlay.className = 'sc-modal-backdrop';
+
+    var modal = doc.createElement('div');
+    modal.className = 'sc-modal-surface';
+    modal.style.cssText = 'text-align:center;max-width:440px;';
+
+    var title = doc.createElement('div');
+    title.textContent = 'Navigate to URL';
+    title.className = 'sc-text-body';
+    title.style.cssText = 'font-weight:600;margin-bottom:16px;font-size:var(--sc-text-lg);';
+    modal.appendChild(title);
+
+    var input = doc.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Enter URL...';
+    input.style.cssText = 'width:100%;padding:10px 14px;border:1px solid var(--sc-border);border-radius:var(--sc-radius-lg);background:var(--sc-bg-surface);color:var(--sc-text-main);font-size:var(--sc-text-base);font-family:var(--sc-font-sans);outline:none;box-sizing:border-box;margin-bottom:16px;';
+    input.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter') go();
+    });
+    modal.appendChild(input);
+
+    var btnRow = doc.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:10px;justify-content:center;';
+
+    var cancelBtn = doc.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'sc-btn';
+    cancelBtn.onclick = close;
+    btnRow.appendChild(cancelBtn);
+
+    var goBtn = doc.createElement('button');
+    goBtn.textContent = 'Go';
+    goBtn.className = 'sc-btn sc-btn-primary';
+    btnRow.appendChild(goBtn);
+
+    modal.appendChild(btnRow);
+    overlay.appendChild(modal);
+    doc.body.appendChild(overlay);
+
+    function go() {
+      var url = input.value.trim();
+      if (!url) return;
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      close();
+      var win = doc.defaultView || doc.parentWindow;
+      win.location.href = url;
+    }
+
+    function close() {
+      overlay.style.opacity = '0';
+      modal.style.transform = 'scale(0.95)';
+      setTimeout(function() { overlay.remove(); }, 200);
+    }
+
+    goBtn.onclick = go;
+
+    overlay.addEventListener('click', function(ev) {
+      if (ev.target === overlay) close();
+    });
+
+    requestAnimationFrame(function() {
+      overlay.style.opacity = '1';
+      modal.style.transform = 'scale(1)';
+      input.focus();
+    });
+  }
+
   function viewImage(doc, url) {
     var overlay = doc.createElement('div');
     overlay.className = 'sc-modal-backdrop';
@@ -268,6 +337,10 @@
 
     items.push(buildItem('Copy URL', function() {
       writeClipboard(win.location.href);
+    }));
+
+    items.push(buildItem('Navigate to URL', function() {
+      navigateToUrlModal(doc);
     }));
 
     items.push(buildItem('Reload', function() {
