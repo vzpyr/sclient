@@ -23,7 +23,7 @@ SClient adds several enhancements and quality of life features to the standard w
 
 - **Playlist Manager**: Manage (import, export, re-order etc.) your playlists in a custom, dedicated overlay.
 - **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`.
-- **Lyrics Integration**: Access synced lyrics in a sidebar (or mini player) for the current song directly from the playback bar (provided by `lrcmux.dev`).
+- **Lyrics Integration**: Access synced lyrics in a sidebar (or mini player) for the current song directly from the playback bar with romanization (provided by `lrcmux.dev`).
 - **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Sensitive information is securely stored using safeStorage.
 - **Discord Rich Presence**: Share what you are currently listening to on Discord.
 - **Listening Stats & Analytics**: Track your listening history locally and view detailed analytics (also allows importing, exporting and merging DB's).
@@ -80,8 +80,6 @@ Windows enforces VMP (Verified Media Path) for Widevine DRM, which requires a pr
 ## Usage
 
 - Press Ctrl + I or use the new gear icon in the header to open the settings menu.
-- Use the settings menu to configure all features or to manage accounts.
-- Access the Lyrics and Download buttons directly from the playback bar.
 
 ## License
 
