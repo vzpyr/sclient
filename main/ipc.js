@@ -114,6 +114,10 @@ function register({ ipcMain, session, app }) {
     config.set("features.tray_icon", args.trayIcon ? "true" : "false");
     config.set("features.hide_upsell", args.hideUpsell ? "true" : "false");
     config.set("features.hide_artists", args.hideArtists ? "true" : "false");
+    config.set("features.show_lyrics", args.showLyrics ? "true" : "false");
+    config.set("features.show_miniplayer", args.showMiniplayer ? "true" : "false");
+    config.set("features.show_downloader", args.showDownloader ? "true" : "false");
+    config.set("features.show_effects", args.showEffects ? "true" : "false");
     config.set("features.true_shuffle", args.trueShuffle ? "true" : "false");
     config.set("features.true_shuffle_mode", args.trueShuffleMode || "native");
     config.set("features.region_bypass", args.regionBypass ? "true" : "false");

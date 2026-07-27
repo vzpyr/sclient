@@ -305,10 +305,10 @@ function applyFeatureStyles() {
 let obsTimer = null;
 const obsRun = () => {
   injectMenuButton();
-  injectDownloadButton();
-  injectLyricsButton();
-  injectMiniplayerButton();
-  injectEffectsButton();
+  if (showEffectsOn) injectEffectsButton();
+  if (showLyricsOn) injectLyricsButton();
+  if (showMiniplayerOn) injectMiniplayerButton();
+  if (showDownloaderOn) injectDownloadButton();
   if (enhancedHeaderOn) {
     replaceNavIcons();
     injectNavButtons();

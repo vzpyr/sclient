@@ -307,6 +307,10 @@ const lastfmSessionKey = cfg.lastfm_session_key || "";
 const lastfmUsername = cfg.lastfm_username || "";
 const statsApiOn = cfg.stats_api_sync || false;
 const statsLocalOn = cfg.stats_local_tracking || false;
+const showLyricsOn = cfg.show_lyrics || false;
+const showMiniplayerOn = cfg.show_miniplayer || false;
+const showDownloaderOn = cfg.show_downloader || false;
+const showEffectsOn = cfg.show_effects || false;
 
 function getAccent() {
   return customAccentOn ? accentColor : "#f50";
@@ -488,8 +492,8 @@ async function pollPlayback() {
 function injectMiniplayerButton() {
   if (document.getElementById("sclient-mini-btn")) return;
 
-  const dlBtn = document.getElementById("sclient-download-btn");
-  if (!dlBtn || !dlBtn.parentNode) return;
+  const target = document.querySelector(".playbackSoundBadge__showQueue");
+  if (!target || !target.parentNode) return;
 
   const btn = document.createElement("button");
   btn.id = "sclient-mini-btn";
@@ -504,7 +508,7 @@ function injectMiniplayerButton() {
     window.postMessage({ source: "sclient-mini-toggle" }, "*");
   });
 
-  dlBtn.parentNode.insertBefore(btn, dlBtn);
+  target.parentNode.insertBefore(btn, target);
 }
 
 window.addEventListener("message", (event) => {

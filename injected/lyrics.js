@@ -433,8 +433,8 @@ async function fetchLyrics() {
 function injectLyricsButton() {
   if (document.getElementById("sclient-lyrics-btn")) return;
 
-  const dlBtn = document.getElementById("sclient-download-btn");
-  if (!dlBtn || !dlBtn.parentNode) return;
+  const target = document.querySelector(".playbackSoundBadge__showQueue");
+  if (!target || !target.parentNode) return;
 
   const btn = document.createElement("button");
   btn.id = "sclient-lyrics-btn";
@@ -449,7 +449,7 @@ function injectLyricsButton() {
     toggleLyrics();
   });
 
-  dlBtn.parentNode.insertBefore(btn, dlBtn);
+  target.parentNode.insertBefore(btn, target);
 }
 
 if (typeof onPlaybackChange !== "undefined") {

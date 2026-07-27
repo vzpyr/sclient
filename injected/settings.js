@@ -228,6 +228,10 @@ function createOverlay() {
     { label: "No Window Decorations", id: "decorations" },
     { label: "Hide Subscription Upsell", id: "upsell" },
     { label: "Hide Artist Features", id: "artists" },
+    { label: "Show Lyrics Button", id: "show-lyrics" },
+    { label: "Show Mini Player Button", id: "show-miniplayer" },
+    { label: "Show Downloader Button", id: "show-downloader" },
+    { label: "Show Audio Effects Button", id: "show-effects" },
   ];
 
   const togglesHtml = TOGGLES.map((t) =>
@@ -475,6 +479,30 @@ function createOverlay() {
       initial: hideArtistsOn,
     },
     {
+      toggleId: "sclient-show-lyrics-toggle",
+      bgId: "sclient-toggle-bg-show-lyrics",
+      sliderId: "sclient-toggle-slider-show-lyrics",
+      initial: showLyricsOn,
+    },
+    {
+      toggleId: "sclient-show-miniplayer-toggle",
+      bgId: "sclient-toggle-bg-show-miniplayer",
+      sliderId: "sclient-toggle-slider-show-miniplayer",
+      initial: showMiniplayerOn,
+    },
+    {
+      toggleId: "sclient-show-downloader-toggle",
+      bgId: "sclient-toggle-bg-show-downloader",
+      sliderId: "sclient-toggle-slider-show-downloader",
+      initial: showDownloaderOn,
+    },
+    {
+      toggleId: "sclient-show-effects-toggle",
+      bgId: "sclient-toggle-bg-show-effects",
+      sliderId: "sclient-toggle-slider-show-effects",
+      initial: showEffectsOn,
+    },
+    {
       toggleId: "sclient-trueshuffle-toggle",
       bgId: "sclient-toggle-bg-trueshuffle",
       sliderId: "sclient-toggle-slider-trueshuffle",
@@ -707,6 +735,10 @@ function createOverlay() {
       trayIcon: $("#sclient-tray-toggle").checked,
       hideUpsell: $("#sclient-upsell-toggle").checked,
       hideArtists: $("#sclient-artists-toggle").checked,
+      showLyrics: $("#sclient-show-lyrics-toggle").checked,
+      showMiniplayer: $("#sclient-show-miniplayer-toggle").checked,
+      showDownloader: $("#sclient-show-downloader-toggle").checked,
+      showEffects: $("#sclient-show-effects-toggle").checked,
       trueShuffle: $("#sclient-trueshuffle-toggle").checked,
       trueShuffleMode: $("#sclient-trueshuffle-engine").value,
       regionBypass: $("#sclient-regionbypass-toggle").checked,

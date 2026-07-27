@@ -1,11 +1,8 @@
 function injectEffectsButton() {
   if (document.getElementById("sclient-effects-btn")) return;
 
-  const lyricsBtn = document.getElementById("sclient-lyrics-btn");
-  const targetParent = lyricsBtn
-    ? lyricsBtn.parentNode
-    : document.querySelector(".playbackSoundBadge__actions");
-  if (!targetParent) return;
+  const target = document.querySelector(".playbackSoundBadge__showQueue");
+  if (!target || !target.parentNode) return;
 
   const btnContainer = document.createElement("div");
   btnContainer.className = "sclient-effects-container";
@@ -61,11 +58,7 @@ function injectEffectsButton() {
   btnContainer.appendChild(btn);
   btnContainer.appendChild(popup);
 
-  if (lyricsBtn) {
-    targetParent.insertBefore(btnContainer, lyricsBtn);
-  } else {
-    targetParent.appendChild(btnContainer);
-  }
+  target.parentNode.insertBefore(btnContainer, target);
 
   window.sclient_effects = window.sclient_effects || {
     speed: 1,
