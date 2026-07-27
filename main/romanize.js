@@ -50,39 +50,47 @@ function normalizeSegment(out) {
 
 async function romanizeLine(text) {
   if (!text) return text;
-  if (isRomanText(text)) return normalizeSegment(text);
 
-  if (hasJapaneseRE.test(text)) {
+  const match = text.match(/^(\s*)(.*?)(\s*)$/);
+  const leading = match[1] || "";
+  const innerText = match[2] || "";
+  const trailing = match[3] || "";
+
+  if (!innerText) return text;
+  if (isRomanText(innerText)) return text;
+
+  let result = innerText;
+
+  if (hasJapaneseRE.test(innerText)) {
     if (!kuroshiroReady) await initKuroshiro();
     if (kuroshiroReady) {
       try {
-        return normalizeSegment(
-          await kuroshiroInstance.convert(text, { to: "romaji", mode: "spaced" })
+        result = normalizeSegment(
+          await kuroshiroInstance.convert(innerText, { to: "romaji", mode: "spaced" })
         );
       } catch (e) {
-        return text;
+        result = innerText;
       }
     }
-    return text;
-  }
-
-  if (hasChineseRE.test(text)) {
+  } else if (hasChineseRE.test(innerText)) {
     try {
-      return normalizeSegment(
-        pinyin(text, { segment: false, group: true })
+      result = normalizeSegment(
+        pinyin(innerText, { segment: false, group: true })
           .map((g) => (Array.isArray(g) ? g.join("") : g))
           .join(" ")
       );
     } catch (e) {
-      return text;
+      result = innerText;
+    }
+  } else {
+    try {
+      result = normalizeSegment(transliterate(innerText));
+    } catch (e) {
+      result = innerText;
     }
   }
 
-  try {
-    return normalizeSegment(transliterate(text));
-  } catch (e) {
-    return text;
-  }
+  return leading + result + trailing;
 }
 
 async function romanizeLines(texts) {
