@@ -596,10 +596,18 @@ function updateLyricsUI(pos) {
 }
 
 let currentInterpolatedPos = 0;
+let lastKnownTime = Date.now();
 
 ipcRenderer.on("mini_time", (_e, data) => {
+  if (data.isPlaying !== undefined && isPlayingLocal !== data.isPlaying) {
+    isPlayingLocal = data.isPlaying;
+    updatePlayPauseUI(isPlayingLocal);
+  }
   if (data.position !== undefined) {
     const liveTime = data.position;
+    lastKnownPosition = liveTime;
+    lastKnownTime = Date.now();
+
     if (Math.abs(liveTime - currentInterpolatedPos) > 0.4) {
       currentInterpolatedPos = liveTime;
     } else if (liveTime > currentInterpolatedPos) {
@@ -610,6 +618,14 @@ ipcRenderer.on("mini_time", (_e, data) => {
 
 function renderLoop() {
   if (currentDuration > 0) {
+    if (isPlayingLocal) {
+      const estimated =
+        lastKnownPosition + ((Date.now() - lastKnownTime) / 1000) * playbackRateLocal;
+      if (estimated > currentInterpolatedPos) {
+        currentInterpolatedPos = estimated > currentDuration ? currentDuration : estimated;
+      }
+    }
+
     $("time-current").textContent = formatTime(currentInterpolatedPos);
     const percent = (currentInterpolatedPos / currentDuration) * 100;
     $("progress-fill").style.width = `${Math.max(0, Math.min(100, percent))}%`;

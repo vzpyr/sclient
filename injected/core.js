@@ -869,12 +869,11 @@ if (typeof window !== "undefined") {
       window.postMessage(
         {
           source: "sclient-mini-time",
-          data: { position: activeMedia.currentTime },
+          data: { position: activeMedia.currentTime, isPlaying: !activeMedia.paused },
         },
         "*"
       );
     }
-    requestAnimationFrame(sendLiveTime);
   }
-  sendLiveTime();
+  setInterval(sendLiveTime, 33);
 }
