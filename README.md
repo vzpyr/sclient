@@ -23,7 +23,7 @@ SClient adds several enhancements and quality of life features to the standard w
 
 - **Playlist Manager**: Manage (import, export, re-order etc.) your playlists in a custom, dedicated overlay.
 - **Real-time Audio Effects**: Built-in playback speed/pitch shifting/manipulation and reverb effects
-- **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`.
+- **Track/Playlist Downloader**: Download tracks and playlists directly from the player interface or on the playlist page using `youtube-dl`.
 - **Lyrics Integration**: Access synced lyrics in a sidebar (or mini player) for the current song directly from the playback bar with romanization (provided by `lrcmux.dev`).
 - **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Sensitive information is securely stored using safeStorage.
 - **Discord Rich Presence**: Share what you are currently listening to on Discord.
