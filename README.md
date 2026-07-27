@@ -22,6 +22,7 @@ SClient adds several enhancements and quality of life features to the standard w
 ### 🔌 Integrations & Tools
 
 - **Playlist Manager**: Manage (import, export, re-order etc.) your playlists in a custom, dedicated overlay.
+- **Real-time Audio Effects**: Built-in playback speed/pitch shifting/manipulation and reverb effects
 - **Track Downloader**: Download tracks directly from the player interface using `youtube-dl`.
 - **Lyrics Integration**: Access synced lyrics in a sidebar (or mini player) for the current song directly from the playback bar with romanization (provided by `lrcmux.dev`).
 - **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Sensitive information is securely stored using safeStorage.
@@ -30,7 +31,7 @@ SClient adds several enhancements and quality of life features to the standard w
 
 ### 🎨 Customization & UI Tweaks
 
-- **Mini Player**: Access a compact player window for distraction-free listening, with integrated lyrics and a dedicated fullscreen mode.
+- **Mini Player**: Access a compact player window for distraction-free listening with integrated lyrics, a visualizer and a dedicated fullscreen mode.
 - **Extensive UI Customization**: Personalize the interface layout, colors, typography, and navigation elements, while hiding clutter and unnecessary prompts.
 - **Custom CSS/JS Editor**: Inject your own custom CSS and JavaScript by writing code directly into a textbox.
 - **Multi-Account Support**: Manage (create, switch, delete) multiple isolated profiles.
