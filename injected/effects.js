@@ -100,55 +100,108 @@ function injectEffectsButton() {
 }
 
 let sclientAudioCtx;
-let sclientConvolver;
 const sclientSourceNodes = new WeakMap();
 
-async function setupReverb() {
-  if (!sclientAudioCtx) {
-    sclientAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sclientConvolver = sclientAudioCtx.createConvolver();
+async function setupAudioNodes(ctx) {
+  if (!ctx.sclientConvolver) {
+    ctx.sclientConvolver = ctx.createConvolver();
+    ctx.sclientAnalyser = ctx.createAnalyser();
+    ctx.sclientAnalyser.fftSize = 256;
+    window.sclientAnalyser = ctx.sclientAnalyser;
 
-    const response = await fetch("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1202/SampleSt.wav");
-    const arrayBuffer = await response.arrayBuffer();
-    sclientConvolver.buffer = await sclientAudioCtx.decodeAudioData(arrayBuffer);
+    const length = ctx.sampleRate * 2.5;
+    const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+    for (let i = 0; i < 2; i++) {
+      const channel = impulse.getChannelData(i);
+      for (let j = 0; j < length; j++) {
+        channel[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / length, 3);
+      }
+    }
+    ctx.sclientConvolver.buffer = impulse;
   }
-  if (sclientAudioCtx.state === "suspended") {
-    await sclientAudioCtx.resume();
+  if (ctx.state === "suspended") {
+    await ctx.resume();
   }
 }
 
 async function applyEffectsToMedia(el) {
-  if (!window.sclient_effects) return;
+  const wantsEffects = !!window.sclient_effects;
+  const wantsVisualizer = window.__SCLIENT_CONFIG__ && window.__SCLIENT_CONFIG__.show_visualizer;
 
-  el.playbackRate = window.sclient_effects.speed;
-  el.preservesPitch = window.sclient_effects.preservePitch;
-  el.webkitPreservesPitch = window.sclient_effects.preservePitch;
-  el.mozPreservesPitch = window.sclient_effects.preservePitch;
+  if (!wantsEffects && !wantsVisualizer) return;
 
-  if (window.sclient_effects.reverb) {
-    await setupReverb();
-    if (!sclientSourceNodes.has(el)) {
-      const source = sclientAudioCtx.createMediaElementSource(el);
+  if (wantsEffects) {
+    el.playbackRate = window.sclient_effects.speed;
+    el.preservesPitch = window.sclient_effects.preservePitch;
+    el.webkitPreservesPitch = window.sclient_effects.preservePitch;
+    el.mozPreservesPitch = window.sclient_effects.preservePitch;
+  }
 
-      source.connect(sclientAudioCtx.destination);
-      sclientSourceNodes.set(el, { source, connectedReverb: false });
+  let ctxToUse;
+  if (sclientSourceNodes.has(el)) {
+    const data = sclientSourceNodes.get(el);
+    ctxToUse = data.externalCtx || sclientAudioCtx;
+  } else {
+    if (!sclientAudioCtx)
+      sclientAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    ctxToUse = sclientAudioCtx;
+  }
+
+  try {
+    await setupAudioNodes(ctxToUse);
+  } catch (e) {
+    console.error("[SClient] Audio nodes setup failed:", e);
+  }
+
+  if (!sclientSourceNodes.has(el)) {
+    try {
+      const source = ctxToUse.createMediaElementSource(el);
+      source.connect(ctxToUse.sclientAnalyser);
+      ctxToUse.sclientAnalyser.connect(ctxToUse.destination);
+      sclientSourceNodes.set(el, { source, connectedReverb: false, externalCtx: null });
+    } catch (e) {
+      if (e.name === "InvalidStateError") {
+        sclientSourceNodes.set(el, { source: null, connectedReverb: false, externalCtx: null });
+      } else {
+        throw e;
+      }
     }
+  }
 
-    const nodeData = sclientSourceNodes.get(el);
+  const nodeData = sclientSourceNodes.get(el);
+  if (!nodeData || !nodeData.source) return;
+
+  const ctx = nodeData.externalCtx || sclientAudioCtx;
+
+  if (nodeData.externalCtx) {
+    try {
+      nodeData.source.connect(ctx.sclientAnalyser);
+    } catch (e) {}
+  }
+
+  if (wantsEffects && window.sclient_effects.reverb) {
     if (!nodeData.connectedReverb) {
-      nodeData.source.disconnect();
-      nodeData.source.connect(sclientConvolver);
-      sclientConvolver.connect(sclientAudioCtx.destination);
+      if (nodeData.externalCtx) {
+        nodeData.source.connect(ctx.sclientConvolver);
+        ctx.sclientConvolver.connect(ctx.destination);
+      } else {
+        ctx.sclientAnalyser.disconnect();
+        ctx.sclientAnalyser.connect(ctx.sclientConvolver);
+        ctx.sclientConvolver.connect(ctx.destination);
+      }
       nodeData.connectedReverb = true;
     }
   } else {
-    if (sclientSourceNodes.has(el)) {
-      const nodeData = sclientSourceNodes.get(el);
-      if (nodeData.connectedReverb) {
-        nodeData.source.disconnect();
-        nodeData.source.connect(sclientAudioCtx.destination);
-        nodeData.connectedReverb = false;
+    if (nodeData.connectedReverb) {
+      if (nodeData.externalCtx) {
+        nodeData.source.disconnect(ctx.sclientConvolver);
+        ctx.sclientConvolver.disconnect();
+      } else {
+        ctx.sclientAnalyser.disconnect();
+        ctx.sclientConvolver.disconnect();
+        ctx.sclientAnalyser.connect(ctx.destination);
       }
+      nodeData.connectedReverb = false;
     }
   }
 }
@@ -157,12 +210,25 @@ if (!window.__sclient_effects_hooked) {
   window.__sclient_effects_hooked = true;
   window.__scMedia = window.__scMedia || [];
 
+  const originalCreateSource =
+    window.AudioContext.prototype.createMediaElementSource ||
+    window.webkitAudioContext.prototype.createMediaElementSource;
+  if (originalCreateSource) {
+    window.AudioContext.prototype.createMediaElementSource = function (el) {
+      const sourceNode = originalCreateSource.apply(this, arguments);
+      sclientSourceNodes.set(el, { source: sourceNode, connectedReverb: false, externalCtx: this });
+      return sourceNode;
+    };
+  }
+
   const originalPlay = HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play = function () {
     if (!window.__scMedia.includes(this)) {
       window.__scMedia.push(this);
     }
-    applyEffectsToMedia(this);
+    if (this.tagName === "AUDIO" || this.tagName === "VIDEO") {
+      applyEffectsToMedia(this).catch(console.error);
+    }
     return originalPlay.apply(this, arguments);
   };
 

@@ -148,6 +148,7 @@ function buildPayload() {
     show_miniplayer: isEnabled("features.show_miniplayer"),
     show_downloader: isEnabled("features.show_downloader"),
     show_effects: isEnabled("features.show_effects"),
+    show_visualizer: isEnabled("features.show_visualizer"),
     true_shuffle: isEnabled("features.true_shuffle"),
     true_shuffle_mode: get("features.true_shuffle_mode", "native"),
     region_bypass: isEnabled("features.region_bypass"),

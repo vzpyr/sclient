@@ -232,6 +232,7 @@ function createOverlay() {
     { label: "Show Mini Player Button", id: "show-miniplayer" },
     { label: "Show Downloader Button", id: "show-downloader" },
     { label: "Show Audio Effects Button", id: "show-effects" },
+    { label: "Enable Audio Visualizer", id: "show-visualizer" },
   ];
 
   const togglesHtml = TOGGLES.map((t) =>
@@ -503,6 +504,12 @@ function createOverlay() {
       initial: showEffectsOn,
     },
     {
+      toggleId: "sclient-show-visualizer-toggle",
+      bgId: "sclient-toggle-bg-show-visualizer",
+      sliderId: "sclient-toggle-slider-show-visualizer",
+      initial: showVisualizerOn,
+    },
+    {
       toggleId: "sclient-trueshuffle-toggle",
       bgId: "sclient-toggle-bg-trueshuffle",
       sliderId: "sclient-toggle-slider-trueshuffle",
@@ -739,6 +746,7 @@ function createOverlay() {
       showMiniplayer: $("#sclient-show-miniplayer-toggle").checked,
       showDownloader: $("#sclient-show-downloader-toggle").checked,
       showEffects: $("#sclient-show-effects-toggle").checked,
+      showVisualizer: $("#sclient-show-visualizer-toggle").checked,
       trueShuffle: $("#sclient-trueshuffle-toggle").checked,
       trueShuffleMode: $("#sclient-trueshuffle-engine").value,
       regionBypass: $("#sclient-regionbypass-toggle").checked,

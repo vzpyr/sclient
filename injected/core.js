@@ -311,6 +311,7 @@ const showLyricsOn = cfg.show_lyrics || false;
 const showMiniplayerOn = cfg.show_miniplayer || false;
 const showDownloaderOn = cfg.show_downloader || false;
 const showEffectsOn = cfg.show_effects || false;
+const showVisualizerOn = cfg.show_visualizer || false;
 
 function getAccent() {
   return customAccentOn ? accentColor : "#f50";
