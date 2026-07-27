@@ -308,7 +308,10 @@ const obsRun = () => {
   if (showEffectsOn) injectEffectsButton();
   if (showLyricsOn) injectLyricsButton();
   if (showMiniplayerOn) injectMiniplayerButton();
-  if (showDownloaderOn) injectDownloadButton();
+  if (showDownloaderOn) {
+    injectDownloadButton();
+    injectPlaylistDownloadButton();
+  }
   if (enhancedHeaderOn) {
     replaceNavIcons();
     injectNavButtons();
