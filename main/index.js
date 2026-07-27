@@ -20,11 +20,11 @@ let pendingSclientUrl = null;
 function sanitizeSclientUrl(raw) {
   if (!raw) return null;
   let url = raw;
-  if (url.startsWith('sclient://')) url = url.slice('sclient://'.length);
-  if (url.startsWith('sclient:')) url = url.slice('sclient:'.length);
+  if (url.startsWith("sclient://")) url = url.slice("sclient://".length);
+  if (url.startsWith("sclient:")) url = url.slice("sclient:".length);
   const match = url.match(/^redirect\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$/);
   if (!match) return null;
-  return 'https://soundcloud.com/' + match[1] + '/' + match[2];
+  return "https://soundcloud.com/" + match[1] + "/" + match[2];
 }
 
 function handleSclientUrl(raw) {
@@ -39,7 +39,7 @@ function handleSclientUrl(raw) {
   }
 }
 
-app.on('open-url', (event, url) => {
+app.on("open-url", (event, url) => {
   event.preventDefault();
   handleSclientUrl(url);
 });
@@ -48,17 +48,21 @@ const gotSingleInstanceLock = app.requestSingleInstanceLock();
 if (!gotSingleInstanceLock) {
   app.quit();
 } else {
-  app.on('second-instance', (_event, argv) => {
-    const raw = (argv || []).find(a => typeof a === 'string' && (a.startsWith('sclient://') || a.startsWith('sclient:')));
+  app.on("second-instance", (_event, argv) => {
+    const raw = (argv || []).find(
+      (a) => typeof a === "string" && (a.startsWith("sclient://") || a.startsWith("sclient:"))
+    );
     if (raw) handleSclientUrl(raw);
   });
 }
 
 (function () {
-  const raw = process.argv.find(a => typeof a === 'string' && (a.startsWith('sclient://') || a.startsWith('sclient:')));
+  const raw = process.argv.find(
+    (a) => typeof a === "string" && (a.startsWith("sclient://") || a.startsWith("sclient:"))
+  );
   if (raw) pendingSclientUrl = sanitizeSclientUrl(raw);
 })();
-app.setAsDefaultProtocolClient('sclient');
+app.setAsDefaultProtocolClient("sclient");
 
 function createWindow() {
   const hideFrame = config.isEnabled("features.hide_decorations");
@@ -112,6 +116,7 @@ function createWindow() {
   win.webContents.on("dom-ready", () => {
     const files = [
       "core.js",
+      "effects.js",
       "accent.js",
       "adblock.js",
       "shuffle.js",
@@ -143,7 +148,9 @@ function createWindow() {
 
     const payload = config.buildConfigPayload();
 
-    win.webContents.executeJavaScript(`
+    win.webContents
+      .executeJavaScript(
+        `
 try {
   (function() {
     window.__SCLIENT_CONFIG__ = ${JSON.stringify(payload)};
@@ -153,7 +160,9 @@ try {
 } catch (e) {
   console.error("[SClient] Injected JS error:", e);
 }
-`).catch((err) => console.error("[SClient] Script execution failed:", err));
+`
+      )
+      .catch((err) => console.error("[SClient] Script execution failed:", err));
   });
 
   win.on("close", (e) => {

@@ -16,11 +16,7 @@ function initKuroshiro() {
   if (kuroshiroInitPromise) return kuroshiroInitPromise;
   kuroshiroInitPromise = (async () => {
     try {
-      const dictPath = path.join(
-        path.dirname(require.resolve("kuromoji")),
-        "..",
-        "dict"
-      );
+      const dictPath = path.join(path.dirname(require.resolve("kuromoji")), "..", "dict");
       const tokenizer = await new Promise((resolve, reject) => {
         kuromoji.builder({ dicPath: dictPath }).build((err, t) => {
           if (err) reject(err);

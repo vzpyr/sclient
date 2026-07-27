@@ -49,12 +49,8 @@ function seekTo(seconds) {
   const x = rect.left + rect.width * percentage;
   const y = rect.top + rect.height / 2;
 
-  bar.dispatchEvent(
-    new MouseEvent("mousedown", { bubbles: true, clientX: x, clientY: y })
-  );
-  bar.dispatchEvent(
-    new MouseEvent("mouseup", { bubbles: true, clientX: x, clientY: y })
-  );
+  bar.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: x, clientY: y }));
+  bar.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, clientX: x, clientY: y }));
 }
 
 function updateLyricsUI(pos) {
@@ -177,7 +173,9 @@ function createLyricsSidebar() {
 
   document.getElementById("sclient-lyrics-romanize-btn").addEventListener("click", async () => {
     romanizeEnabled = !romanizeEnabled;
-    document.getElementById("sclient-lyrics-romanize-btn").classList.toggle("active", romanizeEnabled);
+    document
+      .getElementById("sclient-lyrics-romanize-btn")
+      .classList.toggle("active", romanizeEnabled);
     await romanizeAllLines();
   });
 }
@@ -194,7 +192,10 @@ async function romanizeAllLines() {
       if (wordEls.length > 0) {
         wordEls.forEach((wEl) => {
           const orig = wEl.getAttribute("data-orig-text");
-          if (orig != null) { wEl.textContent = orig; wEl.removeAttribute("data-orig-text"); }
+          if (orig != null) {
+            wEl.textContent = orig;
+            wEl.removeAttribute("data-orig-text");
+          }
         });
       } else {
         const origText = el.getAttribute("data-orig-text");
@@ -212,12 +213,18 @@ async function romanizeAllLines() {
     const wordEls = el.querySelectorAll(".sclient-lyric-word");
     if (wordEls.length > 0) {
       wordEls.forEach((wEl) => {
-        const orig = wEl.getAttribute("data-orig-text") != null ? wEl.getAttribute("data-orig-text") : wEl.textContent;
+        const orig =
+          wEl.getAttribute("data-orig-text") != null
+            ? wEl.getAttribute("data-orig-text")
+            : wEl.textContent;
         wEl.setAttribute("data-orig-text", orig);
         items.push({ wEl, text: orig });
       });
     } else {
-      const origText = el.getAttribute("data-orig-text") != null ? el.getAttribute("data-orig-text") : el.textContent;
+      const origText =
+        el.getAttribute("data-orig-text") != null
+          ? el.getAttribute("data-orig-text")
+          : el.textContent;
       el.setAttribute("data-orig-text", origText);
       items.push({ el, text: origText });
     }
@@ -233,7 +240,7 @@ async function romanizeAllLines() {
   }
 
   items.forEach((it, i) => {
-    const out = (results && results[i] != null) ? results[i] : it.text;
+    const out = results && results[i] != null ? results[i] : it.text;
     if (it.wEl) it.wEl.textContent = out;
     else it.el.textContent = out;
   });
@@ -263,7 +270,10 @@ function esc(str) {
 function renderLineWords(line) {
   if (line.words && line.words.length > 0) {
     return line.words
-      .map((w) => `<span class="sclient-lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`)
+      .map(
+        (w) =>
+          `<span class="sclient-lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`
+      )
       .join("");
   }
   return esc((line.text || "").trim() || " ");
@@ -327,7 +337,9 @@ async function doFetch(artist, title) {
           const lineEl = e.target.closest(".sclient-lyric-line");
           if (!lineEl) return;
           const wordEl = e.target.closest(".sclient-lyric-word");
-          const t = parseFloat(wordEl ? wordEl.getAttribute("data-start") : lineEl.getAttribute("data-start"));
+          const t = parseFloat(
+            wordEl ? wordEl.getAttribute("data-start") : lineEl.getAttribute("data-start")
+          );
           if (!isNaN(t)) {
             const targetPos = Math.max(0, t - lyricsOffset);
             seekTo(targetPos);
@@ -340,7 +352,10 @@ async function doFetch(artist, title) {
         if (romanizeEnabled) romanizeAllLines();
       } else if (data.lines && data.lines.length > 0) {
         const linesHtml = data.lines
-          .map((l) => `<div style="font-size: 16px; color: var(--sc-text-main);">${esc((l.text || "").trim() || " ")}</div>`)
+          .map(
+            (l) =>
+              `<div style="font-size: 16px; color: var(--sc-text-main);">${esc((l.text || "").trim() || " ")}</div>`
+          )
           .join("");
         content.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">${linesHtml}</div>`;
         if (offsetContainer) offsetContainer.style.display = "none";

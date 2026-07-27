@@ -69,7 +69,6 @@ async function scCollectPages(firstHref) {
 }
 
 const api = {
-
   me() {
     return scReq("/me");
   },
@@ -165,7 +164,7 @@ function pmCurrent() {
 
 function pmTrackCount(pl) {
   if (!pl) return 0;
-  return pl.track_count != null ? pl.track_count : (pl.tracks ? pl.tracks.length : 0);
+  return pl.track_count != null ? pl.track_count : pl.tracks ? pl.tracks.length : 0;
 }
 
 async function pmHydrateCurrent() {
@@ -192,16 +191,13 @@ async function pmHydrateCurrent() {
   for (const t of pl.tracks) if (t && t.id != null && t.title) byId.set(t.id, t);
   const need = ids.filter((id) => !byId.has(id));
   if (need.length > 0) {
-
     for (let i = 0; i < need.length; i += 50) {
       const chunk = need.slice(i, i + 50);
       try {
         const res = await api.tracks(chunk);
         const list = Array.isArray(res) ? res : res && res.collection ? res.collection : [];
         for (const t of list) if (t && t.id != null) byId.set(t.id, t);
-      } catch (_) {
-
-      }
+      } catch (_) {}
     }
   }
 
@@ -228,9 +224,7 @@ function pmSortedFiltered() {
   if (q) list = list.filter((p) => (p.title || "").toLowerCase().includes(q));
   switch (_pmState.sortMode) {
     case "modified":
-      list.sort((a, b) =>
-        (b.last_modified || "").localeCompare(a.last_modified || "")
-      );
+      list.sort((a, b) => (b.last_modified || "").localeCompare(a.last_modified || ""));
       break;
     case "count":
       list.sort((a, b) => pmTrackCount(b) - pmTrackCount(a));
@@ -265,18 +259,19 @@ function pmRenderSidebar() {
       const active = p.id === _pmState.selectedId;
       const count = pmTrackCount(p);
       const total = p.duration || 0;
-      const badge = p.sharing === "private" 
-        ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
-        : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+      const badge =
+        p.sharing === "private"
+          ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+          : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
       const subtitle =
-        count === 0
-          ? "empty"
-          : `${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}`;
-      return `<div class="pm-pl${active ? " pm-pl-active" : ""}" data-pid="${p.id}" data-title="${(p.title || "")
-        .replace(/"/g, "&quot;")}" tabindex="0" style="display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;cursor:pointer;transition:background .15s;${
-        active
-          ? `background:${accent}22;box-shadow:inset 2px 0 0 ${accent};`
-          : ""
+        count === 0 ? "empty" : `${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}`;
+      return `<div class="pm-pl${active ? " pm-pl-active" : ""}" data-pid="${p.id}" data-title="${(
+        p.title || ""
+      ).replace(
+        /"/g,
+        "&quot;"
+      )}" tabindex="0" style="display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;cursor:pointer;transition:background .15s;${
+        active ? `background:${accent}22;box-shadow:inset 2px 0 0 ${accent};` : ""
       }">
         <div style="width:40px;height:40px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#222;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/></div>
         <div style="min-width:0;flex:1;">
@@ -300,7 +295,9 @@ function pmRenderSidebar() {
       if (!_pmState.dragging) return;
       if (pid === _pmState.selectedId) return;
       e.preventDefault();
-      try { e.dataTransfer.dropEffect = "move"; } catch (_) {}
+      try {
+        e.dataTransfer.dropEffect = "move";
+      } catch (_) {}
       el.classList.add("pm-droptarget");
     });
     el.addEventListener("dragleave", () => el.classList.remove("pm-droptarget"));
@@ -399,13 +396,17 @@ function pmRenderDetailHeader() {
   const accent = getAccent();
   const count = pmTrackCount(pl);
   const total = pl.duration || (pl.tracks || []).reduce((s, t) => s + (t.duration || 0), 0);
-  const badge = pl.sharing === "private" 
-    ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
-    : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
-  const plPermalink = pl.user && pl.permalink ? `/${pl.user.permalink}/sets/${pl.permalink}` : pl.permalink_url || "";
+  const badge =
+    pl.sharing === "private"
+      ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+  const plPermalink =
+    pl.user && pl.permalink ? `/${pl.user.permalink}/sets/${pl.permalink}` : pl.permalink_url || "";
   const secretLink =
     pl.sharing === "private" && pl.secret_token && pl.permalink_url
-      ? (pl.permalink_url.endsWith("/" + pl.secret_token) ? pl.permalink_url : pl.permalink_url + "/" + pl.secret_token)
+      ? pl.permalink_url.endsWith("/" + pl.secret_token)
+        ? pl.permalink_url
+        : pl.permalink_url + "/" + pl.secret_token
       : null;
 
   const html = `
@@ -415,7 +416,9 @@ function pmRenderDetailHeader() {
         <div style="min-width:0;flex:1;">
           <div class="pm-d-title">${badge}${(pl.title || "Untitled").replace(/</g, "&lt;")}</div>
           <div class="pm-d-meta">${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}${
-            secretLink ? ` · <span id="pm-secret-link-btn" style="opacity:.85;cursor:pointer;text-decoration:underline;" title="Copy to clipboard">secret link</span>` : ""
+            secretLink
+              ? ` · <span id="pm-secret-link-btn" style="opacity:.85;cursor:pointer;text-decoration:underline;" title="Copy to clipboard">secret link</span>`
+              : ""
           }</div>
           <div class="pm-d-meta" style="margin-top:8px;display:flex;gap:10px;align-items:center;"><span>
             ${
@@ -502,8 +505,12 @@ function pmRenderBulkBar() {
     <button id="pm-bulk-remove" class="sc-btn sc-btn-danger" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove</button>
     <button id="pm-bulk-export" class="sc-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export selected</button>
   `;
-  bar.querySelector("#pm-bulk-move").addEventListener("click", () => pmMoveToDialog([..._pmState.selection]));
-  bar.querySelector("#pm-bulk-copy").addEventListener("click", () => pmCopyToDialog([..._pmState.selection]));
+  bar
+    .querySelector("#pm-bulk-move")
+    .addEventListener("click", () => pmMoveToDialog([..._pmState.selection]));
+  bar
+    .querySelector("#pm-bulk-copy")
+    .addEventListener("click", () => pmCopyToDialog([..._pmState.selection]));
   bar.querySelector("#pm-bulk-remove").addEventListener("click", () => pmRemoveSelected());
   bar.querySelector("#pm-bulk-export").addEventListener("click", () => pmExportSelectedJSON());
 }
@@ -516,18 +523,17 @@ function pmRenderTracks() {
   const tracks = visibleTracks(pl);
   if (tracks.length === 0) {
     const emptyMsg =
-      (pl.tracks && pl.tracks.length)
+      pl.tracks && pl.tracks.length
         ? `No tracks match "${_pmState.trackFilterText.replace(/</g, "&lt;")}".`
         : "This playlist is empty. Drag tracks here, paste URLs, or import a JSON dump.";
     scroll.innerHTML = `<div class="pm-empty-tracks">${emptyMsg}</div>`;
     return;
   }
-  scroll.innerHTML =
-    tracks
-      .map((t, i) => {
-        const sel = _pmState.selection.has(t.id);
-        const handlePath = `/${(t.user && t.user.permalink) || ""}/${t.permalink || ""}`;
-        return `<div class="pm-track${sel ? " pm-track-selected" : ""}" data-id="${t.id}" data-index="${i}" draggable="true">
+  scroll.innerHTML = tracks
+    .map((t, i) => {
+      const sel = _pmState.selection.has(t.id);
+      const handlePath = `/${(t.user && t.user.permalink) || ""}/${t.permalink || ""}`;
+      return `<div class="pm-track${sel ? " pm-track-selected" : ""}" data-id="${t.id}" data-index="${i}" draggable="true">
           <span class="pm-track-idx">${i + 1}</span>
           <span class="pm-track-art"><img src="${pmTrackArt(t)}" loading="lazy"/><button class="pm-track-play" data-url="${t.permalink_url || ""}" title="Play on SoundCloud (opens in a new tab)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button></span>
           <span class="pm-track-body">
@@ -537,8 +543,8 @@ function pmRenderTracks() {
           <span class="pm-track-dur">${pmFmtDur(t.duration)}</span>
           <span class="pm-track-handle" title="Drag to reorder" style="display:flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical-icon lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
         </div>`;
-      })
-      .join("");
+    })
+    .join("");
   pmWireTracks();
 }
 
@@ -581,7 +587,6 @@ function pmWireTracks() {
         }
       } else {
         if (_pmState.selection.size === 1 && _pmState.selection.has(id)) {
-
         } else {
           _pmState.selection = new Set([id]);
         }
@@ -596,14 +601,18 @@ function pmWireTracks() {
       pmOpenTrack(id);
     });
 
-    row.addEventListener("click", (e) => {
-      const btn = e.target.closest(".pm-track-play");
-      if (!btn || !btn.dataset.url) return;
-      e.stopPropagation();
-      e.preventDefault();
-      pmCloseContextMenu();
-      pmNavigateInPlace(btn.dataset.url);
-    }, true);
+    row.addEventListener(
+      "click",
+      (e) => {
+        const btn = e.target.closest(".pm-track-play");
+        if (!btn || !btn.dataset.url) return;
+        e.stopPropagation();
+        e.preventDefault();
+        pmCloseContextMenu();
+        pmNavigateInPlace(btn.dataset.url);
+      },
+      true
+    );
 
     row.addEventListener("contextmenu", (e) => {
       e.preventDefault();
@@ -622,13 +631,13 @@ function pmWireTracks() {
       const pl = pmCurrent();
       if (!pl) return;
       if (!_pmState.selection.has(id)) {
-
         _pmState.selection = new Set([id]);
         _pmState.anchorId = id;
         const scroll = document.getElementById("pm-track-scroll");
-        if (scroll) scroll.querySelectorAll(".pm-track").forEach((r) => {
-          r.classList.toggle("pm-track-selected", Number(r.dataset.id) === id);
-        });
+        if (scroll)
+          scroll.querySelectorAll(".pm-track").forEach((r) => {
+            r.classList.toggle("pm-track-selected", Number(r.dataset.id) === id);
+          });
         pmRenderBulkBar();
       }
       const ids = pmOrderedSelectedIds(pl);
@@ -641,7 +650,9 @@ function pmWireTracks() {
     row.addEventListener("dragend", () => {
       _pmState.dragging = null;
       pmClearDropIndicator();
-      document.querySelectorAll(".pm-pl.pm-droptarget").forEach((el) => el.classList.remove("pm-droptarget"));
+      document
+        .querySelectorAll(".pm-pl.pm-droptarget")
+        .forEach((el) => el.classList.remove("pm-droptarget"));
       _pmState.dropTargetId = null;
     });
   });
@@ -653,7 +664,6 @@ function pmWireTracks() {
     pmClearDropIndicator();
     const row = e.target.closest(".pm-track");
     if (!row) {
-
       const all = scroll.querySelectorAll(".pm-track");
       const last = all[all.length - 1];
       if (last) last.classList.add("pm-drop-after");
@@ -664,7 +674,8 @@ function pmWireTracks() {
     row.classList.add(after ? "pm-drop-after" : "pm-drop-before");
   };
   scroll.ondrop = (e) => {
-    if (!_pmState.dragging || _pmState.dragging.fromPlaylist !== (pmCurrent() && pmCurrent().id)) return;
+    if (!_pmState.dragging || _pmState.dragging.fromPlaylist !== (pmCurrent() && pmCurrent().id))
+      return;
     e.preventDefault();
     const pl = pmCurrent();
     if (!pl) return;
@@ -700,7 +711,7 @@ function pmClearDropIndicator() {
 
 async function pmApplyNewOrder(newIds) {
   const pl = pmCurrent();
-    if (!pl) return;
+  if (!pl) return;
   if (JSON.stringify(newIds) === JSON.stringify((pl.tracks || []).map((t) => t.id))) return;
 
   const byId = new Map((pl.tracks || []).map((t) => [t.id, t]));
@@ -715,7 +726,6 @@ async function pmApplyNewOrder(newIds) {
     await api.putTracks(pl.id, newIds);
     showToast("Order updated");
   } catch (e) {
-
     pl.tracks = prevTracks;
     pl.duration = prevDur;
     pmRenderTracksKeepScroll();
@@ -748,7 +758,6 @@ async function pmRemoveSelected(idsArg) {
     await api.putTracks(pl.id, newIds);
     showToast(`${ids.length} track${ids.length === 1 ? "" : "s"} removed`);
   } catch (e) {
-
     pl.tracks = prevTracks;
     pl.duration = prevDur;
     pmRenderDetailHeader();
@@ -764,12 +773,14 @@ async function pmCopyTo(targetPl, ids) {
   try {
     await api.putTracks(targetPl.id, newIds);
 
-    targetPl.tracks = newIds.map((id) => {
-      const here = (targetPl.tracks || []).find((t) => t.id === id);
-      if (here) return here;
-      const src = pmCurrent();
-      return (src && src.tracks || []).find((t) => t.id === id);
-    }).filter(Boolean);
+    targetPl.tracks = newIds
+      .map((id) => {
+        const here = (targetPl.tracks || []).find((t) => t.id === id);
+        if (here) return here;
+        const src = pmCurrent();
+        return ((src && src.tracks) || []).find((t) => t.id === id);
+      })
+      .filter(Boolean);
     targetPl.duration = targetPl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
     showToast(`Copied ${ids.length} track${ids.length === 1 ? "" : "s"} to "${targetPl.title}"`);
     pmRenderSidebar();
@@ -809,9 +820,10 @@ async function pmMoveTo(targetPl, ids) {
     targetPl.duration = targetPl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
     showToast(`Moved ${ids.length} track${ids.length === 1 ? "" : "s"} to "${targetPl.title}"`);
   } catch (e) {
-
     showToast("Move failed, restoring source: " + (e.message || e));
-    try { await api.putTracks(src.id, srcNew.concat(ids)); } catch (_) {}
+    try {
+      await api.putTracks(src.id, srcNew.concat(ids));
+    } catch (_) {}
     src.tracks = srcPrevTracks;
     src.duration = srcPrevDur;
     targetPl.tracks = tgtPrevTracks;
@@ -837,7 +849,11 @@ function pmOpenContextMenu(x, y) {
     { label: `Move to…`, act: () => pmMoveToDialog([..._pmState.selection]) },
     { label: `Export selected as JSON`, act: pmExportSelectedJSON },
     { sep: true },
-    { label: `Open track on SoundCloud`, disabled: n !== 1, act: () => pmOpenTrack([..._pmState.selection][0]) },
+    {
+      label: `Open track on SoundCloud`,
+      disabled: n !== 1,
+      act: () => pmOpenTrack([..._pmState.selection][0]),
+    },
   ];
   for (const it of items) {
     if (it.sep) {
@@ -847,9 +863,14 @@ function pmOpenContextMenu(x, y) {
       continue;
     }
     const el = document.createElement("div");
-    el.className = "pm-ctx-item" + (it.danger ? " pm-ctx-danger" : "") + (it.disabled ? " pm-ctx-disabled" : "");
+    el.className =
+      "pm-ctx-item" + (it.danger ? " pm-ctx-danger" : "") + (it.disabled ? " pm-ctx-disabled" : "");
     el.textContent = it.label;
-    if (!it.disabled) el.addEventListener("click", () => { pmCloseContextMenu(); it.act(); });
+    if (!it.disabled)
+      el.addEventListener("click", () => {
+        pmCloseContextMenu();
+        it.act();
+      });
     menu.appendChild(el);
   }
 
@@ -894,11 +915,22 @@ function pmPickPlaylist(title, excludePid) {
       const it = document.createElement("div");
       it.className = "pm-picker-item";
       it.innerHTML = `<span style="width:30px;height:30px;border-radius:5px;overflow:hidden;background:#222;flex-shrink:0;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;"/></span><span style="min-width:0;"><span style="font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(p.title || "Untitled").replace(/</g, "&lt;")}</span><span style="font-size:11px;opacity:0.6;">${(p.tracks || []).length} tracks</span></span>`;
-      it.addEventListener("click", () => { back.remove(); resolve(p.id); });
+      it.addEventListener("click", () => {
+        back.remove();
+        resolve(p.id);
+      });
       listEl.appendChild(it);
     });
-    dlg.querySelector("#pm-pk-cancel").addEventListener("click", () => { back.remove(); resolve(null); });
-    back.addEventListener("click", (e) => { if (e.target === back) { back.remove(); resolve(null); } });
+    dlg.querySelector("#pm-pk-cancel").addEventListener("click", () => {
+      back.remove();
+      resolve(null);
+    });
+    back.addEventListener("click", (e) => {
+      if (e.target === back) {
+        back.remove();
+        resolve(null);
+      }
+    });
   });
 }
 
@@ -920,7 +952,7 @@ async function pmMoveToDialog(ids) {
 
 function pmOpenTrack(id) {
   const pl = pmCurrent();
-  const t = (pl && pl.tracks || []).find((x) => x.id === id);
+  const t = ((pl && pl.tracks) || []).find((x) => x.id === id);
   if (!t || !t.permalink_url) return;
   if (_pmState.contextMenu) pmCloseContextMenu();
   const overlay = document.getElementById("sclient-playlists-overlay");
@@ -944,7 +976,9 @@ function pmNavigateInPlace(url) {
 async function pmDeletePlaylist() {
   const pl = pmCurrent();
   if (!pl) return;
-  const ok = await showConfirm(`Delete playlist "${pl.title || "Untitled"}"? This cannot be undone.`);
+  const ok = await showConfirm(
+    `Delete playlist "${pl.title || "Untitled"}"? This cannot be undone.`
+  );
   if (!ok) return;
   try {
     await api.del(pl.id);
@@ -965,7 +999,7 @@ async function pmExportSelectedJSON() {
   if (!pl) return;
   const ids = [..._pmState.selection];
   const obj = pmBuildExport(pl, ids);
-  await pmExportJSON(`${(pl.permalink || "playlist")}-selection.json`, obj);
+  await pmExportJSON(`${pl.permalink || "playlist"}-selection.json`, obj);
 }
 
 async function pmExportJSON(defaultName, obj) {
@@ -995,14 +1029,14 @@ document.addEventListener("keydown", (e) => {
 
 async function pmRefresh() {
   const sidebar = document.getElementById("pm-sidebar-list");
-  if (sidebar) sidebar.innerHTML = `<div style="padding:20px;text-align:center;opacity:0.5;">Loading…</div>`;
+  if (sidebar)
+    sidebar.innerHTML = `<div style="padding:20px;text-align:center;opacity:0.5;">Loading…</div>`;
   try {
     if (!_pmState.userId) {
       const me = await api.me();
       _pmState.userId = me && me.id;
     }
     if (!_pmState.userId) {
-
       const tok = extractOAuthToken() || "";
       const parts = tok.split("-");
       if (parts.length >= 3) _pmState.userId = Number(parts[2]);
@@ -1125,7 +1159,6 @@ function createPlaylistManagerOverlay() {
     } else if (_pmState.editor) {
       pmCloseEditor();
     }
-
   }
 
   document.getElementById("pm-close-btn").addEventListener("click", close);
@@ -1183,8 +1216,16 @@ function pmCloseEditor() {
 }
 
 const PM_LICENSES = [
-  "all-rights-reserved", "no-rights-reserved", "cc-by", "cc-by-nc", "cc-by-nc-sa",
-  "cc-by-sa", "cc-by-nd", "cc-by-nc-nd", "cc-sampling+", "cc-zero",
+  "all-rights-reserved",
+  "no-rights-reserved",
+  "cc-by",
+  "cc-by-nc",
+  "cc-by-nc-sa",
+  "cc-by-sa",
+  "cc-by-nd",
+  "cc-by-nc-nd",
+  "cc-sampling+",
+  "cc-zero",
 ];
 const PM_SET_TYPES = ["", "album", "ep", "single", "compilation"];
 const PM_EMBEDDABLE = ["all", "me", "none"];
@@ -1288,7 +1329,9 @@ function pmOpenEditor() {
   const close = () => pmCloseEditor();
   dlg.querySelector("#pm-ed-x").addEventListener("click", close);
   dlg.querySelector("#pm-ed-cancel").addEventListener("click", close);
-  back.addEventListener("mousedown", (e) => { if (e.target === back) close(); });
+  back.addEventListener("mousedown", (e) => {
+    if (e.target === back) close();
+  });
 
   const advWrap = dlg.querySelector("#pm-ed-adv");
   const advToggle = dlg.querySelector("#pm-ed-adv-toggle");
@@ -1298,11 +1341,18 @@ function pmOpenEditor() {
     advToggle.firstChild.textContent = open ? "▸ Advanced details" : "▾ Advanced details";
   });
 
-  let chips = (pl.tag_list || "").trim().split(/\s+/).filter(Boolean).map((s) => s.replace(/^#/, ""));
+  let chips = (pl.tag_list || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((s) => s.replace(/^#/, ""));
   const renderChips = () => {
     const wrap = dlg.querySelector("#pm-ed-tags");
     wrap.innerHTML = chips
-      .map((c, i) => `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`)
+      .map(
+        (c, i) =>
+          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`
+      )
       .join("");
     wrap.querySelectorAll(".pm-chip-x").forEach((x) => {
       x.addEventListener("click", () => {
@@ -1395,7 +1445,7 @@ function pmOpenEditor() {
       Object.assign(pl, merged || {});
 
       if (!pl.tracks) pl.tracks = [];
-      pl.duration = pl.duration || (pl.tracks.reduce((s, t) => s + (t.duration || 0), 0));
+      pl.duration = pl.duration || pl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
       pmRenderSidebar();
       pmRenderDetail();
       pmCloseEditor();
@@ -1411,14 +1461,13 @@ function pmOpenEditor() {
 function pmBuildExport(pl, onlyIds) {
   const allTracks = pl.tracks || [];
   const selectedSet = onlyIds && onlyIds.length ? new Set(onlyIds) : null;
-  const filteredTracks = selectedSet
-    ? allTracks.filter((t) => selectedSet.has(t.id))
-    : allTracks;
+  const filteredTracks = selectedSet ? allTracks.filter((t) => selectedSet.has(t.id)) : allTracks;
 
   const tracksExport = filteredTracks.map((t) => {
     const artist = getArtistFromTrack(t);
     const publisher =
-      (t.publisher_metadata && (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
+      (t.publisher_metadata &&
+        (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
       (t.user && (t.user.username || t.user.full_name)) ||
       t.label_name ||
       (t.publisher_metadata && t.publisher_metadata.artist) ||
@@ -1499,13 +1548,25 @@ async function pmImport() {
     let id;
     if (typeof t === "number" && Number.isFinite(t)) id = t;
     else if (typeof t === "string" && /^\d+$/.test(t.trim())) id = Number(t.trim());
-    else if (t && typeof t === "object" && typeof t.id === "number" && Number.isFinite(t.id)) id = t.id;
-    else if (t && typeof t === "object" && typeof t.id === "string" && /^\d+$/.test(t.id.trim())) id = Number(t.id.trim());
-    else { dropped++; continue; }
-    if (!seen.has(id)) { trackIds.push(id); seen.add(id); }
+    else if (t && typeof t === "object" && typeof t.id === "number" && Number.isFinite(t.id))
+      id = t.id;
+    else if (t && typeof t === "object" && typeof t.id === "string" && /^\d+$/.test(t.id.trim()))
+      id = Number(t.id.trim());
+    else {
+      dropped++;
+      continue;
+    }
+    if (!seen.has(id)) {
+      trackIds.push(id);
+      seen.add(id);
+    }
   }
   if (trackIds.length === 0) {
-    showToast(dropped ? `No importable track ids found (${dropped} entries skipped)` : "No importable tracks found");
+    showToast(
+      dropped
+        ? `No importable track ids found (${dropped} entries skipped)`
+        : "No importable tracks found"
+    );
     return;
   }
   if (dropped > 0) showToast(`Skipped ${dropped} non-id entr${dropped === 1 ? "y" : "ies"}`);
@@ -1594,40 +1655,43 @@ function pmParseSpotifyCsv(text) {
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (c === ',' && !inQuotes) {
+    } else if (c === "," && !inQuotes) {
       row.push(field);
       field = "";
-    } else if ((c === '\n' || c === '\r') && !inQuotes) {
+    } else if ((c === "\n" || c === "\r") && !inQuotes) {
       row.push(field);
-      if (row.some(f => f)) rows.push(row);
+      if (row.some((f) => f)) rows.push(row);
       row = [];
       field = "";
-      if (c === '\r' && text[i + 1] === '\n') i++;
+      if (c === "\r" && text[i + 1] === "\n") i++;
     } else {
       field += c;
     }
   }
   if (field || row.length) {
     row.push(field);
-    if (row.some(f => f)) rows.push(row);
+    if (row.some((f) => f)) rows.push(row);
   }
 
   if (rows.length < 2) throw new Error("Empty or invalid CSV");
 
-  const headers = rows[0].map(h => h.toLowerCase());
-  const trackIdx = headers.findIndex(h => h.includes("track name"));
-  const artistIdx = headers.findIndex(h => h.includes("artist name"));
+  const headers = rows[0].map((h) => h.toLowerCase());
+  const trackIdx = headers.findIndex((h) => h.includes("track name"));
+  const artistIdx = headers.findIndex((h) => h.includes("artist name"));
 
   let durIdx = -1;
   for (let i = 0; i < headers.length; i++) {
     const h = headers[i];
-    if ((h.includes("track duration") && h.includes("ms")) || (h.includes("duration") && h.includes("ms"))) {
+    if (
+      (h.includes("track duration") && h.includes("ms")) ||
+      (h.includes("duration") && h.includes("ms"))
+    ) {
       durIdx = i;
       break;
     }
   }
 
-  const isrcIdx = headers.findIndex(h => h.includes("isrc"));
+  const isrcIdx = headers.findIndex((h) => h.includes("isrc"));
 
   if (trackIdx === -1 || artistIdx === -1) {
     throw new Error("Not an exportify CSV (missing Track Name / Artist columns)");
@@ -1639,13 +1703,16 @@ function pmParseSpotifyCsv(text) {
     if (!r[trackIdx] && !r[artistIdx]) continue;
 
     const rawArtists = r[artistIdx] || "";
-    const artists = rawArtists.split(",").map(a => a.trim()).filter(Boolean);
+    const artists = rawArtists
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean);
 
     result.push({
       title: r[trackIdx] || "",
       artists: artists,
       durationMs: durIdx !== -1 && r[durIdx] ? parseInt(r[durIdx], 10) : 0,
-      isrc: isrcIdx !== -1 ? (r[isrcIdx] || "").trim() : ""
+      isrc: isrcIdx !== -1 ? (r[isrcIdx] || "").trim() : "",
     });
   }
   return result;
@@ -1666,13 +1733,18 @@ function pmNormTitle(s) {
 }
 
 function pmExtractMixType(title) {
-  const m = title.toLowerCase().match(/\b(original|remix|live|acoustic|edit|bootleg|mix|radio edit)\b/);
+  const m = title
+    .toLowerCase()
+    .match(/\b(original|remix|live|acoustic|edit|bootleg|mix|radio edit)\b/);
   return m ? m[1] : "";
 }
 
 function pmScoreMatch(spotifyRow, scTrack) {
   const isrcA = spotifyRow.isrc ? spotifyRow.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
-  const isrcB = scTrack.publisher_metadata && scTrack.publisher_metadata.isrc ? scTrack.publisher_metadata.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
+  const isrcB =
+    scTrack.publisher_metadata && scTrack.publisher_metadata.isrc
+      ? scTrack.publisher_metadata.isrc.replace(/[-\s]/g, "").toLowerCase()
+      : "";
 
   if (isrcA && isrcB && isrcA === isrcB) {
     return { confidence: "high", score: 100, reason: "ISRC exact", tier: 1 };
@@ -1686,12 +1758,17 @@ function pmScoreMatch(spotifyRow, scTrack) {
 
   const getArtistTokens = (str) => {
     if (!str) return [];
-    return str.toLowerCase().split(/,|&|\bvs\.?\b|\//).map(s => s.replace(/[^a-z0-9]/g, "").trim()).filter(Boolean);
+    return str
+      .toLowerCase()
+      .split(/,|&|\bvs\.?\b|\//)
+      .map((s) => s.replace(/[^a-z0-9]/g, "").trim())
+      .filter(Boolean);
   };
 
   const artistsA = getArtistTokens(spotifyRow.artists.join(", "));
   const artistsB = getArtistTokens(getArtistFromTrack(scTrack));
-  const artistOverlap = artistsA.some(a => artistsB.includes(a)) || artistsB.some(b => artistsA.includes(b));
+  const artistOverlap =
+    artistsA.some((a) => artistsB.includes(a)) || artistsB.some((b) => artistsA.includes(b));
 
   const durA = spotifyRow.durationMs;
   const durB = scTrack.duration;
@@ -1700,7 +1777,15 @@ function pmScoreMatch(spotifyRow, scTrack) {
   const mixA = pmExtractMixType(spotifyRow.title);
   const mixB = pmExtractMixType(scTrack.title);
   let mixPenalty = 0;
-  if (mixA !== mixB && (mixA === "remix" || mixB === "remix" || mixA === "live" || mixB === "live" || mixA === "acoustic" || mixB === "acoustic")) {
+  if (
+    mixA !== mixB &&
+    (mixA === "remix" ||
+      mixB === "remix" ||
+      mixA === "live" ||
+      mixB === "live" ||
+      mixA === "acoustic" ||
+      mixB === "acoustic")
+  ) {
     mixPenalty = 25;
   }
 
@@ -1711,26 +1796,31 @@ function pmScoreMatch(spotifyRow, scTrack) {
     }
   }
 
-  const intersection = tokensA.filter(t => tokensB.includes(t)).length;
+  const intersection = tokensA.filter((t) => tokensB.includes(t)).length;
   const union = new Set([...tokensA, ...tokensB]).size;
   const jaccard = union === 0 ? 0 : intersection / union;
 
   const lev = (a, b) => {
-    if(!a.length) return b.length;
-    if(!b.length) return a.length;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
     const matrix = [];
-    for(let i=0; i<=b.length; i++) matrix[i] = [i];
-    for(let j=0; j<=a.length; j++) matrix[0][j] = j;
-    for(let i=1; i<=b.length; i++) {
-      for(let j=1; j<=a.length; j++) {
-        if(b.charAt(i-1) == a.charAt(j-1)) matrix[i][j] = matrix[i-1][j-1];
-        else matrix[i][j] = Math.min(matrix[i-1][j-1]+1, Math.min(matrix[i][j-1]+1, matrix[i-1][j]+1));
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) == a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
+        else
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+          );
       }
     }
     return matrix[b.length][a.length];
   };
   const levDist = lev(normA, normB);
-  const levNorm = Math.max(normA.length, normB.length) === 0 ? 0 : levDist / Math.max(normA.length, normB.length);
+  const levNorm =
+    Math.max(normA.length, normB.length) === 0 ? 0 : levDist / Math.max(normA.length, normB.length);
 
   if ((jaccard >= 0.6 || levNorm <= 0.3) && artistOverlap) {
     let baseScore = Math.floor(jaccard * 100);
@@ -1746,12 +1836,14 @@ function pmScoreMatch(spotifyRow, scTrack) {
 async function mapLimit(items, limit, asyncFn) {
   const results = [];
   let i = 0;
-  const workers = Array(limit).fill(0).map(async () => {
-    while (i < items.length) {
-      const idx = i++;
-      results[idx] = await asyncFn(items[idx], idx);
-    }
-  });
+  const workers = Array(limit)
+    .fill(0)
+    .map(async () => {
+      while (i < items.length) {
+        const idx = i++;
+        results[idx] = await asyncFn(items[idx], idx);
+      }
+    });
   await Promise.all(workers);
   return results;
 }
@@ -1759,10 +1851,13 @@ async function mapLimit(items, limit, asyncFn) {
 async function pmSpotifyImport() {
   const draftStr = localStorage.getItem("sclient_spotify_draft");
   if (draftStr) {
-    const ok = await showConfirm("You have an unfinished Spotify import. Do you want to resume it?", [
-      { id: "new", text: "Start New", type: "secondary" },
-      { id: "resume", text: "Resume", type: "primary" }
-    ]);
+    const ok = await showConfirm(
+      "You have an unfinished Spotify import. Do you want to resume it?",
+      [
+        { id: "new", text: "Start New", type: "secondary" },
+        { id: "resume", text: "Resume", type: "primary" },
+      ]
+    );
     if (ok === "resume") {
       try {
         const state = JSON.parse(draftStr);
@@ -1799,7 +1894,9 @@ let _pmSpotifyState = null;
 
 function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
   const accent = getAccent();
-  injectStyle("sclient-playlists-spotify-style", `
+  injectStyle(
+    "sclient-playlists-spotify-style",
+    `
     .pm-sp-row { display: flex; align-items: stretch; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; gap: 12px; font-size:12px; }
     .pm-sp-row.high { background: rgba(50, 200, 50, 0.05); }
     .pm-sp-row.review { background: rgba(200, 200, 50, 0.05); }
@@ -1808,7 +1905,8 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     .pm-sp-right { flex: 1; min-width: 0; }
     .pm-sp-score { width: 50px; text-align: right; flex-shrink: 0; font-weight: bold; }
     .pm-sp-actions { width: 140px; flex-shrink: 0; display:flex; flex-direction:column; gap:6px; }
-  `);
+  `
+  );
 
   const back = document.createElement("div");
   back.className = "pm-picker-back";
@@ -1845,9 +1943,13 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
 
   dlg.querySelector("#pm-sp-cancel").addEventListener("click", () => back.remove());
   dlg.querySelector("#pm-sp-confirm").addEventListener("click", async () => {
-    const needReview = _pmSpotifyState.rows.filter(r => r.resolved && r.confidence === "review" && r.action === "review").length;
+    const needReview = _pmSpotifyState.rows.filter(
+      (r) => r.resolved && r.confidence === "review" && r.action === "review"
+    ).length;
     if (needReview > 0) {
-      showToast(`Please accept or skip the ${needReview} track(s) marked 'Review' before importing!`);
+      showToast(
+        `Please accept or skip the ${needReview} track(s) marked 'Review' before importing!`
+      );
       return;
     }
 
@@ -1856,9 +1958,9 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       confirmBtn.disabled = true;
       confirmBtn.textContent = "Importing...";
 
-      const validRows = _pmSpotifyState.rows.filter(r => r.action !== "skip" && r.match);
-      const skippedCount = _pmSpotifyState.rows.filter(r => r.action === "skip").length;
-      const trackIds = validRows.map(r => r.match.id);
+      const validRows = _pmSpotifyState.rows.filter((r) => r.action !== "skip" && r.match);
+      const skippedCount = _pmSpotifyState.rows.filter((r) => r.action === "skip").length;
+      const trackIds = validRows.map((r) => r.match.id);
 
       if (trackIds.length === 0) {
         showToast("No tracks to import.");
@@ -1892,10 +1994,13 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
             throw new Error("Invalid playlist response from API");
           }
         } catch (err) {
-          const ok = await showConfirm(`Failed to create playlist chunk ${i + 1}. Continue with remaining?`, [
-            { id: "cancel", text: "Cancel remaining", type: "secondary" },
-            { id: "continue", text: "Continue", type: "primary" }
-          ]);
+          const ok = await showConfirm(
+            `Failed to create playlist chunk ${i + 1}. Continue with remaining?`,
+            [
+              { id: "cancel", text: "Cancel remaining", type: "secondary" },
+              { id: "continue", text: "Continue", type: "primary" },
+            ]
+          );
           if (ok !== "continue") {
             break;
           }
@@ -1906,7 +2011,9 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         await pmSelectPlaylist(createdPlaylists[0].id);
       }
 
-      showToast(`Imported ${successCount} tracks across ${createdPlaylists.length} playlist(s) (${skippedCount} skipped)`);
+      showToast(
+        `Imported ${successCount} tracks across ${createdPlaylists.length} playlist(s) (${skippedCount} skipped)`
+      );
       localStorage.removeItem("sclient_spotify_draft");
       back.remove();
     } catch (e) {
@@ -1930,19 +2037,23 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         reason: "",
         score: 0,
         resolved: false,
-        action: "skip"
+        action: "skip",
       })),
       total: spotifyRows.length,
-      resolved: 0
+      resolved: 0,
     };
   }
 
   const listEl = dlg.querySelector("#pm-sp-list");
 
   const updateProgress = () => {
-    const resolvedCount = _pmSpotifyState.rows.filter(r => r.resolved).length;
-    const needReview = _pmSpotifyState.rows.filter(r => r.resolved && r.confidence === "review" && r.action === "review").length;
-    const skippedCount = _pmSpotifyState.rows.filter(r => r.resolved && r.action === "skip").length;
+    const resolvedCount = _pmSpotifyState.rows.filter((r) => r.resolved).length;
+    const needReview = _pmSpotifyState.rows.filter(
+      (r) => r.resolved && r.confidence === "review" && r.action === "review"
+    ).length;
+    const skippedCount = _pmSpotifyState.rows.filter(
+      (r) => r.resolved && r.action === "skip"
+    ).length;
     const readyCount = resolvedCount - needReview - skippedCount;
 
     let headText = `Spotify CSV Import · resolved ${resolvedCount} / ${_pmSpotifyState.total}`;
@@ -1974,7 +2085,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       existing.dataset.idx = r.idx;
 
       const siblings = Array.from(listEl.children);
-      const insertBefore = siblings.find(sib => Number(sib.dataset.idx) > r.idx);
+      const insertBefore = siblings.find((sib) => Number(sib.dataset.idx) > r.idx);
       if (insertBefore) {
         listEl.insertBefore(existing, insertBefore);
       } else {
@@ -2045,7 +2156,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
 
     r.candidates.forEach((c, i) => {
       if (c.id !== (r.match ? r.match.id : -1)) {
-        actSelect.innerHTML += `<option value="alt_${i}">Match: ${c.title.slice(0,25)}</option>`;
+        actSelect.innerHTML += `<option value="alt_${i}">Match: ${c.title.slice(0, 25)}</option>`;
       }
     });
 
@@ -2133,7 +2244,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         return { candidates, best };
       } catch (e) {
         if (e.message && e.message.includes("429") && retries > 0) {
-          await new Promise(res => setTimeout(res, backoff));
+          await new Promise((res) => setTimeout(res, backoff));
           backoff = Math.min(backoff * 2, 8000);
           retries--;
         } else {
@@ -2144,10 +2255,10 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     return { error: "rate-limited; retry manually" };
   };
 
-  _pmSpotifyState.rows.forEach(r => renderRow(r));
+  _pmSpotifyState.rows.forEach((r) => renderRow(r));
   updateProgress();
 
-  const unresolved = _pmSpotifyState.rows.filter(r => !r.resolved);
+  const unresolved = _pmSpotifyState.rows.filter((r) => !r.resolved);
   mapLimit(unresolved, 5, async (r) => {
     renderRow(r);
     const res = await searchTrack(r.original);

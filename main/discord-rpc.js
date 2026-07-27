@@ -8,13 +8,24 @@ let login = null;
 
 function buildRedirectUrl(trackId, artistSlug, trackSlug) {
   const p = new URLSearchParams();
-  if (trackId) p.set('id', trackId);
-  if (artistSlug) p.set('artist', artistSlug);
-  if (trackSlug) p.set('track', trackSlug);
+  if (trackId) p.set("id", trackId);
+  if (artistSlug) p.set("artist", artistSlug);
+  if (trackSlug) p.set("track", trackSlug);
   return `https://sc.z-n.cc/redirect?${p.toString()}`;
 }
 
-async function updateRpc({ title, artist, isPlaying, artwork, timeStart, timeEnd, songUrl, trackId, artistSlug, trackSlug }) {
+async function updateRpc({
+  title,
+  artist,
+  isPlaying,
+  artwork,
+  timeStart,
+  timeEnd,
+  songUrl,
+  trackId,
+  artistSlug,
+  trackSlug,
+}) {
   if (!rpc) {
     rpc = new Client({ clientId: CLIENT_ID, transport: { type: "ipc" } });
     login = rpc.login().catch((e) => {
@@ -53,7 +64,7 @@ async function updateRpc({ title, artist, isPlaying, artwork, timeStart, timeEnd
 
   if (trackId) {
     activity.buttons = [
-      { label: 'Listen on SoundCloud', url: buildRedirectUrl(trackId, artistSlug, trackSlug) },
+      { label: "Listen on SoundCloud", url: buildRedirectUrl(trackId, artistSlug, trackSlug) },
     ];
   }
 

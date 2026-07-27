@@ -120,12 +120,13 @@ function setupStatsTracking() {
     try {
       const artist = getArtistFromTrack(t);
       const publisher =
-        (t.publisher_metadata && (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
+        (t.publisher_metadata &&
+          (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
         (t.user && (t.user.username || t.user.full_name)) ||
         t.label_name ||
         (t.publisher_metadata && t.publisher_metadata.artist) ||
         null;
-        
+
       await sendBridge("stats_record_listen", {
         played_at: ts,
         track_id: t.id,
@@ -135,7 +136,7 @@ function setupStatsTracking() {
           genre: getGenre(t),
           duration: t.duration || 0,
           artist: artist !== "Unknown" ? artist : null,
-          publisher: publisher
+          publisher: publisher,
         },
       });
       setStatus("Recorded!", "#5f5");

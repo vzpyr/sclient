@@ -17,8 +17,13 @@
       .btn.active,
       .eyebrow,
       .eq span {
-        transition-property: background, color, border-color, box-shadow,
-          -webkit-text-fill-color, background-color;
+        transition-property:
+          background,
+          color,
+          border-color,
+          box-shadow,
+          -webkit-text-fill-color,
+          background-color;
         transition-duration: 0.35s ease;
       }
 
@@ -138,7 +143,9 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: background 0.18s, color 0.18s;
+        transition:
+          background 0.18s,
+          color 0.18s;
         flex-shrink: 0;
       }
       .window-btn + .window-btn {
@@ -331,7 +338,11 @@
         top: 0;
         left: 0;
         height: 100%;
-        background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #fff));
+        background: linear-gradient(
+          90deg,
+          var(--accent),
+          color-mix(in srgb, var(--accent) 60%, #fff)
+        );
         border-radius: 999px;
         width: 0%;
         pointer-events: none;
@@ -451,12 +462,16 @@
         display: none;
       }
       #lyrics-content {
-        scrollbar-width: none; 
+        scrollbar-width: none;
       }
 
       .lyric-line {
-        transition: color 0.4s ease, transform 0.4s ease, font-size 0.4s ease,
-          opacity 0.4s ease, filter 0.4s ease;
+        transition:
+          color 0.4s ease,
+          transform 0.4s ease,
+          font-size 0.4s ease,
+          opacity 0.4s ease,
+          filter 0.4s ease;
         font-size: 14px;
         color: #fff;
         transform-origin: center;
@@ -668,22 +683,92 @@
 
     <div class="top-right">
       <button class="window-btn romanize-btn" id="btn-romanize" title="Romanize lyrics">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-languages-icon lucide-languages"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-languages-icon lucide-languages"
+        >
+          <path d="m5 8 6 6" />
+          <path d="m4 14 6-6 2-3" />
+          <path d="M2 5h12" />
+          <path d="M7 2h1" />
+          <path d="m22 22-5-10-5 10" />
+          <path d="M14 18h6" />
+        </svg>
       </button>
       <div class="offset-controls" id="offset-controls">
-        <input type="range" id="offset-slider" class="offset-slider" min="-2" max="2" step="0.1" value="0" title="Lyrics timing offset">
+        <input
+          type="range"
+          id="offset-slider"
+          class="offset-slider"
+          min="-2"
+          max="2"
+          step="0.1"
+          value="0"
+          title="Lyrics timing offset"
+        />
         <span id="offset-val" class="offset-val">0.0s</span>
       </div>
       <div class="window-controls">
-      <button class="window-btn" id="btn-minimize" title="Minimize">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-icon lucide-minus"><path d="M5 12h14"/></svg>
-      </button>
-      <button class="window-btn" id="btn-fullscreen" title="Fullscreen">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize-icon lucide-maximize"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
-      </button>
-      <button class="window-btn" id="btn-close" title="Back to main window">
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-      </button>
+        <button class="window-btn" id="btn-minimize" title="Minimize">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-minus-icon lucide-minus"
+          >
+            <path d="M5 12h14" />
+          </svg>
+        </button>
+        <button class="window-btn" id="btn-fullscreen" title="Fullscreen">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-maximize-icon lucide-maximize"
+          >
+            <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+            <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+            <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+          </svg>
+        </button>
+        <button class="window-btn" id="btn-close" title="Back to main window">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-x-icon lucide-x"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -696,9 +781,7 @@
         <div class="right-panel">
           <div class="metadata">
             <div class="eyebrow">
-              <span class="eq" id="eq-indicator">
-                <span></span><span></span><span></span>
-              </span>
+              <span class="eq" id="eq-indicator"> <span></span><span></span><span></span> </span>
               Now Playing
             </div>
             <div class="title" id="title">Not Playing</div>
@@ -715,7 +798,24 @@
 
           <div class="controls">
             <button class="btn" id="btn-shuffle" title="Shuffle">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shuffle-icon lucide-shuffle"><path d="m18 14 4 4-4 4"/><path d="m18 2 4 4-4 4"/><path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22"/><path d="M2 6h1.972a4 4 0 0 1 3.6 2.2"/><path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-shuffle-icon lucide-shuffle"
+              >
+                <path d="m18 14 4 4-4 4" />
+                <path d="m18 2 4 4-4 4" />
+                <path d="M2 18h1.973a4 4 0 0 0 3.3-1.7l5.454-8.6a4 4 0 0 1 3.3-1.7H22" />
+                <path d="M2 6h1.972a4 4 0 0 1 3.6 2.2" />
+                <path d="M22 18h-6.041a4 4 0 0 1-3.3-1.8l-.359-.45" />
+              </svg>
             </button>
             <button class="btn" id="btn-loop" title="Repeat">
               <svg
@@ -731,7 +831,10 @@
                 class="lucide lucide-repeat-icon lucide-repeat"
                 style="display: block"
               >
-                <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+                <path d="m17 2 4 4-4 4" />
+                <path d="M3 11v-1a4 4 0 0 1 4-4h14" />
+                <path d="m7 22-4-4 4-4" />
+                <path d="M21 13v1a4 4 0 0 1-4 4H3" />
               </svg>
               <svg
                 id="icon-loop-one"
@@ -763,7 +866,23 @@
 
             <div class="transport">
               <button class="btn" id="btn-prev" title="Previous">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skip-back-icon lucide-skip-back"><path d="M17.971 4.285A2 2 0 0 1 21 6v12a2 2 0 0 1-3.029 1.715l-9.997-5.998a2 2 0 0 1-.003-3.432z"/><path d="M3 20V4"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-skip-back-icon lucide-skip-back"
+                >
+                  <path
+                    d="M17.971 4.285A2 2 0 0 1 21 6v12a2 2 0 0 1-3.029 1.715l-9.997-5.998a2 2 0 0 1-.003-3.432z"
+                  />
+                  <path d="M3 20V4" />
+                </svg>
               </button>
               <button class="btn btn-main" id="btn-playpause" title="Play/Pause">
                 <svg
@@ -777,9 +896,11 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   class="lucide lucide-play-icon lucide-play"
-                  style="display: none;"
+                  style="display: none"
                 >
-                  <path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/>
+                  <path
+                    d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"
+                  />
                 </svg>
                 <svg
                   id="icon-pause"
@@ -793,19 +914,70 @@
                   stroke-linejoin="round"
                   class="lucide lucide-pause-icon lucide-pause"
                 >
-                  <rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/>
+                  <rect x="14" y="3" width="5" height="18" rx="1" />
+                  <rect x="5" y="3" width="5" height="18" rx="1" />
                 </svg>
               </button>
               <button class="btn" id="btn-next" title="Next">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-skip-forward-icon lucide-skip-forward"><path d="M21 4v16"/><path d="M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-skip-forward-icon lucide-skip-forward"
+                >
+                  <path d="M21 4v16" />
+                  <path
+                    d="M6.029 4.285A2 2 0 0 0 3 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"
+                  />
+                </svg>
               </button>
             </div>
 
             <button class="btn" id="btn-like" title="Like">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-icon lucide-heart"><path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-heart-icon lucide-heart"
+              >
+                <path
+                  d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+                />
+              </svg>
             </button>
             <button class="btn" id="btn-lyrics" title="Lyrics">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mic-vocal-icon lucide-mic-vocal"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-mic-vocal-icon lucide-mic-vocal"
+              >
+                <path
+                  d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"
+                />
+                <path
+                  d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"
+                />
+                <circle cx="16" cy="7" r="5" />
+              </svg>
             </button>
           </div>
         </div>

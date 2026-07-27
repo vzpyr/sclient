@@ -1,8 +1,8 @@
 export default async function handler(req, res) {
   const url = new URL(req.url, `https://${req.headers.host}`);
 
-  if (url.pathname === '/redirect') {
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  if (url.pathname === "/redirect") {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
     return res.end(`<!doctype html>
 <html lang="en">
 <head>

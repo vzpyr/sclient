@@ -67,10 +67,7 @@ function hslToRgb(h, s, l) {
 
 function rgbToHex(r, g, b) {
   return (
-    "#" +
-    [r, g, b]
-      .map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0"))
-      .join("")
+    "#" + [r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")
   );
 }
 
@@ -102,8 +99,7 @@ function extractAccentFromArtwork(url) {
         const sWeight = s;
         const weight = Math.max(0, lWeight) * sWeight;
         if (weight <= 0) continue;
-        const key =
-          Math.round(h * 12) + "/" + Math.round(s * 4) + "/" + Math.round(l * 5);
+        const key = Math.round(h * 12) + "/" + Math.round(s * 4) + "/" + Math.round(l * 5);
         const bucket = buckets.get(key);
         if (bucket) {
           bucket.r += r * weight;
@@ -134,8 +130,7 @@ function extractAccentFromArtwork(url) {
       currentAccent = hex;
       artworkAccentLocked = true;
       document.documentElement.style.setProperty("--accent", hex);
-    } catch (e) {
-    }
+    } catch (e) {}
   };
   img.onerror = () => {};
   img.src = url;
@@ -360,16 +355,18 @@ async function romanizeAllLines() {
     const wordEls = el.querySelectorAll(".lyric-word");
     if (wordEls.length > 0) {
       wordEls.forEach((wEl) => {
-        const orig = wEl.getAttribute("data-orig-text") != null
-          ? wEl.getAttribute("data-orig-text")
-          : wEl.textContent;
+        const orig =
+          wEl.getAttribute("data-orig-text") != null
+            ? wEl.getAttribute("data-orig-text")
+            : wEl.textContent;
         wEl.setAttribute("data-orig-text", orig);
         items.push({ wEl, text: orig });
       });
     } else {
-      const origText = el.getAttribute("data-orig-text") != null
-        ? el.getAttribute("data-orig-text")
-        : el.textContent;
+      const origText =
+        el.getAttribute("data-orig-text") != null
+          ? el.getAttribute("data-orig-text")
+          : el.textContent;
       el.setAttribute("data-orig-text", origText);
       items.push({ el, text: origText });
     }
@@ -426,7 +423,10 @@ function renderManual(artist, title) {
 function renderLineWords(line) {
   if (line.words && line.words.length > 0) {
     return line.words
-      .map((w) => `<span class="lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`)
+      .map(
+        (w) =>
+          `<span class="lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`
+      )
       .join("");
   }
   return esc((line.text || "").trim() || " ");
@@ -483,7 +483,9 @@ async function fetchLyrics(artist, title) {
         currentSyncedLyrics[i].element = el;
         el.addEventListener("click", (e) => {
           const wordEl = e.target.closest(".lyric-word");
-          const t = wordEl ? parseFloat(wordEl.getAttribute("data-start")) : currentSyncedLyrics[i].start;
+          const t = wordEl
+            ? parseFloat(wordEl.getAttribute("data-start"))
+            : currentSyncedLyrics[i].start;
           const seekTo = Math.max(0, t - lyricsOffset);
           ipcRenderer.send("mini_action", { action: "seek", value: seekTo });
           lastKnownPosition = seekTo;

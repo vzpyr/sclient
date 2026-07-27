@@ -648,7 +648,8 @@ function createOverlay() {
   if (playlistsBtn) {
     playlistsBtn.addEventListener("click", () => {
       overlay.style.right = "-450px";
-      if (typeof togglePlaylistManager === "function") setTimeout(() => togglePlaylistManager(), 300);
+      if (typeof togglePlaylistManager === "function")
+        setTimeout(() => togglePlaylistManager(), 300);
     });
   }
 

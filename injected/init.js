@@ -308,6 +308,7 @@ const obsRun = () => {
   injectDownloadButton();
   injectLyricsButton();
   injectMiniplayerButton();
+  injectEffectsButton();
   if (enhancedHeaderOn) {
     replaceNavIcons();
     injectNavButtons();
