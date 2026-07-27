@@ -483,6 +483,7 @@ async function pollPlayback() {
           isShuffled: shuffleBtn ? shuffleBtn.classList.contains("m-shuffling") : false,
           loopState: loopState,
           accent: typeof getAccent === "function" ? getAccent() : "#f50",
+          playbackRate: window.sclient_effects ? window.sclient_effects.speed : 1,
           showVisualizer: window.__SCLIENT_CONFIG__
             ? window.__SCLIENT_CONFIG__.show_visualizer
             : false,
@@ -855,3 +856,25 @@ document.addEventListener(
   },
   true
 );
+
+if (typeof window !== "undefined") {
+  function sendLiveTime() {
+    let media = window.__scMedia || [];
+    if (media.length === 0) {
+      media = Array.from(document.querySelectorAll("audio, video"));
+    }
+    const activeMedia = media.find((m) => !m.paused && m.duration > 0) || media[0];
+
+    if (activeMedia) {
+      window.postMessage(
+        {
+          source: "sclient-mini-time",
+          data: { position: activeMedia.currentTime },
+        },
+        "*"
+      );
+    }
+    requestAnimationFrame(sendLiveTime);
+  }
+  sendLiveTime();
+}

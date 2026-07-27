@@ -142,10 +142,7 @@ $("offset-slider").addEventListener("input", (e) => {
   lyricsOffset = parseFloat(e.target.value);
   $("offset-val").textContent = (lyricsOffset > 0 ? "+" : "") + lyricsOffset.toFixed(1) + "s";
   currentHighlightedIndex = -999;
-  const currentPos = isPlayingLocal
-    ? lastKnownPosition + (Date.now() - lastUpdateTime) / 1000
-    : lastKnownPosition;
-  updateLyricsUI(currentPos);
+  updateLyricsUI(currentInterpolatedPos);
 });
 $("btn-minimize").addEventListener("click", () => ipcRenderer.send("mini_minimize"));
 $("btn-fullscreen").addEventListener("click", () => ipcRenderer.send("mini_fullscreen"));
@@ -155,6 +152,7 @@ let isShuffledLocal = false;
 let isLikedLocal = false;
 let loopStateLocal = "none";
 let currentAccent = "#f50";
+let playbackRateLocal = 1;
 
 let lyricsOpenLocal = false;
 let currentSyncedLyrics = [];
@@ -223,7 +221,6 @@ document.addEventListener("keydown", (e) => {
 });
 
 let lastKnownPosition = 0;
-let lastUpdateTime = Date.now();
 
 function updatePlayPauseUI(playing) {
   if (playing) {
@@ -312,6 +309,10 @@ ipcRenderer.on("mini_update", (_e, data) => {
   if (data.loopState !== undefined) {
     loopStateLocal = data.loopState;
     updateLoopUI(loopStateLocal);
+  }
+
+  if (data.playbackRate !== undefined) {
+    playbackRateLocal = data.playbackRate;
   }
 
   if (data.accent && data.accent !== currentAccent && !artworkAccentLocked) {
@@ -594,19 +595,26 @@ function updateLyricsUI(pos) {
   }
 }
 
+let currentInterpolatedPos = 0;
+
+ipcRenderer.on("mini_time", (_e, data) => {
+  if (data.position !== undefined) {
+    const liveTime = data.position;
+    if (Math.abs(liveTime - currentInterpolatedPos) > 0.4) {
+      currentInterpolatedPos = liveTime;
+    } else if (liveTime > currentInterpolatedPos) {
+      currentInterpolatedPos = liveTime;
+    }
+  }
+});
+
 function renderLoop() {
   if (currentDuration > 0) {
-    let currentPos = lastKnownPosition;
-    if (isPlayingLocal) {
-      currentPos += (Date.now() - lastUpdateTime) / 1000;
-      if (currentPos > currentDuration) currentPos = currentDuration;
-    }
-
-    $("time-current").textContent = formatTime(currentPos);
-    const percent = (currentPos / currentDuration) * 100;
+    $("time-current").textContent = formatTime(currentInterpolatedPos);
+    const percent = (currentInterpolatedPos / currentDuration) * 100;
     $("progress-fill").style.width = `${Math.max(0, Math.min(100, percent))}%`;
 
-    updateLyricsUI(currentPos);
+    updateLyricsUI(currentInterpolatedPos);
   }
 
   if (canvas && canvas.style.display !== "none") {

@@ -242,6 +242,9 @@ app.whenReady().then(async () => {
   ipcMain.on("mini_visualizer", (_e, data) => {
     if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_visualizer", data);
   });
+  ipcMain.on("mini_time", (_e, data) => {
+    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_time", data);
+  });
   ipcMain.on("resize_mini", (_e, width, height) => {
     if (miniWin && !miniWin.isDestroyed()) {
       miniWin.desiredSize = { width, height };

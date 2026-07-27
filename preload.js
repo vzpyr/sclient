@@ -115,6 +115,8 @@ window.addEventListener("message", (event) => {
     ipcRenderer.send("mini_update", event.data.data);
   } else if (event.data && event.data.source === "sclient-mini-visualizer") {
     ipcRenderer.send("mini_visualizer", event.data.data);
+  } else if (event.data && event.data.source === "sclient-mini-time") {
+    ipcRenderer.send("mini_time", event.data.data);
   } else if (event.data && event.data.source === "sclient-mini-toggle") {
     ipcRenderer.send("toggle_miniplayer");
   }

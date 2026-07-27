@@ -165,10 +165,7 @@ function createLyricsSidebar() {
     document.getElementById("sclient-lyrics-offset-val").innerText =
       (lyricsOffset > 0 ? "+" : "") + lyricsOffset.toFixed(1) + "s";
     currentHighlightedIndex = -999;
-    let currentPos = isPlaying
-      ? lastKnownPosition + (Date.now() - lastUpdateTime) / 1000
-      : lastKnownPosition;
-    updateLyricsUI(currentPos);
+    updateLyricsUI(currentInterpolatedPos);
   });
 
   document.getElementById("sclient-lyrics-romanize-btn").addEventListener("click", async () => {
@@ -458,7 +455,6 @@ if (typeof onPlaybackChange !== "undefined") {
     currentDuration = evt.duration;
     isPlaying = evt.isPlaying;
     lastUpdateTime = Date.now();
-    updateLyricsUI(lastKnownPosition);
 
     if (lyricsOpen && evt.songUrl) {
       if (evt.songUrl !== currentLyricsUrl) {
@@ -473,10 +469,26 @@ if (typeof onPlaybackChange !== "undefined") {
   });
 }
 
+let currentInterpolatedPos = 0;
+
 function renderLoop() {
-  if (lyricsOpen && isPlaying && currentSyncedLyrics.length) {
-    const estimatedPos = lastKnownPosition + (Date.now() - lastUpdateTime) / 1000;
-    updateLyricsUI(estimatedPos);
+  if (lyricsOpen && currentSyncedLyrics.length) {
+    let media = window.__scMedia || [];
+    if (media.length === 0) {
+      media = Array.from(document.querySelectorAll("audio, video"));
+    }
+    const activeMedia = media.find((m) => !m.paused && m.duration > 0) || media[0];
+
+    if (activeMedia) {
+      const liveTime = activeMedia.currentTime;
+      if (Math.abs(liveTime - currentInterpolatedPos) > 0.4) {
+        currentInterpolatedPos = liveTime;
+      } else if (liveTime > currentInterpolatedPos) {
+        currentInterpolatedPos = liveTime;
+      }
+    }
+
+    updateLyricsUI(currentInterpolatedPos);
   }
   requestAnimationFrame(renderLoop);
 }
