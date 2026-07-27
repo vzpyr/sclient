@@ -483,6 +483,9 @@ async function pollPlayback() {
           isShuffled: shuffleBtn ? shuffleBtn.classList.contains("m-shuffling") : false,
           loopState: loopState,
           accent: typeof getAccent === "function" ? getAccent() : "#f50",
+          showVisualizer: window.__SCLIENT_CONFIG__
+            ? window.__SCLIENT_CONFIG__.show_visualizer
+            : false,
         },
       },
       "*"

@@ -318,6 +318,11 @@ ipcRenderer.on("mini_update", (_e, data) => {
     currentAccent = data.accent;
     document.documentElement.style.setProperty("--accent", currentAccent);
   }
+
+  if (data.showVisualizer !== undefined) {
+    const canvas = $("visualizer");
+    if (canvas) canvas.style.display = data.showVisualizer ? "block" : "none";
+  }
 });
 
 async function romanizeAllLines() {
@@ -603,9 +608,13 @@ function renderLoop() {
 
     updateLyricsUI(currentPos);
   }
+
+  if (canvas && canvas.style.display !== "none") {
+    drawVisualizer();
+  }
+
   requestAnimationFrame(renderLoop);
 }
-renderLoop();
 
 function syncArtworkSize() {
   if (document.querySelector(".content.with-lyrics")) return;
@@ -615,3 +624,74 @@ function syncArtworkSize() {
 }
 syncArtworkSize();
 window.addEventListener("resize", syncArtworkSize);
+
+const canvas = $("visualizer");
+const ctx = canvas ? canvas.getContext("2d") : null;
+
+function resizeCanvas() {
+  if (!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+if (canvas) {
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+}
+
+let targetVisualizerData = new Uint8Array(256);
+let currentVisualizerData = new Float32Array(256);
+
+ipcRenderer.on("mini_visualizer", (_event, dataArray) => {
+  if (!dataArray) return;
+  for (let i = 0; i < dataArray.length && i < 256; i++) {
+    targetVisualizerData[i] = dataArray[i];
+  }
+});
+
+function drawVisualizer() {
+  if (!ctx || !canvas) return;
+
+  const lerpFactor = 0.5;
+  for (let i = 0; i < 256; i++) {
+    currentVisualizerData[i] += (targetVisualizerData[i] - currentVisualizerData[i]) * lerpFactor;
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = currentAccent || "#f50";
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  const barWidth = 6;
+  const gap = 4;
+  const numBars = Math.floor(width / (barWidth + gap));
+  if (numBars <= 0) return;
+
+  const halfBars = Math.ceil(numBars / 2);
+  const step = (256 * 0.75) / halfBars;
+  const maxHeight = height * 0.45;
+
+  const totalWidth = numBars * (barWidth + gap) - gap;
+  const startX = (width - totalWidth) / 2;
+
+  for (let i = 0; i < numBars; i++) {
+    const centerDist = Math.abs(i - (numBars - 1) / 2);
+    const dataIndex = Math.min(255, Math.floor(centerDist * step));
+    const value = currentVisualizerData[dataIndex] || 0;
+
+    const boost = 1 + (centerDist / halfBars) * 1.2;
+    let percent = (value * boost) / 255;
+    percent = Math.min(1, percent);
+
+    const barHeight = Math.max(barWidth, percent * maxHeight);
+    const x = startX + i * (barWidth + gap);
+    const y = height - barHeight;
+
+    ctx.beginPath();
+    ctx.roundRect(x, y, barWidth, barHeight, [barWidth / 2, barWidth / 2, 0, 0]);
+    ctx.fill();
+  }
+}
+
+// Start render loop
+renderLoop();

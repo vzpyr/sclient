@@ -51,7 +51,7 @@ function injectEffectsButton() {
     </label>
     
     <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; color: var(--sc-text-base);">
-        <input type="checkbox" id="sclient-effects-reverb" checked /> Reverb
+        <input type="checkbox" id="sclient-effects-reverb" /> Reverb
     </label>
   `;
 
@@ -63,7 +63,7 @@ function injectEffectsButton() {
   window.sclient_effects = window.sclient_effects || {
     speed: 1,
     preservePitch: false,
-    reverb: true,
+    reverb: false,
   };
 
   const speedSlider = popup.querySelector("#sclient-effects-speed");
