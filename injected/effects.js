@@ -121,6 +121,8 @@ async function setupAudioNodes(ctx) {
 
     setInterval(() => {
       if (!window.sclientAnalyser) return;
+      if (window.__SCLIENT_CONFIG__ && window.__SCLIENT_CONFIG__.show_visualizer === false) return;
+
       const dataArray = new Uint8Array(window.sclientAnalyser.frequencyBinCount);
       window.sclientAnalyser.getByteFrequencyData(dataArray);
 

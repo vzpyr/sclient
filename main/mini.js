@@ -664,9 +664,11 @@ if (canvas) {
 
 let targetVisualizerData = new Uint8Array(256);
 let currentVisualizerData = new Float32Array(256);
+let lastVisualizerUpdate = Date.now();
 
 ipcRenderer.on("mini_visualizer", (_event, dataArray) => {
   if (!dataArray) return;
+  lastVisualizerUpdate = Date.now();
   for (let i = 0; i < dataArray.length && i < 256; i++) {
     targetVisualizerData[i] = dataArray[i];
   }
@@ -674,6 +676,10 @@ ipcRenderer.on("mini_visualizer", (_event, dataArray) => {
 
 function drawVisualizer() {
   if (!ctx || !canvas) return;
+
+  if (Date.now() - lastVisualizerUpdate > 150) {
+    targetVisualizerData.fill(0);
+  }
 
   const lerpFactor = 0.5;
   for (let i = 0; i < 256; i++) {
