@@ -118,6 +118,21 @@ async function setupAudioNodes(ctx) {
       }
     }
     ctx.sclientConvolver.buffer = impulse;
+
+    setInterval(() => {
+      if (!window.sclientAnalyser) return;
+      const dataArray = new Uint8Array(window.sclientAnalyser.frequencyBinCount);
+      window.sclientAnalyser.getByteFrequencyData(dataArray);
+
+      const ipcArray = Array.from(dataArray);
+      window.postMessage(
+        {
+          source: "sclient-mini-visualizer",
+          data: ipcArray,
+        },
+        "*"
+      );
+    }, 33);
   }
   if (ctx.state === "suspended") {
     await ctx.resume();

@@ -111,10 +111,11 @@ ipcRenderer.on("download_progress", (_event, data) => {
 
 window.addEventListener("message", (event) => {
   if (event.source !== window || !event.data) return;
-  if (event.data.source === "sclient-mini-update") {
+  if (event.data && event.data.source === "sclient-mini-update") {
     ipcRenderer.send("mini_update", event.data.data);
-  }
-  if (event.data.source === "sclient-mini-toggle") {
+  } else if (event.data && event.data.source === "sclient-mini-visualizer") {
+    ipcRenderer.send("mini_visualizer", event.data.data);
+  } else if (event.data && event.data.source === "sclient-mini-toggle") {
     ipcRenderer.send("toggle_miniplayer");
   }
 });
