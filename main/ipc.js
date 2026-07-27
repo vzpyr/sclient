@@ -3,6 +3,15 @@ const fetch = require("cross-fetch");
 const path = require("path");
 const fs = require("fs");
 const { BrowserWindow, dialog, clipboard } = require("electron");
+const { execSync } = require("child_process");
+const hasFfmpeg = (() => {
+  try {
+    execSync("ffmpeg -version", { stdio: "ignore" });
+    return true;
+  } catch (e) {
+    return false;
+  }
+})();
 const config = require("./config");
 const rpc = require("./discord-rpc");
 const stats = require("./stats");
@@ -306,14 +315,21 @@ function register({ ipcMain, session, app }) {
   ipcMain.handle("download_song", async (_e, args) => {
     return new Promise((resolve, reject) => {
       const options = {
-        extractAudio: true,
-        audioFormat: "best",
+        format: "bestaudio/best",
         noWarnings: true,
         paths: app.getPath("downloads"),
       };
+      if (hasFfmpeg) {
+        options.extractAudio = true;
+        options.audioFormat = "best";
+        options.addMetadata = true;
+        options.embedThumbnail = true;
+      }
       if (args.isPlaylist) {
-        options.output = "%(playlist_title)s/%(title)s.%(ext)s";
+        options.output = "%(playlist_title)s/%(playlist_index)s. %(artist|uploader)s - %(title)s.%(ext)s";
         options.ignoreErrors = true;
+      } else {
+        options.output = "%(artist|uploader)s - %(title)s.%(ext)s";
       }
       const proc = ytdl.exec(args.url, options);
       proc.catch(() => {});
