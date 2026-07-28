@@ -349,7 +349,12 @@ const obsRun = () => {
   }
   if (enhancedHeaderOn) {
     replaceNavIcons();
-    injectNavButtons();
+    const isWindows = navigator.userAgentData && navigator.userAgentData.platform === "Windows";
+    const hideDecorationsOn = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_decorations : false;
+    const customTitlebarVisible = isWindows && !hideDecorationsOn;
+    if (!customTitlebarVisible) {
+      injectNavButtons();
+    }
   }
   if (collapsibleSidebarOn) injectSidebarToggle();
 };

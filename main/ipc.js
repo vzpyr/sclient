@@ -66,6 +66,16 @@ function register({ ipcMain, session, app }) {
     };
   });
 
+  ipcMain.on("get-ui-config", (event) => {
+    event.returnValue = {
+      hideDecorations: config.isEnabled("features.hide_decorations"),
+      customBgColor: config.isEnabled("features.custom_bg_color"),
+      bgColor: config.get("features.bg_color", "#000000"),
+      customFont: config.isEnabled("features.custom_font"),
+      customFontFamily: config.get("features.custom_font_family", ""),
+    };
+  });
+
   ipcMain.handle("clipboard_readText", () => {
     return clipboard.readText() || "";
   });

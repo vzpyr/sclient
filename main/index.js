@@ -69,7 +69,9 @@ if (!gotSingleInstanceLock) {
 app.setAsDefaultProtocolClient("sclient");
 
 function createWindow() {
-  const hideFrame = config.isEnabled("features.hide_decorations");
+  const hideFrameConfig = config.isEnabled("features.hide_decorations");
+  const isWindows = process.platform === "win32";
+  const hideFrame = isWindows || hideFrameConfig;
   const account = config.getActiveAccount();
   const partition = account === "main" ? "persist:main" : `persist:${account}`;
   const ses = session.fromPartition(partition);
@@ -96,6 +98,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     frame: !hideFrame,
+    titleBarStyle: isWindows && !hideFrameConfig ? 'hidden' : 'default', // Keep native snapping on win if titleBarStyle is hidden
     title: "SClient",
     icon: path.join(__dirname, "..", "assets", "32x32.png"),
     webPreferences: {
@@ -271,6 +274,19 @@ app.whenReady().then(async () => {
         }
       }, 150);
     }
+  });
+
+  ipcMain.on("window_minimize", () => {
+    if (win) win.minimize();
+  });
+  ipcMain.on("window_maximize", () => {
+    if (win) {
+      if (win.isMaximized()) win.unmaximize();
+      else win.maximize();
+    }
+  });
+  ipcMain.on("window_close", () => {
+    if (win) win.close();
   });
 
   createWindow();
