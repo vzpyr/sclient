@@ -13,6 +13,10 @@ let isQuitting = false;
 app.name = "sclient";
 app.on("before-quit", () => {
   isQuitting = true;
+  if (win && !win.isDestroyed() && config.isEnabled("features.load_last_page")) {
+    const url = win.webContents.getURL();
+    if (url && url.startsWith("http")) config.set("last_page_url", url);
+  }
 });
 
 let pendingSclientUrl = null;
@@ -111,7 +115,13 @@ function createWindow() {
     }
   });
 
-  win.loadURL("https://soundcloud.com");
+  const lastPageEnabled = config.isEnabled("features.load_last_page");
+  const lastPageUrl = config.get("last_page_url", "https://soundcloud.com");
+  if (lastPageEnabled && lastPageUrl && lastPageUrl.startsWith("http")) {
+    win.loadURL(lastPageUrl);
+  } else {
+    win.loadURL("https://soundcloud.com");
+  }
 
   win.webContents.on("dom-ready", () => {
     const files = [
@@ -166,6 +176,10 @@ try {
   });
 
   win.on("close", (e) => {
+    if (config.isEnabled("features.load_last_page")) {
+      const url = win.webContents.getURL();
+      if (url && url.startsWith("http")) config.set("last_page_url", url);
+    }
     if (!isQuitting && config.isEnabled("features.tray_icon") && tray) {
       e.preventDefault();
       win.hide();

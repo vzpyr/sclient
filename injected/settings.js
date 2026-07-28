@@ -223,6 +223,7 @@ function createOverlay() {
     { label: "Collapsible Sidebar", id: "collapsible-sidebar" },
     { label: "Discord Rich Presence", id: "rpc" },
     { label: "Run in System Tray", id: "tray" },
+    { label: "Load Last Page", id: "load-last-page" },
     { label: "Adblocker", id: "adblock" },
     { label: "Lazy Scroll Button", id: "lazy-scroll" },
     { label: "No Window Decorations", id: "decorations" },
@@ -466,6 +467,12 @@ function createOverlay() {
       bgId: "sclient-toggle-bg-tray",
       sliderId: "sclient-toggle-slider-tray",
       initial: cfg.tray_icon || false,
+    },
+    {
+      toggleId: "sclient-load-last-page-toggle",
+      bgId: "sclient-toggle-bg-load-last-page",
+      sliderId: "sclient-toggle-slider-load-last-page",
+      initial: loadLastPageOn,
     },
     {
       toggleId: "sclient-upsell-toggle",
@@ -735,6 +742,7 @@ function createOverlay() {
       wideLayout: $("#sclient-wide-layout-toggle").checked,
       wideLayoutWidth: ww,
       collapsibleSidebar: $("#sclient-collapsible-sidebar-toggle").checked,
+      loadLastPage: $("#sclient-load-last-page-toggle").checked,
       customBgColor: $("#sclient-bg-color-toggle").checked,
       bgColor: $("#sclient-bg-color-text").value,
       adblock: $("#sclient-adblock-toggle").checked,

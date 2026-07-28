@@ -134,6 +134,7 @@ function register({ ipcMain, session, app }) {
     config.set("features.proxy_url", args.proxyUrl || "");
     config.set("features.enhanced_header", args.enhancedHeader ? "true" : "false");
     config.set("features.collapsible_sidebar", args.collapsibleSidebar ? "true" : "false");
+    config.set("features.load_last_page", args.loadLastPage ? "true" : "false");
     config.set("integrations.listenbrainz.enabled", args.listenbrainz ? "true" : "false");
     config.setSecure("integrations.listenbrainz.token", args.listenbrainzToken || "");
     config.set("integrations.lastfm.enabled", args.lastfm ? "true" : "false");
