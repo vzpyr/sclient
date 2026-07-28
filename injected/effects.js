@@ -119,22 +119,26 @@ async function setupAudioNodes(ctx) {
     }
     ctx.sclientConvolver.buffer = impulse;
 
+    let dataArray = null;
     setInterval(() => {
       if (!window.sclientAnalyser) return;
       if (window.__SCLIENT_CONFIG__ && window.__SCLIENT_CONFIG__.show_visualizer === false) return;
+      
+      const media = window.__scMedia || [];
+      const activeMedia = media.find((m) => !m.paused);
+      if (!activeMedia) return;
 
-      const dataArray = new Uint8Array(window.sclientAnalyser.frequencyBinCount);
+      if (!dataArray) dataArray = new Uint8Array(window.sclientAnalyser.frequencyBinCount);
       window.sclientAnalyser.getByteFrequencyData(dataArray);
 
-      const ipcArray = Array.from(dataArray);
       window.postMessage(
         {
           source: "sclient-mini-visualizer",
-          data: ipcArray,
+          data: Array.from(dataArray),
         },
         "*"
       );
-    }, 33);
+    }, 66);
   }
   if (ctx.state === "suspended") {
     await ctx.resume();

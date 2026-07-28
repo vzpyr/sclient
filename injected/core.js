@@ -26,11 +26,6 @@ function injectToIframes(id, css) {
 
   document.querySelectorAll("iframe").forEach(applyToIframe);
 
-  // Continuous check for dynamically loading/navigating iframes (like the player)
-  setInterval(() => {
-    document.querySelectorAll("iframe").forEach(applyToIframe);
-  }, 1000);
-
   const obs = new MutationObserver((mutations) => {
     for (const mut of mutations) {
       for (const node of mut.addedNodes) {
@@ -858,22 +853,24 @@ document.addEventListener(
 );
 
 if (typeof window !== "undefined") {
+  let cachedMedia = null;
   function sendLiveTime() {
     let media = window.__scMedia || [];
     if (media.length === 0) {
-      media = Array.from(document.querySelectorAll("audio, video"));
+      if (!cachedMedia) cachedMedia = Array.from(document.querySelectorAll("audio, video"));
+      media = cachedMedia;
     }
     const activeMedia = media.find((m) => !m.paused && m.duration > 0) || media[0];
 
-    if (activeMedia) {
+    if (activeMedia && !activeMedia.paused) {
       window.postMessage(
         {
           source: "sclient-mini-time",
-          data: { position: activeMedia.currentTime, isPlaying: !activeMedia.paused },
+          data: { position: activeMedia.currentTime, isPlaying: true },
         },
         "*"
       );
     }
   }
-  setInterval(sendLiveTime, 33);
+  setInterval(sendLiveTime, 100);
 }

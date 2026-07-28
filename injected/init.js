@@ -221,14 +221,14 @@ function applyFeatureStyles() {
     `
     );
 
-    setInterval(() => {
+    const syncIframeTheme = () => {
+      const isDark = document.body && document.body.classList.contains("theme-dark");
       document.querySelectorAll("iframe").forEach((iframe) => {
         try {
           if (iframe.contentDocument && iframe.contentDocument.head) {
             if (!iframe.contentDocument.getElementById("sclient-custom-bg-color")) {
-              iframe.contentDocument.head.appendChild(
-                document.getElementById("sclient-custom-bg-color").cloneNode(true)
-              );
+              const el = document.getElementById("sclient-custom-bg-color");
+              if (el) iframe.contentDocument.head.appendChild(el.cloneNode(true));
             }
             let fs = iframe.contentDocument.getElementById("sclient-custom-bg-iframe-force");
             if (!fs) {
@@ -246,11 +246,46 @@ function applyFeatureStyles() {
               `;
               iframe.contentDocument.head.appendChild(fs);
             }
-            fs.disabled = !(document.body && document.body.classList.contains("theme-dark"));
+            fs.disabled = !isDark;
           }
         } catch (e) {}
       });
-    }, 1000);
+    };
+
+    syncIframeTheme();
+
+    const iframeObs = new MutationObserver((mutations) => {
+      let shouldSync = false;
+      for (const mut of mutations) {
+        if (mut.type === "attributes" && mut.target === document.body && mut.attributeName === "class") {
+          shouldSync = true;
+          break;
+        }
+        for (const node of mut.addedNodes) {
+          if (node.tagName === "IFRAME") {
+            node.addEventListener("load", syncIframeTheme);
+            shouldSync = true;
+          } else if (node.querySelectorAll) {
+            const iframes = node.querySelectorAll("iframe");
+            if (iframes.length > 0) {
+              iframes.forEach((ifr) => ifr.addEventListener("load", syncIframeTheme));
+              shouldSync = true;
+            }
+          }
+        }
+      }
+      if (shouldSync) syncIframeTheme();
+    });
+    
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        iframeObs.observe(document.documentElement, { childList: true, subtree: true });
+        iframeObs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+      });
+    } else {
+      iframeObs.observe(document.documentElement, { childList: true, subtree: true });
+      if (document.body) iframeObs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+    }
   }
 
   if (adblockOn) applyAdblock();
