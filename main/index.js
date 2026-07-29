@@ -121,7 +121,11 @@ function createWindow() {
   win.on("page-title-updated", (e) => e.preventDefault());
 
   let splashCssKey = null;
+  let isFirstLoad = true;
   win.webContents.on('did-start-loading', async () => {
+    if (!isFirstLoad) return;
+    isFirstLoad = false;
+    
     try {
       const iconPath = path.join(__dirname, '..', 'icons', '128x128.png');
       const iconBase64 = fs.readFileSync(iconPath).toString('base64');
