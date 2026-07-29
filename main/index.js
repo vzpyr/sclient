@@ -126,7 +126,7 @@ function createWindow() {
     isFirstLoad = false;
     
     try {
-      const iconPath = path.join(__dirname, '..', 'icons', '128x128.png');
+      const iconPath = path.join(__dirname, '..', 'assets', '128x128.png');
       const iconBase64 = fs.readFileSync(iconPath).toString('base64');
       const appVersion = app.getVersion();
       
