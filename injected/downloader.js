@@ -104,9 +104,16 @@ function injectDownloadButton() {
 }
 
 function injectPlaylistDownloadButton() {
-  if (document.getElementById("sclient-playlist-download-btn")) return;
-  const targetBtn = document.querySelector(".sc-button-copylink") || document.querySelector(".sc-button-share") || document.querySelector(".sc-button-like");
-  if (!targetBtn || !targetBtn.parentNode) return;
+  if (!document.querySelector(".listenDetails__trackList")) return;
+  
+  const buttonGroup = document.querySelector(".listenEngagement__footer .sc-button-group");
+  if (!buttonGroup) return;
+
+  if (document.getElementById("sclient-playlist-download-btn")) {
+    if (buttonGroup.querySelector("#sclient-playlist-download-btn")) return;
+    const oldBtn = document.getElementById("sclient-playlist-download-btn");
+    if (oldBtn) oldBtn.remove();
+  }
 
   const btn = document.createElement("button");
   btn.id = "sclient-playlist-download-btn";
@@ -196,5 +203,5 @@ function injectPlaylistDownloadButton() {
         titleText.style.color = "var(--sc-danger)";
       });
   });
-  targetBtn.parentNode.insertBefore(btn, targetBtn.nextSibling);
+  buttonGroup.appendChild(btn);
 }

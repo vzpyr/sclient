@@ -349,9 +349,8 @@ const obsRun = () => {
   }
   if (enhancedHeaderOn) {
     replaceNavIcons();
-    const isWindows = navigator.userAgentData && navigator.userAgentData.platform === "Windows";
-    const hideDecorationsOn = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.hide_decorations : false;
-    const customTitlebarVisible = isWindows && !hideDecorationsOn;
+    const titlebarStyle = window.__SCLIENT_CONFIG__ ? window.__SCLIENT_CONFIG__.titlebar_style : "custom";
+    const customTitlebarVisible = titlebarStyle === "custom";
     if (!customTitlebarVisible) {
       injectNavButtons();
     }

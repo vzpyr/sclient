@@ -69,9 +69,8 @@ if (!gotSingleInstanceLock) {
 app.setAsDefaultProtocolClient("sclient");
 
 function createWindow() {
-  const hideFrameConfig = config.isEnabled("features.hide_decorations");
+  const titlebarStyle = config.get("features.titlebar_style", "custom");
   const isWindows = process.platform === "win32";
-  const hideFrame = isWindows || hideFrameConfig;
   const account = config.getActiveAccount();
   const partition = account === "main" ? "persist:main" : `persist:${account}`;
   const ses = session.fromPartition(partition);
@@ -100,8 +99,8 @@ function createWindow() {
   win = new BrowserWindow({
     width: 1280,
     height: 800,
-    frame: !hideFrame,
-    titleBarStyle: isWindows && !hideFrameConfig ? 'hidden' : 'default',
+    frame: titlebarStyle === "native",
+    titleBarStyle: titlebarStyle === "custom" ? 'hidden' : 'default',
     title: "SClient",
     icon: path.join(__dirname, "..", "assets", "32x32.png"),
     backgroundColor: splashBgColor,

@@ -129,7 +129,7 @@ ipcRenderer.on("mini_action", (_event, action) => {
 const uiConfig = ipcRenderer.sendSync("get-ui-config");
 const isWindows = process.platform === "win32";
 
-if (isWindows && !uiConfig.hideDecorations) {
+if (uiConfig.titlebarStyle === "custom") {
   const bgSurfaceVal = uiConfig.customBgColor ? uiConfig.bgColor : "var(--sc-bg-surface, #121212)";
 
   let fontImport = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block');";
@@ -264,13 +264,13 @@ if (isWindows && !uiConfig.hideDecorations) {
   } else {
     injectTitlebar();
   }
-
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      if (document.documentElement) document.documentElement.classList.add('sclient-loaded');
-      setTimeout(() => {
-        if (document.documentElement) document.documentElement.classList.add('sclient-ready');
-      }, 1000);
-    }, 500);
-  });
 }
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    if (document.documentElement) document.documentElement.classList.add('sclient-loaded');
+    setTimeout(() => {
+      if (document.documentElement) document.documentElement.classList.add('sclient-ready');
+    }, 1000);
+  }, 500);
+});

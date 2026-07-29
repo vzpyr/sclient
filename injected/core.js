@@ -129,7 +129,7 @@ if (customFontOn && customFontFamily) {
 }
 
 const lazyScrollOn = cfg.lazy_scroll || false;
-const hideDecorationsOn = cfg.hide_decorations || false;
+
 const wideLayoutOn = cfg.wide_layout || false;
 const wideLayoutWidth = cfg.wide_layout_width || "1200";
 const collapsibleSidebarOn = cfg.collapsible_sidebar || false;

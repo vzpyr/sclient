@@ -226,7 +226,6 @@ function createOverlay() {
     { label: "Load Last Page", id: "load-last-page" },
     { label: "Adblocker", id: "adblock" },
     { label: "Lazy Scroll Button", id: "lazy-scroll" },
-    { label: "No Window Decorations", id: "decorations" },
     { label: "Hide Subscription Upsell", id: "upsell" },
     { label: "Hide Artist Features", id: "artists" },
     { label: "Show Lyrics Button", id: "show-lyrics" },
@@ -295,6 +294,15 @@ function createOverlay() {
       </div>
 
       ${togglesHtml}
+
+      <div class="sc-card">
+        <span style="font-size:14px;font-weight:500;">Titlebar Style</span>
+        <select id="sclient-titlebar-style" style="-webkit-appearance:none;appearance:none;background:rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 class=%22lucide lucide-chevron-down-icon lucide-chevron-down%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid #333;color:white;border-radius:6px;font-family:Inter,sans-serif;font-size:12px;outline:none;cursor:pointer;transition:border-color 0.2s;">
+          <option value="custom">Custom</option>
+          <option value="native">Native</option>
+          <option value="none">None</option>
+        </select>
+      </div>
 
       <div class="sc-card">
         <span style="font-size:14px;font-weight:500;">Wide Layout</span>
@@ -433,12 +441,6 @@ function createOverlay() {
       initial: lazyScrollOn,
     },
     {
-      toggleId: "sclient-decorations-toggle",
-      bgId: "sclient-toggle-bg-decorations",
-      sliderId: "sclient-toggle-slider-decorations",
-      initial: hideDecorationsOn,
-    },
-    {
       toggleId: "sclient-enhanced-header-toggle",
       bgId: "sclient-toggle-bg-enhanced-header",
       sliderId: "sclient-toggle-slider-enhanced-header",
@@ -574,6 +576,7 @@ function createOverlay() {
 
   const widthInput = overlay.querySelector("#sclient-wide-layout-width");
   widthInput.value = wideLayoutWidth && wideLayoutWidth !== "1200" ? wideLayoutWidth : "";
+  overlay.querySelector("#sclient-titlebar-style").value = cfg.titlebar_style || "custom";
   overlay.querySelector("#sclient-trueshuffle-engine").value = trueShuffleMode;
 
   const accentToggle = overlay.querySelector("#sclient-accent-toggle");
@@ -734,7 +737,7 @@ function createOverlay() {
       css: $("#sclient-css-editor").value,
       js: $("#sclient-js-editor").value,
       lazyScroll: $("#sclient-lazy-scroll-toggle").checked,
-      hideDecorations: $("#sclient-decorations-toggle").checked,
+      titlebarStyle: $("#sclient-titlebar-style").value,
       customAccent: accentToggle.checked,
       accentColor: accentText.value,
       customFont: customFontToggle.checked,

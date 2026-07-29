@@ -68,7 +68,7 @@ function register({ ipcMain, session, app }) {
 
   ipcMain.on("get-ui-config", (event) => {
     event.returnValue = {
-      hideDecorations: config.isEnabled("features.hide_decorations"),
+      titlebarStyle: config.get("features.titlebar_style", "custom"),
       customBgColor: config.isEnabled("features.custom_bg_color"),
       bgColor: config.get("features.bg_color", "#000000"),
       customFont: config.isEnabled("features.custom_font"),
@@ -110,7 +110,7 @@ function register({ ipcMain, session, app }) {
     config.setFile("custom.css", args.css);
     config.setFile("custom.js", args.js);
     config.set("features.lazy_scroll", args.lazyScroll ? "true" : "false");
-    config.set("features.hide_decorations", args.hideDecorations ? "true" : "false");
+    config.set("features.titlebar_style", args.titlebarStyle || "custom");
     config.set("features.custom_accent", args.customAccent ? "true" : "false");
     config.set("features.accent_color", args.accentColor || "#f50");
     config.set("features.custom_font", args.customFont ? "true" : "false");

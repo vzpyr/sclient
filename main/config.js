@@ -130,7 +130,7 @@ function buildPayload() {
     css: getFile("custom.css"),
     js: getFile("custom.js"),
     lazy_scroll: isEnabled("features.lazy_scroll"),
-    hide_decorations: isEnabled("features.hide_decorations"),
+    titlebar_style: get("features.titlebar_style", "custom"),
     custom_accent: isEnabled("features.custom_accent"),
     accent_color: get("features.accent_color", "#FF0000"),
     custom_font: isEnabled("features.custom_font"),
