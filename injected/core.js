@@ -136,7 +136,7 @@ const collapsibleSidebarOn = cfg.collapsible_sidebar || false;
 const customBgColorOn = cfg.custom_bg_color || false;
 const bgColor = cfg.bg_color || "#000000";
 
-const bgSurfaceVal = customBgColorOn ? bgColor : "#1e1e1e";
+const bgSurfaceVal = customBgColorOn ? bgColor : "#121212";
 const bgElevatedVal = customBgColorOn ? bgColor : "#2a2a2a";
 
 const scDesignSystem = `
@@ -165,7 +165,7 @@ const scDesignSystem = `
   --sc-radius-xl: 12px;
 }
 body.theme-light {
-  --sc-bg-surface: #f2f2f2;
+  --sc-bg-surface: #ffffff;
   --sc-bg-overlay: rgba(255, 255, 255, 0.85);
   --sc-bg-elevated: #ffffff;
   --sc-text-main: #111111;

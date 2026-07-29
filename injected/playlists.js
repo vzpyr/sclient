@@ -363,7 +363,7 @@ function _pmEnsureDetailStyle() {
     .pm-track-handle:active { cursor:grabbing; }
     .pm-empty-tracks { text-align:center; padding:50px 20px; opacity:0.5; line-height:1.7; }
 
-    .pm-ctx { position:fixed; z-index:9999999; min-width:200px; background:#1e1e1e; border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,0.6); font-family:Inter,sans-serif; font-size:13px; }
+    .pm-ctx { position:fixed; z-index:9999999; min-width:200px; background:#121212; border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,0.6); font-family:Inter,sans-serif; font-size:13px; }
     .pm-ctx-item { padding:8px 12px; border-radius:5px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:14px; }
     .pm-ctx-item:hover { background:${accent}33; color:#fff; }
     .pm-ctx-item.pm-ctx-danger { color:#f88; }

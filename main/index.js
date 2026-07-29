@@ -94,13 +94,18 @@ function createWindow() {
   ses.setUserAgent(cleanUA);
   app.userAgentFallback = cleanUA;
 
+  const customBgEnabled = config.isEnabled("features.custom_bg_color");
+  const splashBgColor = customBgEnabled ? config.get("features.bg_color", "#000000") : "#121212";
+
   win = new BrowserWindow({
     width: 1280,
     height: 800,
     frame: !hideFrame,
-    titleBarStyle: isWindows && !hideFrameConfig ? 'hidden' : 'default', // Keep native snapping on win if titleBarStyle is hidden
+    titleBarStyle: isWindows && !hideFrameConfig ? 'hidden' : 'default',
     title: "SClient",
     icon: path.join(__dirname, "..", "assets", "32x32.png"),
+    backgroundColor: splashBgColor,
+    show: false,
     webPreferences: {
       partition,
       preload: path.join(__dirname, "..", "preload.js"),
@@ -108,8 +113,39 @@ function createWindow() {
     },
   });
 
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
   win.setMenu(null);
   win.on("page-title-updated", (e) => e.preventDefault());
+
+  let splashCssKey = null;
+  win.webContents.on('did-start-loading', async () => {
+    try {
+      const iconPath = path.join(__dirname, '..', 'icons', '128x128.png');
+      const iconBase64 = fs.readFileSync(iconPath).toString('base64');
+      
+      splashCssKey = await win.webContents.insertCSS(`
+        html:not(.sclient-ready) { background: ${splashBgColor} !important; overflow: hidden !important; }
+        html:not(.sclient-loaded) body { opacity: 0 !important; overflow: hidden !important; }
+        html:not(.sclient-ready) ::-webkit-scrollbar { display: none !important; }
+        html::before {
+          content: ""; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background-color: ${splashBgColor}; 
+          background-image: url('data:image/png;base64,${iconBase64}');
+          background-repeat: no-repeat;
+          background-position: center center;
+          background-size: 80px 80px;
+          z-index: 9999999999; pointer-events: none;
+          opacity: 1; transition: opacity 1.0s ease-out;
+        }
+        html.sclient-loaded::before { opacity: 0; }
+      `);
+    } catch (e) {
+      console.error("[SClient] Failed to inject splash CSS:", e);
+    }
+  });
 
   win.webContents.on("before-input-event", (event, input) => {
     if (input.key === "F12" && input.type === "keyDown") {

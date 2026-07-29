@@ -130,7 +130,7 @@ const uiConfig = ipcRenderer.sendSync("get-ui-config");
 const isWindows = process.platform === "win32";
 
 if (isWindows && !uiConfig.hideDecorations) {
-  const bgSurfaceVal = uiConfig.customBgColor ? uiConfig.bgColor : "var(--sc-bg-surface, #1e1e1e)";
+  const bgSurfaceVal = uiConfig.customBgColor ? uiConfig.bgColor : "var(--sc-bg-surface, #121212)";
 
   let fontImport = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block');";
   let fontFamily = "var(--sc-font-sans, 'Inter', sans-serif)";
@@ -148,7 +148,7 @@ if (isWindows && !uiConfig.hideDecorations) {
       position: fixed;
       top: 0; left: 0; right: 0;
       height: 32px;
-      background: ${bgSurfaceVal};
+      background: var(--sc-bg-surface, ${bgSurfaceVal});
       z-index: 9999999;
       display: flex;
       justify-content: space-between;
@@ -264,4 +264,13 @@ if (isWindows && !uiConfig.hideDecorations) {
   } else {
     injectTitlebar();
   }
+
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      if (document.documentElement) document.documentElement.classList.add('sclient-loaded');
+      setTimeout(() => {
+        if (document.documentElement) document.documentElement.classList.add('sclient-ready');
+      }, 1000);
+    }, 500);
+  });
 }
