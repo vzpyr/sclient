@@ -129,6 +129,7 @@ function createWindow() {
     try {
       const iconPath = path.join(__dirname, '..', 'icons', '128x128.png');
       const iconBase64 = fs.readFileSync(iconPath).toString('base64');
+      const appVersion = app.getVersion();
       
       splashCssKey = await win.webContents.insertCSS(`
         html:not(.sclient-ready) { background: ${splashBgColor} !important; overflow: hidden !important; }
@@ -144,7 +145,14 @@ function createWindow() {
           z-index: 9999999999; pointer-events: none;
           opacity: 1; transition: opacity 1.0s ease-out;
         }
-        html.sclient-loaded::before { opacity: 0; }
+        html::after {
+          content: "v${appVersion}"; position: fixed; bottom: 24px; left: 0; right: 0;
+          text-align: center; color: rgba(255, 255, 255, 0.35);
+          font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.5px;
+          z-index: 9999999999; pointer-events: none;
+          opacity: 1; transition: opacity 1.0s ease-out;
+        }
+        html.sclient-loaded::before, html.sclient-loaded::after { opacity: 0; }
       `);
     } catch (e) {
       console.error("[SClient] Failed to inject splash CSS:", e);
