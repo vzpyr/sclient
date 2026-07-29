@@ -105,8 +105,8 @@ function injectDownloadButton() {
 
 function injectPlaylistDownloadButton() {
   if (document.getElementById("sclient-playlist-download-btn")) return;
-  const deleteBtn = document.querySelector(".sc-button-delete");
-  if (!deleteBtn || !deleteBtn.parentNode) return;
+  const targetBtn = document.querySelector(".sc-button-copylink") || document.querySelector(".sc-button-share") || document.querySelector(".sc-button-like");
+  if (!targetBtn || !targetBtn.parentNode) return;
 
   const btn = document.createElement("button");
   btn.id = "sclient-playlist-download-btn";
@@ -196,6 +196,5 @@ function injectPlaylistDownloadButton() {
         titleText.style.color = "var(--sc-danger)";
       });
   });
-
-  deleteBtn.parentNode.insertBefore(btn, deleteBtn.nextSibling);
+  targetBtn.parentNode.insertBefore(btn, targetBtn.nextSibling);
 }
