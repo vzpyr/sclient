@@ -202,6 +202,7 @@ function createWindow() {
     const chartPath = path.join(
       __dirname,
       "..",
+      "..",
       "node_modules",
       "chart.js",
       "dist",

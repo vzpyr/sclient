@@ -435,7 +435,7 @@ function register({ ipcMain, session, app }) {
   });
 
   ipcMain.handle("restart_app", () => {
-    app.relaunch({ args: [path.join(__dirname, "..")] });
+    app.relaunch({ args: [path.join(__dirname, "..", "..")] });
     app.exit(0);
   });
 
@@ -446,7 +446,7 @@ function register({ ipcMain, session, app }) {
 
   ipcMain.handle("clear_data_and_restart", async () => {
     await session.fromPartition(partitionName(config.getActiveAccount())).clearStorageData();
-    app.relaunch({ args: [path.join(__dirname, "..")] });
+    app.relaunch({ args: [path.join(__dirname, "..", "..")] });
     app.exit(0);
   });
 
