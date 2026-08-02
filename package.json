@@ -30,7 +30,8 @@
     "asarUnpack": [
       "node_modules/youtube-dl-exec/**",
       "node_modules/better-sqlite3/**",
-      "node_modules/keytar/**"
+      "node_modules/keytar/**",
+      "node_modules/abstract-socket/**"
     ],
     "linux": {
       "target": [
@@ -71,7 +72,8 @@
         "--talk-name=org.freedesktop.Notifications",
         "--talk-name=org.freedesktop.secrets",
         "--own-name=org.mpris.MediaPlayer2.chromium",
-        "--own-name=org.mpris.MediaPlayer2.chromium.*"
+        "--own-name=org.mpris.MediaPlayer2.chromium.*",
+        "--own-name=org.mpris.MediaPlayer2.sclient"
       ],
       "files": [
         [
@@ -114,6 +116,7 @@
     "kuroshiro": "^1.2.0",
     "pinyin": "^4.0.0",
     "transliteration": "^2.6.1",
+    "mpris-service": "^2.1.2",
     "youtube-dl-exec": "^3.1.9"
   },
   "allowScripts": {

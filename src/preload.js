@@ -119,11 +119,17 @@ window.addEventListener("message", (event) => {
     ipcRenderer.send("mini_time", event.data.data);
   } else if (event.data && event.data.source === "sclient-mini-toggle") {
     ipcRenderer.send("toggle_miniplayer");
+  } else if (event.data && event.data.source === "sclient-mpris-update") {
+    ipcRenderer.send("mpris_update", event.data.data);
   }
 });
 
 ipcRenderer.on("mini_action", (_event, action) => {
   window.postMessage({ source: "sclient-mini-action", action }, "*");
+});
+
+ipcRenderer.on("mpris_command", (_event, data) => {
+  window.postMessage({ source: "sclient-mpris-command", data }, "*");
 });
 
 const uiConfig = ipcRenderer.sendSync("get-ui-config");

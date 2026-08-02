@@ -163,6 +163,7 @@ function buildPayload() {
     lastfm_session_key: getSecure("integrations.lastfm.session_key"),
     lastfm_username: get("integrations.lastfm.username"),
     load_last_page: isEnabled("features.load_last_page"),
+    mpris: isEnabled("features.mpris"),
     stats_api_sync: statsApiOn,
     stats_local_tracking: statsLocalOn,
   };

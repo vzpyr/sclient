@@ -222,6 +222,7 @@ function createOverlay() {
     { label: "Enhanced Header", id: "enhanced-header" },
     { label: "Collapsible Sidebar", id: "collapsible-sidebar" },
     { label: "Discord Rich Presence", id: "rpc" },
+    ...(navigator.platform.includes("Linux") ? [{ label: "Custom MPRIS Integration (Linux)", id: "mpris" }] : []),
     { label: "Run in System Tray", id: "tray" },
     { label: "Load Last Page", id: "load-last-page" },
     { label: "Adblocker", id: "adblock" },
@@ -571,6 +572,12 @@ function createOverlay() {
           });
       },
     },
+    ...(navigator.platform.includes("Linux") ? [{
+      toggleId: "sclient-mpris-toggle",
+      bgId: "sclient-toggle-bg-mpris",
+      sliderId: "sclient-toggle-slider-mpris",
+      initial: mprisOn,
+    }] : []),
   ];
   for (const cfg of TOGGLE_CONFIGS) setupToggle(overlay, cfg);
 
@@ -750,6 +757,7 @@ function createOverlay() {
       bgColor: $("#sclient-bg-color-text").value,
       adblock: $("#sclient-adblock-toggle").checked,
       discordRpc: $("#sclient-rpc-toggle").checked,
+      mpris: $("#sclient-mpris-toggle")?.checked || false,
       trayIcon: $("#sclient-tray-toggle").checked,
       hideUpsell: $("#sclient-upsell-toggle").checked,
       hideArtists: $("#sclient-artists-toggle").checked,

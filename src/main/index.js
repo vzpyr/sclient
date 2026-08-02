@@ -5,6 +5,11 @@ const fetch = require("cross-fetch");
 const { ElectronBlocker } = require("@ghostery/adblocker-electron");
 const config = require("./config");
 const ipc = require("./ipc");
+const mpris = require("./mpris");
+
+if (process.platform === "linux" && config.isEnabled("features.mpris")) {
+  app.commandLine.appendSwitch("disable-features", "MediaSessionService");
+}
 
 let tray = null;
 let win = null;
@@ -341,6 +346,10 @@ app.whenReady().then(async () => {
   });
 
   createWindow();
+
+  if (process.platform === "linux" && config.isEnabled("features.mpris")) {
+    mpris.init({ ipcMain, win });
+  }
 
   if (pendingSclientUrl && win && !win.isDestroyed()) {
     win.loadURL(pendingSclientUrl);
