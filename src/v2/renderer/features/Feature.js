@@ -29,7 +29,7 @@ class Feature {
   }
 
   isEnabled() {
-    return !!SCLIENT_CONFIG.get(this.featureKey, false);
+    return this.featureKey == null ? true : !!SCLIENT_CONFIG.get(this.featureKey, false);
   }
 
   init() {
