@@ -1,5 +1,3 @@
-const FEATURES = [];
-
 function initFeatures() {
   for (const f of FEATURES) {
     if (f.isEnabled()) f.init();

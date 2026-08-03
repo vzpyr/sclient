@@ -1,3 +1,5 @@
+const FEATURES = [];
+
 function injectStyle(id, css) {
   if (document.getElementById(id)) return;
   const style = document.createElement("style");

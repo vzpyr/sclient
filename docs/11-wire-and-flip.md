@@ -15,11 +15,11 @@ Fix during this phase: hoist the registry so it initializes before any feature f
 
 ### 1. `src/v2/main/index.js` — port of old `src/main/index.js`
 Port VERBATIM except the changes below:
-- **Injection order** — replace the old `files` array + `chartJs` + payload block with the EXACT order from 00-overview §11. Read paths from `path.join(__dirname, "..", "renderer", ...)`. Chart.js path: `path.join(__dirname, "..", "..", "node_modules", "chart.js", "dist", "chart.umd.js")`.
+- **Injection order** — replace the old `files` array + `chartJs` + payload block with the EXACT order from 00-overview §11. Read paths from `path.join(__dirname, "..", "renderer", ...)`. Chart.js path: `path.join(__dirname, "..", "..", "..", "node_modules", "chart.js", "dist", "chart.umd.js")` (three `..` — `src/v2/main` sits one level deeper than the old `src/main`; two `..` would resolve to `src/node_modules`).
 - **CSS injection** — after `dom-ready`, also `insertCSS` the four style files in order (base, titlebar, layout, features) — read them from `styles/`. Keep the splash `insertCSS` logic (that's separate and stays).
 - **Config payload** — `window.__SCLIENT_CONFIG__ = ${JSON.stringify(config.buildConfigPayload())};` set BEFORE the JS bundle (as old).
 - **Preload path** — `preload: path.join(__dirname, "..", "preload.js")`.
-- **Miniplayer block** — REMOVE the inline miniplayer IPC from `app.whenReady`; instead call `require("./features/miniplayer").register({ ipcMain, BrowserWindow, win, app })` (Phase 9 file handles it). Keep the `miniWin`-related `win.hide()` behavior inside that register (it was in the old block).
+- **Miniplayer block** — REMOVE the inline miniplayer IPC from `app.whenReady`; instead call `require("./features/miniplayer").register({ ipcMain, BrowserWindow, win, app })` (Phase 9 file handles it). Keep the `miniWin`-related `win.hide()` behavior inside that register (it was in the old block). ⚠️ ORDER: `miniplayer.register` must run AFTER `createWindow()` (unlike the old inline block). The Phase 9 module captures `win` by value from the destructured register argument, so passing the still-null `let win` would permanently null-capture it and silently break `mini_action` forwarding. Call it right after `createWindow()`.
 - **Main feature registration** — register everything in `app.whenReady`:
   ```javascript
   require("./ipc").register({ ipcMain, session, app, config });
@@ -29,6 +29,9 @@ Port VERBATIM except the changes below:
   require("./features/listenbrainz").register({ ipcMain, config });
   require("./features/stats").register({ ipcMain, dialog, config });
   require("./features/playlist-manager").register({ ipcMain, dialog });
+
+  // window_minimize / window_maximize / window_close inline handlers go here (core, as old)
+  createWindow();
   require("./features/miniplayer").register({ ipcMain, BrowserWindow, win, app });
   ```
   (`dialog` is imported from electron at the top. `mpris` is NOT registered here unconditionally — old behavior: `mpris.init({ ipcMain, win })` only when `process.platform === "linux" && config.isEnabled("features.mpris")`; keep that conditional, calling the Phase 6 `main/features/mpris.js` `init({ ipcMain, win })`.)
@@ -37,7 +40,7 @@ Port VERBATIM except the changes below:
 - Export nothing (entry point). `app.name = "sclient"` stays.
 
 ### 2. `src/v2/preload.js` — port of old `src/preload.js`
-- Copy VERBATIM with ONE change: remove the inline titlebar `<style>` block (the static CSS now lives in `styles/titlebar.css`, injected via insertCSS in main). KEEP: the titlebar HTML/button creation, the dynamic font @import logic, nav/control button wiring, `get-ui-config` usage, proxy interception, UA spoofing, the bridge relay (`sclient-bridge` ↔ `ipcRenderer.invoke`), `download_progress` forwarding, mini/mpris relays, `sclient-loaded`/`sclient-ready` class timing.
+- Copy VERBATIM with these changes: remove the inline titlebar `<style>` block (the static CSS now lives in `styles/titlebar.css`, injected via insertCSS in main), and KEEP a minimal dynamic `<style>` containing only `${fontImport}` + `#sclient-titlebar { font-family: ${fontFamily}; }` (the dynamic font must still be applied — titlebar.css does not set font-family). Rename the remaining `var(--sc-*)` refs to `var(--sclient-*)` per 00-overview §12. Drop the now-unused `bgSurfaceVal`. KEEP: the titlebar HTML/button creation, nav/control button wiring, `get-ui-config` usage, proxy interception, UA spoofing, the bridge relay (`sclient-bridge` ↔ `ipcRenderer.invoke`), `download_progress` forwarding, mini/mpris relays, `sclient-loaded`/`sclient-ready` class timing.
 - ⚠️ Ordering: main injects titlebar.css via insertCSS in the dom-ready handler — that happens before `sclient-loaded` fade-out, so no flash regression. If the titlebar looks unstyled at boot, the fix is to insertCSS titlebar.css EARLIER (in `did-start-loading` next to the splash CSS) — implement it there instead if needed; note what you chose and why.
 
 ### 3. `package.json`

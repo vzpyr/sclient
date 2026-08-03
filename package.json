@@ -3,7 +3,7 @@
   "desktopName": "com.vzpyr.sclient.desktop",
   "version": "0.1.1",
   "description": "Customizable cross-platform desktop client for SoundCloud",
-  "main": "src/main/index.js",
+  "main": "src/v2/main/index.js",
   "scripts": {
     "start": "electron .",
     "build:linux": "electron-builder --linux",
