@@ -18,6 +18,7 @@ class LastfmFeature extends Feature {
     return `
       <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
         <button id="sclient-lastfm-connect-btn" class="sclient-btn sclient-btn-primary">Connect Last.fm Account</button>
+        <button id="sclient-lastfm-disconnect-btn" class="sclient-btn sclient-btn-danger" style="display:none;">Disconnect</button>
         <span id="sclient-lastfm-status" style="font-size:11px;font-weight:bold;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.1);color:#ccc;">Waiting...</span>
       </div>
     `;
