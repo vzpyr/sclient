@@ -80,6 +80,8 @@ function register({ ipcMain, session, app }) {
         }
       } else {
         config.set(key, typeof value === "boolean" ? String(value) : value);
+        if (key === "stats.api_sync") config.statsApiSyncEnabled = Boolean(value);
+        if (key === "stats.local_tracking") config.statsLocalTrackingEnabled = Boolean(value);
       }
     }
   });
