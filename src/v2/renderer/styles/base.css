@@ -1,0 +1,197 @@
+:root {
+  --sclient-accent: #f50;
+  --sclient-bg-surface: #121212;
+  --sclient-bg-overlay: rgba(0, 0, 0, 0.75);
+  --sclient-bg-elevated: #2a2a2a;
+  --sclient-text-main: #ffffff;
+  --sclient-text-muted: rgba(255, 255, 255, 0.65);
+  --sclient-border: rgba(255, 255, 255, 0.12);
+  --sclient-border-hover: rgba(255, 255, 255, 0.25);
+  --sclient-btn-bg: rgba(255, 255, 255, 0.08);
+  --sclient-btn-bg-hover: rgba(255, 255, 255, 0.16);
+  --sclient-danger: #e53935;
+  --sclient-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --sclient-text-xs: 11px;
+  --sclient-text-sm: 12px;
+  --sclient-text-base: 13px;
+  --sclient-text-lg: 16px;
+  --sclient-text-xl: 18px;
+  --sclient-text-xxl: 22px;
+  --sclient-radius-sm: 4px;
+  --sclient-radius-md: 6px;
+  --sclient-radius-lg: 8px;
+  --sclient-radius-xl: 12px;
+}
+body.theme-light {
+  --sclient-bg-surface: #ffffff;
+  --sclient-bg-overlay: rgba(255, 255, 255, 0.85);
+  --sclient-bg-elevated: #ffffff;
+  --sclient-text-main: #111111;
+  --sclient-text-muted: rgba(0, 0, 0, 0.6);
+  --sclient-border: rgba(0, 0, 0, 0.12);
+  --sclient-border-hover: rgba(0, 0, 0, 0.25);
+  --sclient-btn-bg: rgba(0, 0, 0, 0.06);
+  --sclient-btn-bg-hover: rgba(0, 0, 0, 0.12);
+}
+.sclient-text-h1 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xxl); font-weight: 700; color: var(--sclient-text-main); }
+.sclient-text-h2 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xl); font-weight: 600; color: var(--sclient-text-main); }
+.sclient-text-body { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-base); color: var(--sclient-text-main); line-height: 1.5; }
+.sclient-text-sub { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-sm); color: var(--sclient-text-muted); }
+
+.sclient-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--sclient-btn-bg);
+  color: var(--sclient-text-main);
+  border: 1px solid var(--sclient-border);
+  border-radius: var(--sclient-radius-md);
+  cursor: pointer;
+  font-family: var(--sclient-font-sans);
+  font-size: var(--sclient-text-base);
+  font-weight: 500;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, filter 0.2s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+.sclient-btn:hover {
+  background: var(--sclient-btn-bg-hover);
+  border-color: var(--sclient-border-hover);
+  filter: brightness(1.15);
+}
+.sclient-btn:active {
+  transform: scale(0.97);
+}
+.sclient-btn-primary {
+  background: var(--sclient-accent);
+  color: #ffffff;
+  border-color: transparent;
+}
+.sclient-btn-primary:hover {
+  background: var(--sclient-accent);
+  border-color: transparent;
+  filter: brightness(1.15);
+}
+.sclient-btn-danger {
+  background: var(--sclient-danger);
+  color: #ffffff;
+  border-color: transparent;
+}
+.sclient-btn-danger:hover {
+  background: var(--sclient-danger);
+  border-color: transparent;
+  filter: brightness(1.15);
+}
+.sclient-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.sclient-btn-ghost:hover {
+  background: var(--sclient-btn-bg-hover);
+  border-color: transparent;
+  filter: brightness(1.15);
+}
+
+.sclient-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--sclient-bg-overlay);
+  z-index: 9999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.sclient-modal-surface {
+  background: var(--sclient-bg-elevated);
+  color: var(--sclient-text-main);
+  padding: 24px;
+  border-radius: var(--sclient-radius-xl);
+  max-width: 400px;
+  width: 90%;
+  border: 1px solid var(--sclient-border);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  font-family: var(--sclient-font-sans);
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+.sclient-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--sclient-bg-surface);
+  border: 1px solid var(--sclient-border);
+  color: var(--sclient-text-main);
+  border-radius: var(--sclient-radius-md);
+  padding: 6px 10px;
+  font-family: var(--sclient-font-sans);
+  font-size: var(--sclient-text-base);
+  height: 32px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.sclient-input:focus {
+  border-color: var(--sclient-accent);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
+* { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
+
+body.theme-light #sclient-settings-overlay,
+body.theme-light #sclient-lyrics-sidebar,
+body.theme-light #sclient-stats-overlay,
+body.theme-light #sclient-playlists-overlay {
+  background: var(--sclient-bg-surface) !important;
+  color: var(--sclient-text-main) !important;
+}
+body.theme-light .pm-sidebar {
+  background: var(--sclient-bg-elevated) !important;
+  border-right: 1px solid var(--sclient-border) !important;
+}
+body.theme-light #sclient-lyrics-content {
+  color: var(--sclient-text-main) !important;
+}
+body.theme-light #sclient-settings-scroll > div[style*="justify-content: space-between"],
+body.theme-light .stats-card,
+body.theme-light .stats-chart-box {
+  background: var(--sclient-bg-elevated) !important;
+  border: 1px solid var(--sclient-border) !important;
+  color: var(--sclient-text-main) !important;
+}
+body.theme-light .stats-chart-title {
+  color: var(--sclient-text-main) !important;
+}
+body.theme-light .stats-table th {
+  color: var(--sclient-text-muted) !important;
+  border-bottom: 1px solid var(--sclient-border) !important;
+}
+body.theme-light .stats-table td {
+  color: var(--sclient-text-main) !important;
+  border-bottom: 1px solid var(--sclient-border) !important;
+}
+body.theme-light #sclient-accounts-list > div {
+  background: var(--sclient-bg-elevated) !important;
+  border: 1px solid var(--sclient-border) !important;
+}
+body.theme-light #sclient-css-container,
+body.theme-light #sclient-js-container {
+  border-top: 1px solid var(--sclient-border) !important;
+}
+body.theme-light .pm-picker,
+body.theme-light .pm-picker-item {
+  background: var(--sclient-bg-elevated) !important;
+  color: var(--sclient-text-main) !important;
+  border-color: var(--sclient-border) !important;
+}
+body.theme-light .pm-track-row:hover {
+  background: var(--sclient-btn-bg-hover) !important;
+}

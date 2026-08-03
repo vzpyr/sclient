@@ -1,0 +1,33 @@
+.sclient-floating-btn {
+  position: fixed; right: 15px; z-index: 101;
+  background: var(--sclient-bg-elevated);
+  color: var(--sclient-text-main); border: 1px solid var(--sclient-border) !important;
+  border-radius: 50%; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: right 0.3s ease, background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s ease, filter 0.2s ease;
+  padding: 0; outline: none !important;
+}
+.sclient-floating-btn:focus { outline: none !important; }
+.sclient-floating-btn:hover { background: var(--sclient-bg-elevated) !important; filter: brightness(1.25); border-color: var(--sclient-border-hover) !important; }
+.sclient-floating-btn:active { transform: scale(0.95); }
+.sclient-download-toast {
+  position: fixed; bottom: 68px; z-index: 99999;
+  background: var(--sclient-bg-elevated);
+  color: var(--sclient-text-main); border: 1px solid var(--sclient-border); border-radius: var(--sclient-radius-xl);
+  min-height: 40px; box-sizing: border-box;
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: opacity 0.3s ease, right 0.3s ease;
+  font-family: var(--sclient-font-sans); font-size: var(--sclient-text-base);
+  font-weight: 500; pointer-events: none; opacity: 0;
+  white-space: pre-line; text-align: center;
+}
+body button.sclient-floating-btn.active,
+.theme-dark body button.sclient-floating-btn.active {
+  color: var(--sclient-accent) !important; border: 1px solid var(--sclient-accent) !important;
+}
+body button.sclient-floating-btn.active svg,
+.theme-dark body button.sclient-floating-btn.active svg {
+  color: var(--sclient-accent) !important; stroke: var(--sclient-accent) !important;
+}

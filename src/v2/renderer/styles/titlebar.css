@@ -1,0 +1,80 @@
+#sclient-titlebar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 32px;
+  background: var(--sclient-bg-surface, #121212);
+  z-index: 9999999;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  -webkit-app-region: drag;
+  border-bottom: 1px solid var(--sclient-border, rgba(255,255,255,0.05));
+  box-sizing: border-box;
+  padding: 0 10px;
+}
+
+#sclient-titlebar .nav-area {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+#sclient-titlebar .title-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sclient-text-main, #fff);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+#sclient-titlebar.font-ready .title-area {
+  opacity: 1;
+}
+#sclient-titlebar .controls-area {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+#sclient-titlebar button {
+  background: transparent;
+  border: none;
+  color: var(--sclient-text-muted, rgba(255,255,255,0.65));
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+  padding: 0;
+  margin: 0;
+}
+#sclient-titlebar button:hover {
+  color: var(--sclient-text-main, #fff);
+}
+header, .header, .header__wrapper {
+  top: 32px !important;
+}
+#content, .l-main {
+  padding-top: 32px !important;
+}
+.l-sidebar-right,
+.sclient-floating-btn,
+#sclient-sidebar-toggle,
+#sclient-lyrics-sidebar {
+  margin-top: 32px !important;
+}
+#sclient-settings-overlay,
+#sclient-stats-overlay,
+iframe.webiIframe {
+  top: 32px !important;
+  height: calc(100% - 32px) !important;
+}
