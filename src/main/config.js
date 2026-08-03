@@ -1,7 +1,12 @@
 const path = require("path");
 const fs = require("fs");
 const { app } = require("electron");
-const keytar = require("keytar");
+let keytar = null;
+try {
+  keytar = require("keytar");
+} catch (e) {
+  console.error("[SClient] keytar unavailable, storing secrets in config.json:", e.message);
+}
 
 const DIR = path.join(app.getPath("userData"), "SClient");
 const FILE = path.join(DIR, "config.json");
@@ -30,23 +35,26 @@ const secureCache = {};
 
 async function initSecure() {
   for (const key of SECURE_KEYS) {
-    try {
-      const fromKeychain = await keytar.getPassword(SERVICE, key);
-      if (fromKeychain !== null) {
-        secureCache[key] = fromKeychain;
+    let stored = null;
+    if (keytar) {
+      try {
+        stored = await keytar.getPassword(SERVICE, key);
+      } catch (e) {
+        console.error("[SClient] keytar read failed:", key, e);
+      }
+      if (stored !== null) {
+        secureCache[key] = stored;
+        clearRaw(key);
         continue;
       }
-    } catch (e) {
-      console.error("[SClient] keytar read failed:", key, e);
     }
-
     const raw = resolvePath(key);
     if (typeof raw === "string" && raw !== "") {
       secureCache[key] = raw;
+      if (!keytar) continue;
       try {
         await keytar.setPassword(SERVICE, key, raw);
-        assignPath(key, undefined);
-        save();
+        clearRaw(key);
       } catch (e) {
         console.error("[SClient] keytar migrate failed:", key, e);
       }
@@ -78,6 +86,11 @@ function assignPath(key, val) {
   obj[parts[parts.length - 1]] = val;
 }
 
+function clearRaw(key) {
+  assignPath(key, undefined);
+  save();
+}
+
 function get(key, fallback = "") {
   const val = resolvePath(key);
   return val !== undefined && val !== null ? val : fallback;
@@ -100,13 +113,24 @@ function getSecure(key, fallback = "") {
 function setSecure(key, val) {
   if (val === "" || val === null || val === undefined) {
     delete secureCache[key];
-    keytar.deletePassword(SERVICE, key).catch(() => {});
-  } else {
-    secureCache[key] = val;
-    keytar.setPassword(SERVICE, key, val).catch((e) => {
-      console.error("[SClient] keytar write failed:", key, e);
-    });
+    clearRaw(key);
+    if (keytar) keytar.deletePassword(SERVICE, key).catch(() => {});
+    return;
   }
+  secureCache[key] = val;
+  if (!keytar) {
+    assignPath(key, val);
+    save();
+    return;
+  }
+  keytar
+    .setPassword(SERVICE, key, val)
+    .then(() => clearRaw(key))
+    .catch((e) => {
+      console.error("[SClient] keytar write failed:", key, e);
+      assignPath(key, val);
+      save();
+    });
 }
 
 function getFile(name) {
