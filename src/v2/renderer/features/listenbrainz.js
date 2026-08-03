@@ -9,7 +9,7 @@ class ListenbrainzFeature extends Feature {
     return "ListenBrainz Scrobbling";
   }
   get settingsFields() {
-    return [{ type: "text", key: "integrations.listenbrainz.token", label: "Token" }];
+    return [{ type: "password", key: "integrations.listenbrainz.token", label: "Token" }];
   }
   settingsCustom() {
     return `

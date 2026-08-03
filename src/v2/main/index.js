@@ -231,8 +231,11 @@ function createWindow() {
     const payload = config.buildConfigPayload();
 
     const stylesDir = path.join(rendererDir, "styles");
+    const cssFiles = CSS_FILES.filter(
+      (f) => f !== "titlebar.css" || config.get("features.titlebar_style", "custom") === "custom"
+    );
     Promise.all(
-      CSS_FILES.map((f) => win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8")))
+      cssFiles.map((f) => win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8")))
     ).catch((err) => console.error("[SClient] Failed to inject styles:", err));
 
     win.webContents

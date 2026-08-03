@@ -858,6 +858,7 @@ function createPlaylistManagerOverlay() {
     .pm-pl.pm-droptarget { box-shadow:inset 0 0 0 2px ${accent} !important; background:${accent}18 !important; }
     .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--sclient-bg-surface); }
 .sclient-select { -webkit-appearance:none; appearance:none; background:var(--sclient-bg-surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 10px center / 16px 16px; border:1px solid var(--sclient-border); color:var(--sclient-text-main); border-radius:var(--sclient-radius-md); padding:8px 32px 8px 12px; font-family:var(--sclient-font-sans); font-size:var(--sclient-text-base); height:37px; box-sizing:border-box; outline:none; cursor:pointer; }
+body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>"); }
     `
   );
 

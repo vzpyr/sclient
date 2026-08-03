@@ -41,7 +41,7 @@ async function initSecure() {
     }
 
     const raw = resolvePath(key);
-    if (raw !== undefined && raw !== null && raw !== "") {
+    if (typeof raw === "string" && raw !== "") {
       secureCache[key] = raw;
       try {
         await keytar.setPassword(SERVICE, key, raw);

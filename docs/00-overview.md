@@ -289,6 +289,8 @@ fetchTrackData(songUrl)               // verbatim from core.js:399-ish (with tra
 onPlaybackChange(cb)                  // verbatim from core.js:411 + pollPlayback (2000ms interval, PLAYBACK_SEL '.playbackSoundBadge__titleLink',
                                       //   isPlaying from navigator.mediaSession.playbackState, position/duration via parseTime from
                                       //   '.playbackTimeline__timePassed' / '.playbackTimeline__duration', event {type:'track_start'|'tick'|'none', songUrl, trackData, isPlaying, timestamp, position, duration})
+                                      //   RETURNS an unsubscribe function: removes the listener; the 2s poll timer stops when the LAST
+                                      //   listener unsubscribes. Features must store the return value and call it in destroy().
 getCurrentTrack()                     // NEW: returns { songUrl, trackData } from current state (for on-demand reads, e.g. downloader button)
 seekTo(seconds)                       // verbatim from lyrics.js: dispatches mousedown/mouseup on '.playbackTimeline__progressWrapper'
 playerCommand(action, value)          // NEW: all playback control DOM logic in ONE place (see below)
@@ -303,6 +305,8 @@ initBridge()                          // sets window.__scMedia = window.__scMedi
 It maps each action to the same button clicks (`document.querySelector(".playControl")?.click()` etc.) and returns nothing. Both the miniplayer feature and the mpris feature call `bridge.playerCommand(...)`.
 
 **IMPORTANT:** the old `pollPlayback` also posted `sclient-mini-update` and `sclient-mpris-update` messages inline. In v2 that is REMOVED from bridge — those posts move to the miniplayer feature (Phase 9) and mpris feature (Phase 6) respectively, which subscribe to `onPlaybackChange` and build their own payloads. Bridge stays pure state.
+
+**Every feature that subscribes via `onPlaybackChange` must keep the returned unsubscribe on `this` and call it in `destroy()`** (pattern: lyrics.js `this.unsubscribePlayback`). Otherwise toggling the feature off/on double-subscribes.
 
 ---
 
@@ -342,7 +346,7 @@ class Feature {
   }
 
   isEnabled() {
-    return this.featureKey == null ? true : !!SCLIENT_CONFIG.get(this.featureKey, false);
+    return this.featureKey == null ? true : !!SCLIENT_CONFIG.get(this.featureKey.replace(/^features\./, ""), false);
   }
 
   init() { if (this.enabled) return; this.enabled = true; }
@@ -370,9 +374,10 @@ class Feature {
 
 Rules for feature files:
 - One class per file. Instantiate at the bottom: `const DOWNLOADER_FEATURE = new DownloaderFeature();` (global const, part of the concatenation — this IS the registration).
+- `featureKey` is the STORAGE dot-path (`features.show_lyrics`, §15). `isEnabled()` strips the `features.` prefix and looks up the FLAT payload key (`show_lyrics`, §7). Keep the key name aligned with §15 — never return a bare payload key.
 - `init()` = subscribe to bridge events, inject always-on styles, set up anything that must exist even before DOM targets appear.
 - `injectUI()` = create buttons/sidebars/overlays that depend on SoundCloud DOM nodes appearing. The manager's MutationObserver calls it (debounced) once per feature. **Retry contract:** if the feature's anchor element wasn't found yet, the feature may set `this.injected = false` before returning; the manager will re-invoke `injectUI()` on the next DOM mutation. Otherwise `injected` stays true after the first call.
-- `destroy()` = default handles cleanup; override only for extra teardown (call `super.destroy()`).
+- `destroy()` = default handles cleanup; override only for extra teardown (call `super.destroy()`). If `init()` subscribed via `onPlaybackChange`, store the returned unsubscribe on `this` and call it here (pattern: lyrics.js `this.unsubscribePlayback`).
 - DOM targeting: every feature that injects UI must guard with `if (document.getElementById("sclient-<x>")) return;` (idempotency) and return early if its anchor selector is missing.
 
 ---
@@ -545,7 +550,7 @@ Convention: dot-paths in a JSON file (`config.json` in userData/SClient); boolea
 
 | Key | Type | Settings field |
 |---|---|---|
-| `features.titlebar_style` | 'custom'\|'native' | select (General section) |
+| `features.titlebar_style` | 'custom'\|'native'\|'none' | select (General section) |
 | `features.tray_icon` | bool | toggle (General) |
 | `features.load_last_page` | bool | toggle (General) |
 | `features.custom_accent` | bool | toggle (appearance) + color field `features.accent_color` |

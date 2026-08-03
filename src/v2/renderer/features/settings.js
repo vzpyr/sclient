@@ -101,6 +101,9 @@ function fieldHtml(field) {
   if (field.type === "number") {
     return `<div class="sclient-field-row"><span class="sclient-field-label">${esc(field.label)}</span><input type="number" data-config-key="${key}" class="sclient-input sclient-field-input"></div>`;
   }
+  if (field.type === "password") {
+    return `<div class="sclient-field-row"><span class="sclient-field-label">${esc(field.label)}</span><input type="password" data-config-key="${key}" class="sclient-input sclient-field-input" placeholder="${esc(field.label)}"></div>`;
+  }
   return `<div class="sclient-field-row"><span class="sclient-field-label">${esc(field.label)}</span><input type="text" data-config-key="${key}" class="sclient-input sclient-field-input" placeholder="${esc(field.label)}"></div>`;
 }
 
@@ -486,6 +489,7 @@ class SettingsFeature extends Feature {
           <select data-config-key="features.titlebar_style" class="sclient-select">
             <option value="custom">Custom</option>
             <option value="native">Native</option>
+            <option value="none">None</option>
           </select>
         </div>
       </div>
@@ -562,8 +566,10 @@ class SettingsFeature extends Feature {
         .sclient-toggle input { opacity:0;width:0;height:0; }
         .sclient-toggle-bg { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#333;transition:.3s;border-radius:24px; }
         .sclient-toggle-slider { position:absolute;height:18px;width:18px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%; }
-        .sclient-select { -webkit-appearance:none;appearance:none;background:rgba(0,0,0,0.5) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid var(--sclient-border);color:var(--sclient-text-main);border-radius:var(--sclient-radius-md);font-family:var(--sclient-font-sans);font-size:var(--sclient-text-sm);outline:none;cursor:pointer;transition:border-color 0.2s;flex-shrink:0; }
+        .sclient-select { -webkit-appearance:none;appearance:none;background:var(--sclient-bg-surface) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid var(--sclient-border);color:var(--sclient-text-main);border-radius:var(--sclient-radius-md);font-family:var(--sclient-font-sans);font-size:var(--sclient-text-sm);outline:none;cursor:pointer;transition:border-color 0.2s;flex-shrink:0; }
         .sclient-select option { background:#121212;color:white; }
+        body.theme-light .sclient-select { background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m6 9 6 6 6-6%22/></svg>'); }
+        body.theme-light .sclient-select option { background:#ffffff;color:#111111; }
       </style>
 
       <div id="sclient-settings-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;padding-right:8px;display:flex;flex-direction:column;min-height:0;margin-bottom:15px;">
