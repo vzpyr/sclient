@@ -29,7 +29,7 @@ Port the ENTIRE miniplayer window-management block from old `src/main/index.js` 
 Port from old core.js:
 - `injectUI()` → `injectMiniplayerButton()` verbatim (button `#sclient-mini-btn` before `.playbackSoundBadge__showQueue`, posts `{source:"sclient-mini-toggle"}`).
 - `init()`:
-  - Subscribe `onPlaybackChange` → build the `sclient-mini-update` payload exactly as old `pollPlayback` did: trackData, isPlaying, position, duration, isLiked (`.playbackSoundBadge__like` has `sc-button-selected`), isShuffled (`.shuffleControl` has `m-shuffling`), loopState (from `.repeatControl` classes `m-one`/`m-all`), accent (`getAccent()`), playbackRate (`window.sclient_effects?.speed ?? 1`), showVisualizer (`SCLIENT_CONFIG.showVisualizer`) → `window.postMessage({source:"sclient-mini-update", data}, "*")`.
+  - Subscribe `onPlaybackChange` (store the returned unsubscribe on `this`, call it in `destroy()` — see §10) → build the `sclient-mini-update` payload exactly as old `pollPlayback` did: trackData, isPlaying, position, duration, isLiked (`.playbackSoundBadge__like` has `sc-button-selected`), isShuffled (`.shuffleControl` has `m-shuffling`), loopState (from `.repeatControl` classes `m-one`/`m-all`), accent (`getAccent()`), playbackRate (`window.sclient_effects?.speed ?? 1`), showVisualizer (`SCLIENT_CONFIG.showVisualizer`) → `window.postMessage({source:"sclient-mini-update", data}, "*")`.
   - Listen for `sclient-mini-action` messages → `bridge.playerCommand(action)` (old core.js handler logic, now in bridge).
   - The 100ms `sendLiveTime` interval posting `sclient-mini-time` → keep (store interval on `this`, clear in `destroy()`).
 - featureKey `features.show_miniplayer`, category `playback`.

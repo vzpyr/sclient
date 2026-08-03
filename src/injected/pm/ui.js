@@ -1087,8 +1087,8 @@ function pmOpenEditor() {
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase URL</label>
             <input id="pm-ed-purl" class="sclient-input" type="text" value="${(pl.purchase_url || "").replace(/"/g, "&quot;")}"></div>
           <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase title</label>
-        </label>
-      </div>
+            <input id="pm-ed-ptitle" class="sclient-input" type="text" value="${(pl.purchase_title || "").replace(/"/g, "&quot;")}"></div>
+        </div>
       <div style="display:flex;gap:14px;align-items:flex-start;">
         <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#222;flex-shrink:0;">
           <img id="pm-ed-art-preview" src="${pmPlaylistArt(pl)}" style="width:100%;height:100%;object-fit:cover;"/>
@@ -1129,7 +1129,8 @@ function pmOpenEditor() {
   advToggle.addEventListener("click", () => {
     const open = advWrap.style.display !== "none";
     advWrap.style.display = open ? "none" : "block";
-    advToggle.firstChild.textContent = open ? "▸ Advanced details" : "▾ Advanced details";
+    const advSpan = advToggle.querySelector("span");
+    if (advSpan) advSpan.textContent = open ? "▸ Advanced details" : "▾ Advanced details";
   });
 
   let chips = (pl.tag_list || "")
@@ -1180,8 +1181,8 @@ function pmOpenEditor() {
     artPreview.src = PLACEHOLDER_ART;
   });
 
-  const secretWrap = dlg.querySelector("#pm-ed-secret-wrap");
-  const secretInput = dlg.querySelector("#pm-ed-secret");
+  const secretWrap = dlg.querySelector("#pm-ed-secret-box");
+  const secretInput = dlg.querySelector("#pm-ed-secret-url");
   const sharingSel = dlg.querySelector("#pm-ed-sharing");
   const currentSecretLink = () => {
     if (!pl.permalink_url || !pl.secret_token) return "";

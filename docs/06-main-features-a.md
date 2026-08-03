@@ -44,14 +44,14 @@ Port old `src/injected/downloader.js` VERBATIM (both button injections + both to
 Merge old `src/main/discord-rpc.js` (Client, CLIENT_ID, buildRedirectUrl, updateRpc logic) into a file with `register({ ipcMain })` registering `update_rpc` which calls the same logic. Everything else verbatim (keep `rpc`/`login` module state).
 
 ### 6. `src/v2/renderer/features/discord-rpc.js` — `DiscordRpcFeature`
-Port old `src/injected/rpc-bridge.js` VERBATIM: `setupDiscordRpc()` → `init()` subscribing `onPlaybackChange`, dedupe via `last` state object, builds payload (title/artist/isPlaying/artwork/timeStart/timeEnd/songUrl/trackId/artistSlug/trackSlug), `sendBridge("update_rpc", {...})`. Uses `bridge.getArtistFromTrack(evt.trackData)`. NO injectUI. featureKey `features.discord_rpc`, category `playback`.
+Port old `src/injected/rpc-bridge.js` VERBATIM: `setupDiscordRpc()` → `init()` subscribing `onPlaybackChange` (store the returned unsubscribe on `this`, call it in `destroy()` — see §10), dedupe via `last` state object, builds payload (title/artist/isPlaying/artwork/timeStart/timeEnd/songUrl/trackId/artistSlug/trackSlug), `sendBridge("update_rpc", {...})`. Uses `bridge.getArtistFromTrack(evt.trackData)`. NO injectUI. featureKey `features.discord_rpc`, category `playback`.
 
 ### 7. `src/v2/main/features/mpris.js` — `{ register }`
 Merge old `src/main/mpris.js` (mpris-service player, capabilities, event→renderer forwarding via `mpris_command`, `mpris_update` handler building metadata) into `register({ ipcMain, win })`. Old code was called as `mpris.init({ ipcMain, win })` from main/index.js only when enabled — keep an `init({ ipcMain, win })` export too (Phase 11 calls it conditionally), and register `mpris_update` inside `init`. Behavior verbatim (position/duration micros, getPositionOverride, volume).
 
 ### 8. `src/v2/renderer/features/mpris.js` — `MprisFeature`
 New renderer side (old code had this logic INLINE inside `pollPlayback` in core.js):
-- `init()`: subscribe `onPlaybackChange`; on each event build the mpris payload exactly like the old inline block: title/artist (via `getArtistFromTrack`), artwork (upscaled via the `-(t50x50|badge|large|t120x120).(jpg|png)` → `-t500x500.$2` regex), isPlaying, position, duration, songUrl, volume (from `bridge.getActiveMedia()?.volume ?? 1`) — post `{ source: "sclient-mpris-update", data }` via `window.postMessage(..., "*")`.
+- `init()`: subscribe `onPlaybackChange` (store the returned unsubscribe on `this`, call it in `destroy()` — see §10); on each event build the mpris payload exactly like the old inline block: title/artist (via `getArtistFromTrack`), artwork (upscaled via the `-(t50x50|badge|large|t120x120).(jpg|png)` → `-t500x500.$2` regex), isPlaying, position, duration, songUrl, volume (from `bridge.getActiveMedia()?.volume ?? 1`) — post `{ source: "sclient-mpris-update", data }` via `window.postMessage(..., "*")`.
 - Also listen for `sclient-mpris-command` messages and forward to `bridge.playerCommand(data)` (replaces old core.js handler).
 - featureKey `features.mpris`, category `playback`.
 
