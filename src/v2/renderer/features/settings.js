@@ -61,22 +61,22 @@ function highlight(text, patterns) {
 
 function highlightCss(text) {
   return highlight(text, [
-    [/(\/\*[\s\S]*?\*\/)/g, "#6a9955"],
-    [/([.#][a-zA-Z0-9_-]+)(?=[\s{])/g, "#d7ba7d"],
-    [/([a-zA-Z-]+)\s*(?=:)/g, "#9cdcfe"],
-    [/(:\s*)([^;}]+)(?=;|\})/g, "#ce9178"],
+    [/(\/\*[\s\S]*?\*\/)/g, "var(--sclient-syntax-comment, #6a9955)"],
+    [/([.#][a-zA-Z0-9_-]+)(?=[\s{])/g, "var(--sclient-syntax-selector, #d7ba7d)"],
+    [/([a-zA-Z-]+)\s*(?=:)/g, "var(--sclient-syntax-property, #9cdcfe)"],
+    [/(:\s*)([^;}]+)(?=;|\})/g, "var(--sclient-syntax-value, #ce9178)"],
   ]);
 }
 
 function highlightJs(text) {
   return highlight(text, [
-    [/(\/\/.*)/g, "#6a9955"],
-    [/('.*?'|".*?"|`[\s\S]*?`)/g, "#ce9178"],
+    [/(\/\/.*)/g, "var(--sclient-syntax-comment, #6a9955)"],
+    [/('.*?'|".*?"|`[\s\S]*?`)/g, "var(--sclient-syntax-string, #ce9178)"],
     [
       /\b(const|let|var|function|return|if|else|for|while|try|catch|async|await|class|new|this|import|export|from|true|false|null|undefined)\b/g,
-      "#569cd6",
+      "var(--sclient-syntax-keyword, #569cd6)",
     ],
-    [/\b([a-zA-Z0-9_]+)(?=\s*\()/g, "#dcdcaa"],
+    [/\b([a-zA-Z0-9_]+)(?=\s*\()/g, "var(--sclient-syntax-function, #dcdcaa)"],
   ]);
 }
 

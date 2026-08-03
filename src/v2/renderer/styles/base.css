@@ -21,6 +21,13 @@
   --sclient-radius-md: 6px;
   --sclient-radius-lg: 8px;
   --sclient-radius-xl: 12px;
+  --sclient-syntax-comment: #6a9955;
+  --sclient-syntax-selector: #d7ba7d;
+  --sclient-syntax-property: #9cdcfe;
+  --sclient-syntax-value: #ce9178;
+  --sclient-syntax-string: #ce9178;
+  --sclient-syntax-keyword: #569cd6;
+  --sclient-syntax-function: #dcdcaa;
 }
 body.theme-light {
   --sclient-bg-surface: #ffffff;
@@ -32,6 +39,13 @@ body.theme-light {
   --sclient-border-hover: rgba(0, 0, 0, 0.25);
   --sclient-btn-bg: rgba(0, 0, 0, 0.06);
   --sclient-btn-bg-hover: rgba(0, 0, 0, 0.12);
+  --sclient-syntax-comment: #008000;
+  --sclient-syntax-selector: #795e26;
+  --sclient-syntax-property: #001080;
+  --sclient-syntax-value: #a31515;
+  --sclient-syntax-string: #a31515;
+  --sclient-syntax-keyword: #0000ff;
+  --sclient-syntax-function: #795e26;
 }
 .sclient-text-h1 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xxl); font-weight: 700; color: var(--sclient-text-main); }
 .sclient-text-h2 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xl); font-weight: 600; color: var(--sclient-text-main); }
@@ -184,7 +198,16 @@ body.theme-light #sclient-accounts-list > div {
 }
 body.theme-light #sclient-css-container,
 body.theme-light #sclient-js-container {
+  background: #ffffff !important;
   border-top: 1px solid var(--sclient-border) !important;
+}
+body.theme-light #sclient-css-highlight,
+body.theme-light #sclient-js-highlight {
+  color: #1f1f1f !important;
+}
+body.theme-light #sclient-css-editor,
+body.theme-light #sclient-js-editor {
+  caret-color: #1f1f1f !important;
 }
 body.theme-light .pm-picker,
 body.theme-light .pm-picker-item {
