@@ -116,6 +116,14 @@ function onPlaybackChange(cb) {
   if (playbackListeners.length === 1) {
     playbackTimer = setInterval(pollPlayback, 2000);
   }
+  return () => {
+    const idx = playbackListeners.indexOf(cb);
+    if (idx !== -1) playbackListeners.splice(idx, 1);
+    if (playbackListeners.length === 0 && playbackTimer) {
+      clearInterval(playbackTimer);
+      playbackTimer = null;
+    }
+  };
 }
 
 async function pollPlayback() {

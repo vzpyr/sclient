@@ -14,8 +14,8 @@ function startObserver() {
     obsTimer = setTimeout(() => {
       for (const f of FEATURES) {
         if (f.enabled && !f.injected && typeof f.injectUI === "function") {
-          f.injectUI();
           f.injected = true;
+          f.injectUI();
         }
       }
     }, 100);

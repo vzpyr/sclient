@@ -26,6 +26,7 @@ class LyricsFeature extends Feature {
     this.romanizeEnabled = false;
     this.currentInterpolatedPos = 0;
     this.rafId = null;
+    this.unsubscribePlayback = null;
   }
 
   init() {
@@ -54,7 +55,7 @@ class LyricsFeature extends Feature {
 		}
 	`
     );
-    onPlaybackChange((evt) => {
+    this.unsubscribePlayback = onPlaybackChange((evt) => {
       this.lastKnownPosition = evt.position;
       this.currentDuration = evt.duration;
       this.isPlaying = evt.isPlaying;
@@ -82,6 +83,10 @@ class LyricsFeature extends Feature {
     if (this.currentFetchAbort) {
       this.currentFetchAbort.abort();
       this.currentFetchAbort = null;
+    }
+    if (this.unsubscribePlayback) {
+      this.unsubscribePlayback();
+      this.unsubscribePlayback = null;
     }
     const sidebar = document.getElementById("sclient-lyrics-sidebar");
     if (sidebar && sidebar.parentNode) sidebar.parentNode.removeChild(sidebar);
