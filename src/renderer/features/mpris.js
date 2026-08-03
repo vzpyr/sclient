@@ -20,9 +20,13 @@ class MprisFeature extends Feature {
     this.unsubscribePlayback = onPlaybackChange((evt) => {
       if (evt.type === "none") return;
 
-      const artwork = evt.trackData && evt.trackData.artwork_url
-        ? evt.trackData.artwork_url.replace(/-(t50x50|badge|large|t120x120)\.(jpg|png)/i, "-t500x500.$2")
-        : "";
+      const artwork =
+        evt.trackData && evt.trackData.artwork_url
+          ? evt.trackData.artwork_url.replace(
+              /-(t50x50|badge|large|t120x120)\.(jpg|png)/i,
+              "-t500x500.$2"
+            )
+          : "";
       window.postMessage(
         {
           source: "sclient-mpris-update",

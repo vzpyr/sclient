@@ -3,11 +3,13 @@
 **Prereqs:** `docs/00-overview.md` (sections 6, 8, 9, 10, 12). Phases 01–03 done.
 
 ## Goal
+
 Port the three most complex renderer-only features. Same class pattern as Phase 3. These are big ports — be meticulous; behavior parity matters more than prettiness.
 
 ## Files to create
 
 ### 1. `context-menu.js` — `ContextMenuFeature` (always-on, no toggle)
+
 - Port the ENTIRE old `src/injected/contextmenu.js` (an IIFE). It contains: `findEditable`, `findLink`, `findImageEl`, `imageUrlFrom`, `navigateToUrlModal`, the context menu builder/positioning/dismissal, the `contextmenu` handler, and `injectIntoIframes()` (injects the handler into iframes with `doc.__sclient_cm` marker).
 - Convert to a class: `init()` sets up `document.addEventListener("contextmenu", ...)` via `this.on(...)`; iframe injection via a MutationObserver stored on `this` (so `destroy()` can disconnect it).
 - Rename classes it creates: `sc-modal-backdrop` → `sclient-modal-backdrop`, `sc-modal-surface` → `sclient-modal-surface`, `sc-text-body` → `sclient-text-body` (see 00-overview §12).
@@ -16,6 +18,7 @@ Port the three most complex renderer-only features. Same class pattern as Phase 
 - Note: old code wrapped everything in an IIFE for privacy — in v2 that's unnecessary (concatenation scope), but keeping an IIFE inside the file is harmless. Prefer plain functions.
 
 ### 2. `shuffle.js` — `ShuffleFeature`
+
 - Port old `src/injected/shuffle.js` VERBATIM:
   - `resolveUrl(arg)` helper
   - the `window.fetch` interception (hydrate stub tracks via `tracks?ids=` chunking, 50 per chunk, using `extractClientId()` from bridge)
@@ -29,6 +32,7 @@ Port the three most complex renderer-only features. Same class pattern as Phase 
 - `showToast` now comes from utils.js — remove the old file-local definition if any (old shuffle.js used the global one; there was no local def — verify).
 
 ### 3. `effects.js` — `EffectsFeature`
+
 - Port old `src/injected/effects.js` VERBATIM:
   - `injectEffectsButton()` — button `#sclient-effects-btn` + popup `#sclient-effects-popup` (speed slider, preserve-pitch checkbox, reverb checkbox). **Rename** `.sc-background-darkgrey` stays (it's SC's utility class — keep). The popup positioning/toggle/outside-click-close logic verbatim.
   - `setupAudioNodes(ctx)` — convolver + analyser, `window.sclientAnalyser`, the 66ms visualizer interval that posts `{source:"sclient-mini-visualizer"}` — keep the postMessage (preload still relays it; miniplayer feature also reads it in Phase 9). Gate on `SCLIENT_CONFIG.showVisualizer`.
@@ -40,6 +44,7 @@ Port the three most complex renderer-only features. Same class pattern as Phase 
 - All intervals stored on `this` and cleared in `destroy()` override.
 
 ## Verification checklist
+
 1. `node --check` all files.
 2. Diff-inventory: every function from old shuffle.js / effects.js / contextmenu.js exists in the new file (use grep to enumerate old `function ` names and compare).
 3. No `--sc-` own vars introduced; `sc-background-darkgrey`/`sc-artwork`/SC classes kept as-is.
@@ -48,4 +53,5 @@ Port the three most complex renderer-only features. Same class pattern as Phase 
 6. Do NOT touch: `src/` old tree, main process, other v2 files, `package.json`.
 
 ## Report
+
 List the three ports, confirm the single-line permanent-patch comments (the only allowed comments), confirm checklist. Await human approval, then commit `feat(v2): renderer features B`.

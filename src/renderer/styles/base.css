@@ -10,7 +10,7 @@
   --sclient-btn-bg: rgba(255, 255, 255, 0.08);
   --sclient-btn-bg-hover: rgba(255, 255, 255, 0.16);
   --sclient-danger: #e53935;
-  --sclient-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --sclient-font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --sclient-text-xs: 11px;
   --sclient-text-sm: 12px;
   --sclient-text-base: 13px;
@@ -49,10 +49,29 @@ body.theme-light {
   --sclient-syntax-function: #795e26;
   --sclient-editor-bg: #ffffff;
 }
-.sclient-text-h1 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xxl); font-weight: 700; color: var(--sclient-text-main); }
-.sclient-text-h2 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xl); font-weight: 600; color: var(--sclient-text-main); }
-.sclient-text-body { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-base); color: var(--sclient-text-main); line-height: 1.5; }
-.sclient-text-sub { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-sm); color: var(--sclient-text-muted); }
+.sclient-text-h1 {
+  font-family: var(--sclient-font-sans);
+  font-size: var(--sclient-text-xxl);
+  font-weight: 700;
+  color: var(--sclient-text-main);
+}
+.sclient-text-h2 {
+  font-family: var(--sclient-font-sans);
+  font-size: var(--sclient-text-xl);
+  font-weight: 600;
+  color: var(--sclient-text-main);
+}
+.sclient-text-body {
+  font-family: var(--sclient-font-sans);
+  font-size: var(--sclient-text-base);
+  color: var(--sclient-text-main);
+  line-height: 1.5;
+}
+.sclient-text-sub {
+  font-family: var(--sclient-font-sans);
+  font-size: var(--sclient-text-sm);
+  color: var(--sclient-text-muted);
+}
 
 .sclient-btn {
   display: inline-flex;
@@ -68,7 +87,11 @@ body.theme-light {
   font-family: var(--sclient-font-sans);
   font-size: var(--sclient-text-base);
   font-weight: 500;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, filter 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.15s ease,
+    filter 0.2s ease;
   outline: none;
   box-sizing: border-box;
 }
@@ -133,7 +156,7 @@ body.theme-light {
   max-width: 400px;
   width: 90%;
   border: 1px solid var(--sclient-border);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   font-family: var(--sclient-font-sans);
   transform: scale(0.95);
   transition: transform 0.2s ease;
@@ -156,11 +179,25 @@ body.theme-light {
   border-color: var(--sclient-accent);
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; background: transparent; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(128, 128, 128, 0.4); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.7); }
-* { scrollbar-width: thin; scrollbar-color: rgba(128, 128, 128, 0.4) transparent; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.7);
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, 0.4) transparent;
+}
 
 body.theme-light #sclient-settings-overlay,
 body.theme-light #sclient-lyrics-sidebar,

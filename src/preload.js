@@ -136,7 +136,8 @@ const uiConfig = ipcRenderer.sendSync("get-ui-config");
 const isWindows = process.platform === "win32";
 
 if (uiConfig.titlebarStyle === "custom") {
-  let fontImport = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block');";
+  let fontImport =
+    "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block');";
   let fontFamily = "var(--sclient-font-sans, 'Inter', sans-serif)";
 
   if (uiConfig.customFont && uiConfig.customFontFamily) {
@@ -169,7 +170,7 @@ if (uiConfig.titlebarStyle === "custom") {
         <button id="sclient-close-btn" class="close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
     `;
-    
+
     document.body.appendChild(titlebar);
 
     document.getElementById("sclient-back-btn").onclick = () => window.history.back();
@@ -179,22 +180,22 @@ if (uiConfig.titlebarStyle === "custom") {
     document.getElementById("sclient-close-btn").onclick = () => ipcRenderer.send("window_close");
 
     document.fonts.ready.then(() => {
-      titlebar.classList.add('font-ready');
+      titlebar.classList.add("font-ready");
     });
   };
 
-  if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', injectTitlebar);
+  if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", injectTitlebar);
   } else {
     injectTitlebar();
   }
 }
 
-window.addEventListener('load', () => {
+window.addEventListener("load", () => {
   setTimeout(() => {
-    if (document.documentElement) document.documentElement.classList.add('sclient-loaded');
+    if (document.documentElement) document.documentElement.classList.add("sclient-loaded");
     setTimeout(() => {
-      if (document.documentElement) document.documentElement.classList.add('sclient-ready');
+      if (document.documentElement) document.documentElement.classList.add("sclient-ready");
     }, 1000);
   }, 500);
 });

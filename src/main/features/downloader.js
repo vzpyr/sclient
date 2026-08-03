@@ -29,7 +29,8 @@ function register({ ipcMain, app }) {
         options.embedThumbnail = true;
       }
       if (args.isPlaylist) {
-        options.output = "%(playlist_title)s/%(playlist_index)s. %(artist|uploader)s - %(title)s.%(ext)s";
+        options.output =
+          "%(playlist_title)s/%(playlist_index)s. %(artist|uploader)s - %(title)s.%(ext)s";
         options.ignoreErrors = true;
       } else {
         options.output = "%(artist|uploader)s - %(title)s.%(ext)s";
@@ -54,7 +55,8 @@ function register({ ipcMain, app }) {
           const match = part.match(/\[download\]\s+([\d\.]+)%/);
           if (match && match[1]) {
             const pct = parseFloat(match[1]);
-            const finalPct = args.isPlaylist && totalTracks ? ((currentTrack - 1) * 100 + pct) / totalTracks : pct;
+            const finalPct =
+              args.isPlaylist && totalTracks ? ((currentTrack - 1) * 100 + pct) / totalTracks : pct;
             _e.sender.send("download_progress", { url: args.url, percent: finalPct.toFixed(1) });
           }
         }
@@ -62,7 +64,8 @@ function register({ ipcMain, app }) {
         const matchEnd = stdoutBuf.match(/\[download\]\s+([\d\.]+)%/);
         if (matchEnd && matchEnd[1]) {
           const pct = parseFloat(matchEnd[1]);
-          const finalPct = args.isPlaylist && totalTracks ? ((currentTrack - 1) * 100 + pct) / totalTracks : pct;
+          const finalPct =
+            args.isPlaylist && totalTracks ? ((currentTrack - 1) * 100 + pct) / totalTracks : pct;
           _e.sender.send("download_progress", { url: args.url, percent: finalPct.toFixed(1) });
         }
       });
@@ -73,7 +76,8 @@ function register({ ipcMain, app }) {
       });
 
       proc.on("close", (code) => {
-        const hasFatalError = stderr.includes("Unable to download JSON metadata") || stderr.includes("HTTP Error");
+        const hasFatalError =
+          stderr.includes("Unable to download JSON metadata") || stderr.includes("HTTP Error");
         if (code === 0 || (args.isPlaylist && !hasFatalError)) {
           resolve();
         } else {

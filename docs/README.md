@@ -38,20 +38,20 @@ assume it. If a phase doc contradicts it, the overview wins.
 
 ## Phase checklist
 
-| # | Doc | What it delivers | App runs? |
-|---|---|---|---|
-| 1 | `01-foundation.md` | `src/v2/` skeleton, utils.js, bridge.js, config.js, Feature.js, core.js manager | no (v2 inert) |
-| 2 | `02-styles.md` | base.css, titlebar.css, layout.css, features.css | no |
-| 3 | `03-renderer-features-a.md` | hides, lazy-scroll, wide-layout, collapsible-sidebar, enhanced-header, accent, adblock, artwork-viewer | no |
-| 4 | `04-renderer-features-b.md` | context-menu, shuffle, effects | no |
-| 5 | `05-lyrics.md` | lyrics | no |
-| 6 | `06-main-features-a.md` | main/ipc.js (generic save), downloader/discord-rpc/mpris pairs, romanize | no |
-| 7 | `07-main-features-b.md` | lastfm, listenbrainz, stats pairs | no |
-| 8 | `08-playlist-manager.md` | playlist manager (4 renderer files + main dialogs) | no |
-| 9 | `09-miniplayer.md` | miniplayer window + feature pair | no |
-| 10 | `10-settings.md` | data-driven settings overlay | no |
-| 11 | `11-wire-and-flip.md` | new main/index.js + preload.js, package.json flip | **YES — smoke test** |
-| 12 | `12-collapse-and-final-qa.md` | delete old tree, collapse v2→src, full QA matrix | **YES — 22-point QA** |
+| #   | Doc                           | What it delivers                                                                                       | App runs?             |
+| --- | ----------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------- |
+| 1   | `01-foundation.md`            | `src/v2/` skeleton, utils.js, bridge.js, config.js, Feature.js, core.js manager                        | no (v2 inert)         |
+| 2   | `02-styles.md`                | base.css, titlebar.css, layout.css, features.css                                                       | no                    |
+| 3   | `03-renderer-features-a.md`   | hides, lazy-scroll, wide-layout, collapsible-sidebar, enhanced-header, accent, adblock, artwork-viewer | no                    |
+| 4   | `04-renderer-features-b.md`   | context-menu, shuffle, effects                                                                         | no                    |
+| 5   | `05-lyrics.md`                | lyrics                                                                                                 | no                    |
+| 6   | `06-main-features-a.md`       | main/ipc.js (generic save), downloader/discord-rpc/mpris pairs, romanize                               | no                    |
+| 7   | `07-main-features-b.md`       | lastfm, listenbrainz, stats pairs                                                                      | no                    |
+| 8   | `08-playlist-manager.md`      | playlist manager (4 renderer files + main dialogs)                                                     | no                    |
+| 9   | `09-miniplayer.md`            | miniplayer window + feature pair                                                                       | no                    |
+| 10  | `10-settings.md`              | data-driven settings overlay                                                                           | no                    |
+| 11  | `11-wire-and-flip.md`         | new main/index.js + preload.js, package.json flip                                                      | **YES — smoke test**  |
+| 12  | `12-collapse-and-final-qa.md` | delete old tree, collapse v2→src, full QA matrix                                                       | **YES — 22-point QA** |
 
 ## How to run a phase
 

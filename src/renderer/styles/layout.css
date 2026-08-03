@@ -1,17 +1,36 @@
-.playControls__soundBadge { width: 40vw !important; min-width: 350px !important; max-width: 550px !important; flex: none !important; }
-.playbackSoundBadge__titleContextContainer { max-width: none !important; flex: 1 !important; overflow: hidden !important; }
-.playbackSoundBadge__actions { flex-shrink: 0 !important; }
+.playControls__soundBadge {
+  width: 40vw !important;
+  min-width: 350px !important;
+  max-width: 550px !important;
+  flex: none !important;
+}
+.playbackSoundBadge__titleContextContainer {
+  max-width: none !important;
+  flex: 1 !important;
+  overflow: hidden !important;
+}
+.playbackSoundBadge__actions {
+  flex-shrink: 0 !important;
+}
 
-.mixedSelectionModule, .mixedSelectionGallery, .tileGallery,
-.tileGallery__sliderPeekContainer, .tileGallery__sliderPanel {
-  height: auto !important; min-height: min-content !important;
+.mixedSelectionModule,
+.mixedSelectionGallery,
+.tileGallery,
+.tileGallery__sliderPeekContainer,
+.tileGallery__sliderPanel {
+  height: auto !important;
+  min-height: min-content !important;
 }
 .tileGallery__slider {
-  height: auto !important; min-height: min-content !important;
+  height: auto !important;
+  min-height: min-content !important;
   padding: 0 !important;
 }
 .playableTile {
-  height: auto !important; padding-bottom: 10px !important;
+  height: auto !important;
+  padding-bottom: 10px !important;
   margin-bottom: 0 !important;
 }
-.systemPlaylistTile { height: auto !important; }
+.systemPlaylistTile {
+  height: auto !important;
+}

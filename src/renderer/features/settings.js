@@ -129,7 +129,11 @@ function auxCard(a) {
     hasToggle: !!a.toggleKey,
     featureKey: a.toggleKey,
     settingsFields: a.fields || [],
-    settingsCustom: a.custom ? function () { return a.custom; } : null,
+    settingsCustom: a.custom
+      ? function () {
+          return a.custom;
+        }
+      : null,
   });
 }
 
@@ -138,8 +142,7 @@ function categorySectionHtml(category, title) {
     (f) => f.settingsCategory === category && f !== PLAYLIST_MANAGER_FEATURE
   );
   const cards =
-    features.map(renderFeatureCard).join("") +
-    (AUXILIARY[category] || []).map(auxCard).join("");
+    features.map(renderFeatureCard).join("") + (AUXILIARY[category] || []).map(auxCard).join("");
   return `<div class="sclient-section-title">${title}</div>${cards}`;
 }
 
@@ -626,7 +629,9 @@ class SettingsFeature extends Feature {
     STATS_FEATURE.refreshStatus();
 
     overlay.querySelector("#sclient-close-btn").addEventListener("click", () => this.toggle());
-    overlay.querySelector("#sclient-save-btn").addEventListener("click", () => saveSettings(overlay));
+    overlay
+      .querySelector("#sclient-save-btn")
+      .addEventListener("click", () => saveSettings(overlay));
     overlay
       .querySelector("#sclient-add-account-btn")
       .addEventListener("click", () => addAccount(overlay));

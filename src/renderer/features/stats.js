@@ -154,7 +154,10 @@ class StatsFeature extends Feature {
             this.setStatus("Listening...", "#789cff");
           }
         } else if (!evt.isPlaying && this.trackData) {
-          this.setStatus(this.hasRecorded ? "Recorded!" : "Paused", this.hasRecorded ? "#5f5" : "#f9a826");
+          this.setStatus(
+            this.hasRecorded ? "Recorded!" : "Paused",
+            this.hasRecorded ? "#5f5" : "#f9a826"
+          );
         }
       });
     }
@@ -478,7 +481,9 @@ class StatsFeature extends Feature {
       type: "bar",
       indexAxis: "y",
       data: {
-        labels: topTracks.map((t) => (t.title.length > 30 ? t.title.slice(0, 30) + "..." : t.title)),
+        labels: topTracks.map((t) =>
+          t.title.length > 30 ? t.title.slice(0, 30) + "..." : t.title
+        ),
         datasets: [
           {
             label: "Plays",

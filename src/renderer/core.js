@@ -96,7 +96,11 @@ function applyAppearance() {
     const iframeObs = new MutationObserver((mutations) => {
       let shouldSync = false;
       for (const mut of mutations) {
-        if (mut.type === "attributes" && mut.target === document.body && mut.attributeName === "class") {
+        if (
+          mut.type === "attributes" &&
+          mut.target === document.body &&
+          mut.attributeName === "class"
+        ) {
           shouldSync = true;
           break;
         }
@@ -123,7 +127,8 @@ function applyAppearance() {
       });
     } else {
       iframeObs.observe(document.documentElement, { childList: true, subtree: true });
-      if (document.body) iframeObs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+      if (document.body)
+        iframeObs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     }
   }
 }

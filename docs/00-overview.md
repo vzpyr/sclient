@@ -52,7 +52,7 @@ Electron runs three separate "worlds" that cannot directly access each other:
 
 1. **Renderer code cannot `require()` anything.** No npm packages. `youtube-dl-exec`, `better-sqlite3`, `keytar`, `mpris-service`, `@xhayper/discord-rpc` can ONLY run in main.
 2. **Main cannot read the DOM.** It only knows what the renderer tells it over IPC.
-3. **The renderer is the single source of truth for player state** (title, artist, position, duration, playing). Main features are *told* by renderer features via IPC.
+3. **The renderer is the single source of truth for player state** (title, artist, position, duration, playing). Main features are _told_ by renderer features via IPC.
 
 ---
 
@@ -193,7 +193,7 @@ src/v2/
    - `SCLIENT_CONFIG` — config wrapper (renderer/config.js)
    - `FEATURES` — array of feature instances (renderer/core.js)
    - `window.__scMedia` — array of media elements; initialized in bridge.js; written ONLY by the effects feature's `HTMLMediaElement.prototype.play` hook; read via `bridge.getActiveMedia()`.
-   Everything else must be function/class scoped or module-scoped (top-level of its own file, which is fine because of the concatenation order).
+     Everything else must be function/class scoped or module-scoped (top-level of its own file, which is fine because of the concatenation order).
 4. **No feature may call another feature's functions.** Shared logic goes in `utils.js` or `bridge.js`. The only exception: `settings.js` reads `FEATURES` (registry) — that's the manager, not a feature-to-feature call.
 5. **Only `bridge.js` touches SoundCloud's player DOM** (player bar selectors, `<audio>`/`<video>`, `navigator.mediaSession`, media playback controls). Features that need player state/control call bridge functions. Features MAY touch DOM for their own injected UI (buttons, sidebars, overlays) — that's their job.
 6. **Every DOM element a feature creates gets an `sclient-` prefixed ID** and must be removable in `destroy()` (track via `this.addStyle()` / `this.on()` / cleanup array).
@@ -207,7 +207,7 @@ src/v2/
 14. **NO COMMENTS in code. Zero.** No banner/header blocks, no section separators, no inline explanations of what the code obviously does, no "ported from..." notes. The ONLY exceptions (exactly these):
     - one-line comment in `features/adblock.js` and `features/shuffle.js` noting their fetch/XHR interception is permanent and cannot be unpatched (safety-relevant);
     - one-line attribution at the top of files that are byte-for-byte copies (`// copy of src/main/config.js`).
-    Everything else ships comment-free. A comment that merely restates code = failed phase. This applies to ALL code, including the Phase 1 contract files.
+      Everything else ships comment-free. A comment that merely restates code = failed phase. This applies to ALL code, including the Phase 1 contract files.
 
 ---
 
@@ -231,47 +231,47 @@ Add exactly one getter per row of the payload table below (snake_case key → ca
 
 The payload schema (what `buildConfigPayload` sends — keep key names EXACTLY):
 
-| payload key | type | camelCase getter |
-|---|---|---|
-| css | string | customCss |
-| js | string | customJs |
-| lazy_scroll | bool | lazyScroll |
-| titlebar_style | string | titlebarStyle |
-| custom_accent | bool | customAccent |
-| accent_color | string | accentColor |
-| custom_font | bool | customFont |
-| custom_font_family | string | customFontFamily |
-| wide_layout | bool | wideLayout |
-| wide_layout_width | string | wideLayoutWidth |
-| custom_bg_color | bool | customBgColor |
-| bg_color | string | bgColor |
-| adblock | bool | adblock |
-| discord_rpc | bool | discordRpc |
-| tray_icon | bool | trayIcon |
-| hide_upsell | bool | hideUpsell |
-| hide_artists | bool | hideArtists |
-| show_lyrics | bool | showLyrics |
-| show_miniplayer | bool | showMiniplayer |
-| show_downloader | bool | showDownloader |
-| show_effects | bool | showEffects |
-| show_visualizer | bool | showVisualizer |
-| true_shuffle | bool | trueShuffle |
-| true_shuffle_mode | string | trueShuffleMode |
-| region_bypass | bool | regionBypass |
-| proxy_url | string | proxyUrl |
-| enhanced_header | bool | enhancedHeader |
-| collapsible_sidebar | bool | collapsibleSidebar |
-| listenbrainz | bool | listenbrainzEnabled |
-| listenbrainz_token | string | listenbrainzToken |
-| lastfm | bool | lastfmEnabled |
-| lastfm_api_key | string | lastfmApiKey |
-| lastfm_secret | string | lastfmSecret |
-| lastfm_session_key | string | lastfmSessionKey |
-| lastfm_username | string | lastfmUsername |
-| load_last_page | bool | loadLastPage |
-| mpris | bool | mpris |
-| stats_api_sync | bool | statsApiSync |
-| stats_local_tracking | bool | statsLocalTracking |
+| payload key          | type   | camelCase getter    |
+| -------------------- | ------ | ------------------- |
+| css                  | string | customCss           |
+| js                   | string | customJs            |
+| lazy_scroll          | bool   | lazyScroll          |
+| titlebar_style       | string | titlebarStyle       |
+| custom_accent        | bool   | customAccent        |
+| accent_color         | string | accentColor         |
+| custom_font          | bool   | customFont          |
+| custom_font_family   | string | customFontFamily    |
+| wide_layout          | bool   | wideLayout          |
+| wide_layout_width    | string | wideLayoutWidth     |
+| custom_bg_color      | bool   | customBgColor       |
+| bg_color             | string | bgColor             |
+| adblock              | bool   | adblock             |
+| discord_rpc          | bool   | discordRpc          |
+| tray_icon            | bool   | trayIcon            |
+| hide_upsell          | bool   | hideUpsell          |
+| hide_artists         | bool   | hideArtists         |
+| show_lyrics          | bool   | showLyrics          |
+| show_miniplayer      | bool   | showMiniplayer      |
+| show_downloader      | bool   | showDownloader      |
+| show_effects         | bool   | showEffects         |
+| show_visualizer      | bool   | showVisualizer      |
+| true_shuffle         | bool   | trueShuffle         |
+| true_shuffle_mode    | string | trueShuffleMode     |
+| region_bypass        | bool   | regionBypass        |
+| proxy_url            | string | proxyUrl            |
+| enhanced_header      | bool   | enhancedHeader      |
+| collapsible_sidebar  | bool   | collapsibleSidebar  |
+| listenbrainz         | bool   | listenbrainzEnabled |
+| listenbrainz_token   | string | listenbrainzToken   |
+| lastfm               | bool   | lastfmEnabled       |
+| lastfm_api_key       | string | lastfmApiKey        |
+| lastfm_secret        | string | lastfmSecret        |
+| lastfm_session_key   | string | lastfmSessionKey    |
+| lastfm_username      | string | lastfmUsername      |
+| load_last_page       | bool   | loadLastPage        |
+| mpris                | bool   | mpris               |
+| stats_api_sync       | bool   | statsApiSync        |
+| stats_local_tracking | bool   | statsLocalTracking  |
 
 Booleans in the payload are REAL booleans (main converts them). Strings like `accent_color` may be empty.
 
@@ -283,24 +283,25 @@ Source of truth: old `src/injected/core.js` lines 313–595 (functions to port v
 
 ```javascript
 // API surface (all defined in this file, in this order):
-sendBridge(cmd, args = {})            // verbatim from core.js:319 (300s timeout, callbackId pattern)
-getArtistFromTrack(track)             // verbatim from core.js:351
-extractClientId()                     // verbatim from core.js:364 (performance resource entries)
-extractOAuthToken()                   // merged: cookie 'oauth_token' startsWith '2-', then localStorage, then sessionStorage
-fetchTrackData(songUrl)               // verbatim from core.js:399-ish (with trackCache Map)
-onPlaybackChange(cb)                  // verbatim from core.js:411 + pollPlayback (2000ms interval, PLAYBACK_SEL '.playbackSoundBadge__titleLink',
-                                      //   isPlaying from navigator.mediaSession.playbackState, position/duration via parseTime from
-                                      //   '.playbackTimeline__timePassed' / '.playbackTimeline__duration', event {type:'track_start'|'tick'|'none', songUrl, trackData, isPlaying, timestamp, position, duration})
-                                      //   RETURNS an unsubscribe function: removes the listener; the 2s poll timer stops when the LAST
-                                      //   listener unsubscribes. Features must store the return value and call it in destroy().
-getCurrentTrack()                     // NEW: returns { songUrl, trackData } from current state (for on-demand reads, e.g. downloader button)
-seekTo(seconds)                       // verbatim from lyrics.js: dispatches mousedown/mouseup on '.playbackTimeline__progressWrapper'
-playerCommand(action, value)          // NEW: all playback control DOM logic in ONE place (see below)
-getActiveMedia()                      // returns (window.__scMedia || []).find(m => m.duration > 0) — media find helper
-initBridge()                          // sets window.__scMedia = window.__scMedia || [] (idempotent)
+sendBridge(cmd, (args = {})); // verbatim from core.js:319 (300s timeout, callbackId pattern)
+getArtistFromTrack(track); // verbatim from core.js:351
+extractClientId(); // verbatim from core.js:364 (performance resource entries)
+extractOAuthToken(); // merged: cookie 'oauth_token' startsWith '2-', then localStorage, then sessionStorage
+fetchTrackData(songUrl); // verbatim from core.js:399-ish (with trackCache Map)
+onPlaybackChange(cb); // verbatim from core.js:411 + pollPlayback (2000ms interval, PLAYBACK_SEL '.playbackSoundBadge__titleLink',
+//   isPlaying from navigator.mediaSession.playbackState, position/duration via parseTime from
+//   '.playbackTimeline__timePassed' / '.playbackTimeline__duration', event {type:'track_start'|'tick'|'none', songUrl, trackData, isPlaying, timestamp, position, duration})
+//   RETURNS an unsubscribe function: removes the listener; the 2s poll timer stops when the LAST
+//   listener unsubscribes. Features must store the return value and call it in destroy().
+getCurrentTrack(); // NEW: returns { songUrl, trackData } from current state (for on-demand reads, e.g. downloader button)
+seekTo(seconds); // verbatim from lyrics.js: dispatches mousedown/mouseup on '.playbackTimeline__progressWrapper'
+playerCommand(action, value); // NEW: all playback control DOM logic in ONE place (see below)
+getActiveMedia(); // returns (window.__scMedia || []).find(m => m.duration > 0) — media find helper
+initBridge(); // sets window.__scMedia = window.__scMedia || [] (idempotent)
 ```
 
 **`playerCommand(action, value)`** consolidates ALL of the DOM control logic currently in:
+
 - old core.js "sclient-mini-action" message handler (playpause/next/prev/shuffle/loop/like + seek via `media.currentTime`)
 - old core.js "sclient-mpris-command" message handler (play/pause/playpause/stop/next/previous + seek + setPosition + volume, including the volume slider DOM sync: `.volume` data-level, `.volume__sliderWrapper` aria-valuenow, `.volume__sliderProgress` height, `.volume__sliderHandle` top)
 
@@ -316,12 +317,12 @@ It maps each action to the same button clicks (`document.querySelector(".playCon
 
 ```javascript
 // All verbatim ports unless noted:
-injectStyle(id, css)                  // core.js:1  (idempotent, DOMContentLoaded-safe)
-injectToIframes(id, css)              // core.js:15 (handles iframe injection + MutationObserver)
-showToast(message)                    // core.js:596 (uses sclient-modal-surface class — renamed, see Section 12)
-showConfirm(message, options)         // core.js:619 (uses sclient-modal-backdrop/surface, sclient-btn classes — renamed)
-esc(str)                              // lyrics.js (HTML escape for & < > ")
-getAccent()                           // core.js:313 → NEW impl: SCLIENT_CONFIG.customAccent ? SCLIENT_CONFIG.accentColor : "#f50"
+injectStyle(id, css); // core.js:1  (idempotent, DOMContentLoaded-safe)
+injectToIframes(id, css); // core.js:15 (handles iframe injection + MutationObserver)
+showToast(message); // core.js:596 (uses sclient-modal-surface class — renamed, see Section 12)
+showConfirm(message, options); // core.js:619 (uses sclient-modal-backdrop/surface, sclient-btn classes — renamed)
+esc(str); // lyrics.js (HTML escape for & < > ")
+getAccent(); // core.js:313 → NEW impl: SCLIENT_CONFIG.customAccent ? SCLIENT_CONFIG.accentColor : "#f50"
 ```
 
 That's the entire file (~150 lines). If you feel the need to add more, stop and ask — that's a signal something belongs in bridge.js or a feature.
@@ -332,13 +333,27 @@ That's the entire file (~150 lines). If you feel the need to add more, stop and 
 
 ```javascript
 class Feature {
-  get featureKey() { return null; }
-  get settingsCategory() { return null; }
-  get settingsLabel() { return null; }
-  get settingsDescription() { return ""; }
-  get hasToggle() { return true; }
-  get settingsFields() { return []; }
-  settingsCustom() { return ""; }
+  get featureKey() {
+    return null;
+  }
+  get settingsCategory() {
+    return null;
+  }
+  get settingsLabel() {
+    return null;
+  }
+  get settingsDescription() {
+    return "";
+  }
+  get hasToggle() {
+    return true;
+  }
+  get settingsFields() {
+    return [];
+  }
+  settingsCustom() {
+    return "";
+  }
   settingsInit(overlay) {}
 
   constructor() {
@@ -348,14 +363,23 @@ class Feature {
   }
 
   isEnabled() {
-    return this.featureKey == null ? true : !!SCLIENT_CONFIG.get(this.featureKey.replace(/^features\./, ""), false);
+    return this.featureKey == null
+      ? true
+      : !!SCLIENT_CONFIG.get(this.featureKey.replace(/^features\./, ""), false);
   }
 
-  init() { if (this.enabled) return; this.enabled = true; }
+  init() {
+    if (this.enabled) return;
+    this.enabled = true;
+  }
   destroy() {
     this.enabled = false;
     this.injected = false;
-    this.cleanup.forEach((fn) => { try { fn(); } catch (e) {} });
+    this.cleanup.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {}
+    });
     this.cleanup = [];
   }
   injectUI() {}
@@ -375,6 +399,7 @@ class Feature {
 ```
 
 Rules for feature files:
+
 - One class per file. Instantiate at the bottom: `const DOWNLOADER_FEATURE = new DownloaderFeature();` (global const, part of the concatenation — this IS the registration).
 - `featureKey` is the STORAGE dot-path (`features.show_lyrics`, §15). `isEnabled()` strips the `features.` prefix and looks up the FLAT payload key (`show_lyrics`, §7). Keep the key name aligned with §15 — never return a bare payload key.
 - `init()` = subscribe to bridge events, inject always-on styles, set up anything that must exist even before DOM targets appear.
@@ -434,30 +459,30 @@ Also in main/index.js dom-ready: `window.__SCLIENT_CONFIG__ = <buildConfigPayloa
 
 Renames (apply to ALL new files; old files keep old names until deleted):
 
-| OLD (ours) | NEW |
-|---|---|
-| `--sc-accent` | `--sclient-accent` |
-| `--sc-bg-surface` | `--sclient-bg-surface` |
-| `--sc-bg-overlay` | `--sclient-bg-overlay` |
-| `--sc-bg-elevated` | `--sclient-bg-elevated` |
-| `--sc-text-main` | `--sclient-text-main` |
-| `--sc-text-muted` | `--sclient-text-muted` |
-| `--sc-border` | `--sclient-border` |
-| `--sc-border-hover` | `--sclient-border-hover` |
-| `--sc-btn-bg` | `--sclient-btn-bg` |
-| `--sc-btn-bg-hover` | `--sclient-btn-bg-hover` |
-| `--sc-danger` | `--sclient-danger` |
-| `--sc-font-sans` | `--sclient-font-sans` |
-| `--sc-text-xs/sm/base/lg/xl/xxl` | `--sclient-text-xs/...` |
-| `--sc-radius-sm/md/lg/xl` | `--sclient-radius-sm/...` |
-| `.sc-btn` | `.sclient-btn` |
-| `.sc-btn-primary` | `.sclient-btn-primary` |
-| `.sc-btn-danger` | `.sclient-btn-danger` |
-| `.sc-btn-ghost` | `.sclient-btn-ghost` |
-| `.sc-text-h1/h2/body/sub` | `.sclient-text-h1/...` |
-| `.sc-modal-backdrop` | `.sclient-modal-backdrop` |
-| `.sc-modal-surface` | `.sclient-modal-surface` |
-| `.sc-card` | `.sclient-card` |
+| OLD (ours)                       | NEW                       |
+| -------------------------------- | ------------------------- |
+| `--sc-accent`                    | `--sclient-accent`        |
+| `--sc-bg-surface`                | `--sclient-bg-surface`    |
+| `--sc-bg-overlay`                | `--sclient-bg-overlay`    |
+| `--sc-bg-elevated`               | `--sclient-bg-elevated`   |
+| `--sc-text-main`                 | `--sclient-text-main`     |
+| `--sc-text-muted`                | `--sclient-text-muted`    |
+| `--sc-border`                    | `--sclient-border`        |
+| `--sc-border-hover`              | `--sclient-border-hover`  |
+| `--sc-btn-bg`                    | `--sclient-btn-bg`        |
+| `--sc-btn-bg-hover`              | `--sclient-btn-bg-hover`  |
+| `--sc-danger`                    | `--sclient-danger`        |
+| `--sc-font-sans`                 | `--sclient-font-sans`     |
+| `--sc-text-xs/sm/base/lg/xl/xxl` | `--sclient-text-xs/...`   |
+| `--sc-radius-sm/md/lg/xl`        | `--sclient-radius-sm/...` |
+| `.sc-btn`                        | `.sclient-btn`            |
+| `.sc-btn-primary`                | `.sclient-btn-primary`    |
+| `.sc-btn-danger`                 | `.sclient-btn-danger`     |
+| `.sc-btn-ghost`                  | `.sclient-btn-ghost`      |
+| `.sc-text-h1/h2/body/sub`        | `.sclient-text-h1/...`    |
+| `.sc-modal-backdrop`             | `.sclient-modal-backdrop` |
+| `.sc-modal-surface`              | `.sclient-modal-surface`  |
+| `.sc-card`                       | `.sclient-card`           |
 
 KEEP as-is: `#sclient-*` IDs, `.sclient-floating-btn`, `.sclient-download-toast`, `.sclient-lyric-line`, `.sclient-lyric-word`, `.sclient-input`, `.sclient-sidebar-open`, `.sclient-svg-container`. Keep SoundCloud's classes we intentionally reuse: `.sc-button*`, `.sc-mr-1x`, `.sc-background-darkgrey`, `.sc-artwork`, and all SC structural selectors (`.header__*`, `.playbackSoundBadge__*`, `.playbackTimeline__*`, `.skipControl__*`, `.playControl`, `.shuffleControl`, `.repeatControl`, `.volume__*`, `.queue__*`, `.l-container`, `.l-main`, `.l-sidebar-right`, `.theme-dark`, `.theme-light`).
 
@@ -471,78 +496,78 @@ Design system (`styles/base.css`) root block: all `--sclient-*` vars with the sa
 
 **IPC channels (renderer → main via sendBridge / ipcRenderer):**
 
-| Channel | Owner (main) |
-|---|---|
-| `get-proxy-config`, `get-ui-config` (sendSync) | ipc.js core |
-| `clipboard_readText`, `clipboard_writeText` | ipc.js core |
-| `webcontents_paste/copy/cut/selectAll` | ipc.js core |
-| `get_custom_files`, `save_custom_files` | ipc.js core |
-| `get_active_account`, `set_active_account`, `get_accounts`, `create_account`, `delete_account` | ipc.js core |
-| `restart_app`, `clear_data`, `clear_data_and_restart` | ipc.js core |
-| `romanize` | ipc.js core |
-| `download_song` (+ push `download_progress`) | features/downloader.js |
-| `update_rpc` | features/discord-rpc.js |
-| `mpris_update` (renderer→main), `mpris_command` (main→renderer) | features/mpris.js |
-| `lastfm_authenticate`, `lastfm_save_credentials`, `lastfm_disconnect`, `lastfm_now_playing`, `lastfm_scrobble` | features/lastfm.js |
-| `submit_listenbrainz` | features/listenbrainz.js |
-| `stats_store_credentials`, `stats_record_listen`, `stats_get_data`, `stats_wipe_db`, `stats_export_db`, `stats_pick_import_file`, `stats_execute_import` | features/stats.js |
-| `playlist_save_file`, `playlist_pick_import_file` | features/playlist-manager.js |
-| `toggle_miniplayer`, `mini_close`, `mini_minimize`, `mini_fullscreen`, `mini_action`, `mini_update`, `mini_visualizer`, `mini_time`, `resize_mini` | features/miniplayer.js |
-| `window_minimize`, `window_maximize`, `window_close` | ipc.js core |
+| Channel                                                                                                                                                  | Owner (main)                 |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `get-proxy-config`, `get-ui-config` (sendSync)                                                                                                           | ipc.js core                  |
+| `clipboard_readText`, `clipboard_writeText`                                                                                                              | ipc.js core                  |
+| `webcontents_paste/copy/cut/selectAll`                                                                                                                   | ipc.js core                  |
+| `get_custom_files`, `save_custom_files`                                                                                                                  | ipc.js core                  |
+| `get_active_account`, `set_active_account`, `get_accounts`, `create_account`, `delete_account`                                                           | ipc.js core                  |
+| `restart_app`, `clear_data`, `clear_data_and_restart`                                                                                                    | ipc.js core                  |
+| `romanize`                                                                                                                                               | ipc.js core                  |
+| `download_song` (+ push `download_progress`)                                                                                                             | features/downloader.js       |
+| `update_rpc`                                                                                                                                             | features/discord-rpc.js      |
+| `mpris_update` (renderer→main), `mpris_command` (main→renderer)                                                                                          | features/mpris.js            |
+| `lastfm_authenticate`, `lastfm_save_credentials`, `lastfm_disconnect`, `lastfm_now_playing`, `lastfm_scrobble`                                           | features/lastfm.js           |
+| `submit_listenbrainz`                                                                                                                                    | features/listenbrainz.js     |
+| `stats_store_credentials`, `stats_record_listen`, `stats_get_data`, `stats_wipe_db`, `stats_export_db`, `stats_pick_import_file`, `stats_execute_import` | features/stats.js            |
+| `playlist_save_file`, `playlist_pick_import_file`                                                                                                        | features/playlist-manager.js |
+| `toggle_miniplayer`, `mini_close`, `mini_minimize`, `mini_fullscreen`, `mini_action`, `mini_update`, `mini_visualizer`, `mini_time`, `resize_mini`       | features/miniplayer.js       |
+| `window_minimize`, `window_maximize`, `window_close`                                                                                                     | ipc.js core                  |
 
 ---
 
 ## 14. Master Mapping: old file → new home
 
-| Old | New | Phase |
-|---|---|---|
-| `main/index.js` | `v2/main/index.js` (window/splash/tray/injection/protocol/partitions) | 11 |
-| `main/config.js` | `v2/main/config.js` (copy unchanged) | 1 |
-| `main/romanize.js` | `v2/main/romanize.js` (copy unchanged) | 6 |
-| `main/ipc.js` — window/clipboard/accounts/config/romanize/proxy/ui | `v2/main/ipc.js` | 6 |
-| `main/ipc.js` — `download_song` | `v2/main/features/downloader.js` | 6 |
-| `main/ipc.js` — `update_rpc` | `v2/main/features/discord-rpc.js` | 6 |
-| `main/ipc.js` — lastfm_* | `v2/main/features/lastfm.js` | 7 |
-| `main/ipc.js` — `submit_listenbrainz` | `v2/main/features/listenbrainz.js` | 7 |
-| `main/ipc.js` — stats_* | `v2/main/features/stats.js` | 7 |
-| `main/ipc.js` — playlist_* | `v2/main/features/playlist-manager.js` | 8 |
-| `main/stats.js` | merged into `v2/main/features/stats.js` | 7 |
-| `main/discord-rpc.js` | merged into `v2/main/features/discord-rpc.js` | 6 |
-| `main/mpris.js` | merged into `v2/main/features/mpris.js` | 6 |
-| `main/mini.js`, `mini.html` | `v2/miniplayer/index.js`, `v2/miniplayer/index.html` | 9 |
-| `preload.js` | `v2/preload.js` (titlebar CSS moves to styles/titlebar.css) | 11 |
-| `injected/core.js` — utils + showToast/showConfirm/getAccent | `v2/renderer/utils.js` | 1 |
-| `injected/core.js` — bridge (sendBridge, onPlaybackChange, extractClientId, getArtistFromTrack, fetchTrackData) | `v2/renderer/bridge.js` | 1 |
-| `injected/core.js` — mini/mpris message handlers, injectMiniplayerButton, sendLiveTime | miniplayer.js / mpris.js features | 6/9 |
-| `injected/core.js` — design system, scrollbar, light theme CSS | `v2/renderer/styles/base.css` | 2 |
-| `injected/core.js` — layout fixes, player fix | `v2/renderer/styles/layout.css` | 2 |
-| `injected/core.js` — floating button styles, download toast | `v2/renderer/styles/features.css` | 2 |
-| `injected/core.js` — wide layout | `features/wide-layout.js` | 3 |
-| `injected/core.js` — collapsible sidebar | `features/collapsible-sidebar.js` | 3 |
-| `injected/core.js` — lazy scroll | `features/lazy-scroll.js` | 3 |
-| `injected/core.js` — avatar artwork viewer (unlabeled!) | `features/artwork-viewer.js` | 3 |
-| `injected/core.js` — F5/Ctrl+R handler | `v2/renderer/core.js` (verbatim) | 1 |
-| `injected/core.js` — custom css/js injection | `v2/renderer/core.js` | 1 |
-| `injected/init.js` — injectMenuButton | `features/settings.js` | 10 |
-| `injected/init.js` — sidebar toggle | `features/collapsible-sidebar.js` | 3 |
-| `injected/init.js` — nav icons/back-fwd | `features/enhanced-header.js` | 3 |
-| `injected/init.js` — applyFeatureStyles + observer | distributed to features / `core.js` | 1+ |
-| `injected/accent.js` | `features/accent.js` | 3 |
-| `injected/adblock.js` | `features/adblock.js` | 3 |
-| `injected/shuffle.js` | `features/shuffle.js` | 4 |
-| `injected/contextmenu.js` | `features/context-menu.js` | 4 |
-| `injected/effects.js` | `features/effects.js` | 4 |
-| `injected/lyrics.js` | `features/lyrics.js` | 5 |
-| `injected/rpc-bridge.js` | `features/discord-rpc.js` | 6 |
-| `injected/downloader.js` | `features/downloader.js` | 6 |
-| `injected/scrobbler.js` | `features/lastfm.js` + `features/listenbrainz.js` | 7 |
-| `injected/stats.js` | `features/stats.js` | 7 |
-| `injected/pm/api.js` | `features/playlist-manager/api.js` | 8 |
-| `injected/pm/state.js` | `features/playlist-manager/state.js` | 8 |
-| `injected/pm/ui.js` | `features/playlist-manager/index.js` | 8 |
-| `injected/pm/spotify.js` | `features/playlist-manager/spotify.js` | 8 |
-| `injected/settings.js` | `features/settings.js` (data-driven rewrite) | 10 |
-| `api/index.js` | untouched | — |
+| Old                                                                                                             | New                                                                   | Phase |
+| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----- |
+| `main/index.js`                                                                                                 | `v2/main/index.js` (window/splash/tray/injection/protocol/partitions) | 11    |
+| `main/config.js`                                                                                                | `v2/main/config.js` (copy unchanged)                                  | 1     |
+| `main/romanize.js`                                                                                              | `v2/main/romanize.js` (copy unchanged)                                | 6     |
+| `main/ipc.js` — window/clipboard/accounts/config/romanize/proxy/ui                                              | `v2/main/ipc.js`                                                      | 6     |
+| `main/ipc.js` — `download_song`                                                                                 | `v2/main/features/downloader.js`                                      | 6     |
+| `main/ipc.js` — `update_rpc`                                                                                    | `v2/main/features/discord-rpc.js`                                     | 6     |
+| `main/ipc.js` — lastfm_*                                                                                        | `v2/main/features/lastfm.js`                                          | 7     |
+| `main/ipc.js` — `submit_listenbrainz`                                                                           | `v2/main/features/listenbrainz.js`                                    | 7     |
+| `main/ipc.js` — stats_*                                                                                         | `v2/main/features/stats.js`                                           | 7     |
+| `main/ipc.js` — playlist_*                                                                                      | `v2/main/features/playlist-manager.js`                                | 8     |
+| `main/stats.js`                                                                                                 | merged into `v2/main/features/stats.js`                               | 7     |
+| `main/discord-rpc.js`                                                                                           | merged into `v2/main/features/discord-rpc.js`                         | 6     |
+| `main/mpris.js`                                                                                                 | merged into `v2/main/features/mpris.js`                               | 6     |
+| `main/mini.js`, `mini.html`                                                                                     | `v2/miniplayer/index.js`, `v2/miniplayer/index.html`                  | 9     |
+| `preload.js`                                                                                                    | `v2/preload.js` (titlebar CSS moves to styles/titlebar.css)           | 11    |
+| `injected/core.js` — utils + showToast/showConfirm/getAccent                                                    | `v2/renderer/utils.js`                                                | 1     |
+| `injected/core.js` — bridge (sendBridge, onPlaybackChange, extractClientId, getArtistFromTrack, fetchTrackData) | `v2/renderer/bridge.js`                                               | 1     |
+| `injected/core.js` — mini/mpris message handlers, injectMiniplayerButton, sendLiveTime                          | miniplayer.js / mpris.js features                                     | 6/9   |
+| `injected/core.js` — design system, scrollbar, light theme CSS                                                  | `v2/renderer/styles/base.css`                                         | 2     |
+| `injected/core.js` — layout fixes, player fix                                                                   | `v2/renderer/styles/layout.css`                                       | 2     |
+| `injected/core.js` — floating button styles, download toast                                                     | `v2/renderer/styles/features.css`                                     | 2     |
+| `injected/core.js` — wide layout                                                                                | `features/wide-layout.js`                                             | 3     |
+| `injected/core.js` — collapsible sidebar                                                                        | `features/collapsible-sidebar.js`                                     | 3     |
+| `injected/core.js` — lazy scroll                                                                                | `features/lazy-scroll.js`                                             | 3     |
+| `injected/core.js` — avatar artwork viewer (unlabeled!)                                                         | `features/artwork-viewer.js`                                          | 3     |
+| `injected/core.js` — F5/Ctrl+R handler                                                                          | `v2/renderer/core.js` (verbatim)                                      | 1     |
+| `injected/core.js` — custom css/js injection                                                                    | `v2/renderer/core.js`                                                 | 1     |
+| `injected/init.js` — injectMenuButton                                                                           | `features/settings.js`                                                | 10    |
+| `injected/init.js` — sidebar toggle                                                                             | `features/collapsible-sidebar.js`                                     | 3     |
+| `injected/init.js` — nav icons/back-fwd                                                                         | `features/enhanced-header.js`                                         | 3     |
+| `injected/init.js` — applyFeatureStyles + observer                                                              | distributed to features / `core.js`                                   | 1+    |
+| `injected/accent.js`                                                                                            | `features/accent.js`                                                  | 3     |
+| `injected/adblock.js`                                                                                           | `features/adblock.js`                                                 | 3     |
+| `injected/shuffle.js`                                                                                           | `features/shuffle.js`                                                 | 4     |
+| `injected/contextmenu.js`                                                                                       | `features/context-menu.js`                                            | 4     |
+| `injected/effects.js`                                                                                           | `features/effects.js`                                                 | 4     |
+| `injected/lyrics.js`                                                                                            | `features/lyrics.js`                                                  | 5     |
+| `injected/rpc-bridge.js`                                                                                        | `features/discord-rpc.js`                                             | 6     |
+| `injected/downloader.js`                                                                                        | `features/downloader.js`                                              | 6     |
+| `injected/scrobbler.js`                                                                                         | `features/lastfm.js` + `features/listenbrainz.js`                     | 7     |
+| `injected/stats.js`                                                                                             | `features/stats.js`                                                   | 7     |
+| `injected/pm/api.js`                                                                                            | `features/playlist-manager/api.js`                                    | 8     |
+| `injected/pm/state.js`                                                                                          | `features/playlist-manager/state.js`                                  | 8     |
+| `injected/pm/ui.js`                                                                                             | `features/playlist-manager/index.js`                                  | 8     |
+| `injected/pm/spotify.js`                                                                                        | `features/playlist-manager/spotify.js`                                | 8     |
+| `injected/settings.js`                                                                                          | `features/settings.js` (data-driven rewrite)                          | 10    |
+| `api/index.js`                                                                                                  | untouched                                                             | —     |
 
 ---
 
@@ -550,37 +575,37 @@ Design system (`styles/base.css`) root block: all `--sclient-*` vars with the sa
 
 Convention: dot-paths in a JSON file (`config.json` in userData/SClient); booleans as strings `"true"`/`"false"`; secure values in OS keychain via keytar. Secure keys (SECURE_KEYS): `integrations.listenbrainz.token`, `integrations.lastfm.api_key`, `integrations.lastfm.secret`, `integrations.lastfm.session_key`.
 
-| Key | Type | Settings field |
-|---|---|---|
-| `features.titlebar_style` | 'custom'\|'native'\|'none' | select (General section) |
-| `features.tray_icon` | bool | toggle (General) |
-| `features.load_last_page` | bool | toggle (General) |
-| `features.custom_accent` | bool | toggle (appearance) + color field `features.accent_color` |
-| `features.custom_font` | bool | toggle + text `features.custom_font_family` |
-| `features.custom_bg_color` | bool | toggle + color `features.bg_color` |
-| `features.wide_layout` | bool | toggle + text `features.wide_layout_width` |
-| `features.enhanced_header` | bool | toggle |
-| `features.collapsible_sidebar` | bool | toggle |
-| `features.lazy_scroll` | bool | toggle |
-| `features.adblock` | bool | toggle (SPECIAL: also toggles ElectronBlocker in main) |
-| `features.hide_upsell` | bool | toggle |
-| `features.hide_artists` | bool | toggle |
-| `features.show_lyrics` | bool | toggle |
-| `features.show_miniplayer` | bool | toggle |
-| `features.show_downloader` | bool | toggle |
-| `features.show_effects` | bool | toggle |
-| `features.show_visualizer` | bool | toggle |
-| `features.true_shuffle` | bool | toggle + select `features.true_shuffle_mode` ('native'\|'api') |
-| `features.region_bypass` | bool | toggle + text `features.proxy_url` |
-| `features.discord_rpc` | bool | toggle |
-| `features.mpris` | bool | toggle |
-| `integrations.listenbrainz.enabled` | bool | toggle + secure token |
-| `integrations.lastfm.enabled` | bool | toggle + secure api_key, secret + auth flow |
-| `stats.api_sync` | bool | toggle (stats section) |
-| `stats.local_tracking` | bool | toggle (stats section) |
-| `accounts.active` | string | account management (core) |
-| `last_page_url` | string | written by main on close, not in settings |
-| files: `custom.css`, `custom.js` | file | CSS/JS editors (settings) |
+| Key                                 | Type                       | Settings field                                                 |
+| ----------------------------------- | -------------------------- | -------------------------------------------------------------- |
+| `features.titlebar_style`           | 'custom'\|'native'\|'none' | select (General section)                                       |
+| `features.tray_icon`                | bool                       | toggle (General)                                               |
+| `features.load_last_page`           | bool                       | toggle (General)                                               |
+| `features.custom_accent`            | bool                       | toggle (appearance) + color field `features.accent_color`      |
+| `features.custom_font`              | bool                       | toggle + text `features.custom_font_family`                    |
+| `features.custom_bg_color`          | bool                       | toggle + color `features.bg_color`                             |
+| `features.wide_layout`              | bool                       | toggle + text `features.wide_layout_width`                     |
+| `features.enhanced_header`          | bool                       | toggle                                                         |
+| `features.collapsible_sidebar`      | bool                       | toggle                                                         |
+| `features.lazy_scroll`              | bool                       | toggle                                                         |
+| `features.adblock`                  | bool                       | toggle (SPECIAL: also toggles ElectronBlocker in main)         |
+| `features.hide_upsell`              | bool                       | toggle                                                         |
+| `features.hide_artists`             | bool                       | toggle                                                         |
+| `features.show_lyrics`              | bool                       | toggle                                                         |
+| `features.show_miniplayer`          | bool                       | toggle                                                         |
+| `features.show_downloader`          | bool                       | toggle                                                         |
+| `features.show_effects`             | bool                       | toggle                                                         |
+| `features.show_visualizer`          | bool                       | toggle                                                         |
+| `features.true_shuffle`             | bool                       | toggle + select `features.true_shuffle_mode` ('native'\|'api') |
+| `features.region_bypass`            | bool                       | toggle + text `features.proxy_url`                             |
+| `features.discord_rpc`              | bool                       | toggle                                                         |
+| `features.mpris`                    | bool                       | toggle                                                         |
+| `integrations.listenbrainz.enabled` | bool                       | toggle + secure token                                          |
+| `integrations.lastfm.enabled`       | bool                       | toggle + secure api_key, secret + auth flow                    |
+| `stats.api_sync`                    | bool                       | toggle (stats section)                                         |
+| `stats.local_tracking`              | bool                       | toggle (stats section)                                         |
+| `accounts.active`                   | string                     | account management (core)                                      |
+| `last_page_url`                     | string                     | written by main on close, not in settings                      |
+| files: `custom.css`, `custom.js`    | file                       | CSS/JS editors (settings)                                      |
 
 ---
 

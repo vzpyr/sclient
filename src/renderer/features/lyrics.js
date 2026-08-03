@@ -130,13 +130,15 @@ class LyricsFeature extends Feature {
 
     if (activeIdx !== this.currentHighlightedIndex) {
       if (this.currentHighlightedIndex >= 0 && this.currentHighlightedIndex < lineEls.length) {
-        lineEls[this.currentHighlightedIndex].querySelectorAll(".sclient-lyric-word").forEach((w) => {
-          w.classList.remove("sung");
-          w.style.background = "";
-          w.style.webkitBackgroundClip = "";
-          w.style.backgroundClip = "";
-          w.style.color = "";
-        });
+        lineEls[this.currentHighlightedIndex]
+          .querySelectorAll(".sclient-lyric-word")
+          .forEach((w) => {
+            w.classList.remove("sung");
+            w.style.background = "";
+            w.style.webkitBackgroundClip = "";
+            w.style.backgroundClip = "";
+            w.style.color = "";
+          });
       }
       this.currentHighlightedIndex = activeIdx;
       lineEls.forEach((el, i) => {
@@ -224,7 +226,9 @@ class LyricsFeature extends Feature {
 
     document.body.appendChild(sidebar);
 
-    this.on(document.getElementById("sclient-lyrics-close-btn"), "click", () => this.toggleLyrics());
+    this.on(document.getElementById("sclient-lyrics-close-btn"), "click", () =>
+      this.toggleLyrics()
+    );
 
     this.on(document.getElementById("sclient-lyrics-offset-slider"), "input", (e) => {
       this.lyricsOffset = parseFloat(e.target.value);

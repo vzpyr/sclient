@@ -133,9 +133,11 @@ class DownloaderFeature extends Feature {
 
     const btn = document.createElement("button");
     btn.id = "sclient-playlist-download-btn";
-    btn.className = "sc-button-secondary sc-button sc-button-medium sc-button-icon sc-button-responsive";
+    btn.className =
+      "sc-button-secondary sc-button sc-button-medium sc-button-icon sc-button-responsive";
     btn.title = "Download Playlist";
-    btn.innerHTML = '<div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-down-icon lucide-folder-down"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6"/><path d="m15 13-3 3-3-3"/></svg></div>';
+    btn.innerHTML =
+      '<div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-down-icon lucide-folder-down"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6"/><path d="m15 13-3 3-3-3"/></svg></div>';
 
     this.on(btn, "click", async (e) => {
       e.preventDefault();
@@ -183,12 +185,19 @@ class DownloaderFeature extends Feature {
         const cid = extractClientId();
         const tok = extractOAuthToken();
         if (cid && tok) {
-          const res = await fetch(`https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(fullUrl)}&client_id=${cid}`, {
-            headers: { Authorization: `OAuth ${tok}` }
-          });
+          const res = await fetch(
+            `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(fullUrl)}&client_id=${cid}`,
+            {
+              headers: { Authorization: `OAuth ${tok}` },
+            }
+          );
           if (res.ok) {
             const data = await res.json();
-            if (data.sharing === "private" && data.secret_token && !fullUrl.includes(data.secret_token)) {
+            if (
+              data.sharing === "private" &&
+              data.secret_token &&
+              !fullUrl.includes(data.secret_token)
+            ) {
               fullUrl += "/" + data.secret_token;
             }
           }
@@ -196,7 +205,11 @@ class DownloaderFeature extends Feature {
       } catch (_) {}
 
       const progressHandler = (event) => {
-        if (event.data && event.data.source === "sclient-bridge-event" && event.data.event === "download_progress") {
+        if (
+          event.data &&
+          event.data.source === "sclient-bridge-event" &&
+          event.data.event === "download_progress"
+        ) {
           if (event.data.data.url === fullUrl) {
             const pct = event.data.data.percent;
             progressFill.style.width = pct + "%";

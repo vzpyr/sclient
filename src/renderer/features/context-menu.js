@@ -118,7 +118,9 @@ class ContextMenuFeature extends Feature {
       accent = typeof getAccent === "function" ? getAccent() : accent;
     } catch (ex) {}
     if (typeof getAccent !== "function") {
-      const ca = getComputedStyle(document.documentElement).getPropertyValue("--sclient-accent").trim();
+      const ca = getComputedStyle(document.documentElement)
+        .getPropertyValue("--sclient-accent")
+        .trim();
       if (ca) accent = ca;
     }
 

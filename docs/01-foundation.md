@@ -3,11 +3,13 @@
 **Prereqs:** read `docs/00-overview.md` fully (sections 2, 6, 7, 8, 9, 10, 11 especially).
 
 ## Goal
+
 Create the `src/v2/` skeleton and every contract later phases depend on. After this phase, the v2 renderer has working utils, bridge, config wrapper, Feature base class, and a feature manager — but **nothing is wired into the app yet** (old `src/` still runs; do NOT touch it).
 
 ## Files to create
 
 ### 1. Directory skeleton (empty dirs are fine)
+
 ```
 src/v2/main/
 src/v2/main/features/
@@ -20,7 +22,9 @@ src/v2/miniplayer/
 ### 2. `src/v2/main/config.js` — copy of `src/main/config.js` UNCHANGED (byte-for-byte)
 
 ### 3. `src/v2/renderer/utils.js`
+
 Port these functions **verbatim** from the old files (rename classes per Section 12 of 00-overview):
+
 - `injectStyle(id, css)` — from `src/injected/core.js` line 1
 - `injectToIframes(id, css)` — from `src/injected/core.js` line 15
 - `showToast(message)` — from `src/injected/core.js` line 596. **Rename `.sc-modal-surface` → `.sclient-modal-surface`** and `var(--sc-radius-xl)` → `var(--sclient-radius-xl)` in its inline styles.
@@ -31,7 +35,9 @@ Port these functions **verbatim** from the old files (rename classes per Section
 Note: `getAccent` and `SCLIENT_CONFIG` are not defined yet at this point in concatenation — that's fine, they resolve at call time (utils.js runs before config.js but functions only call them later).
 
 ### 4. `src/v2/renderer/bridge.js`
+
 Port from `src/injected/core.js` lines 313–595, exactly as specified in 00-overview Section 8:
+
 - `sendBridge(cmd, args)` — verbatim (core.js:319)
 - `getArtistFromTrack(track)` — verbatim (core.js:351)
 - `extractClientId()` — verbatim (core.js:364)
@@ -48,13 +54,17 @@ Port from `src/injected/core.js` lines 313–595, exactly as specified in 00-ove
 - `initBridge()` — `window.__scMedia = window.__scMedia || [];` (idempotent)
 
 ### 5. `src/v2/renderer/config.js`
+
 `SCLIENT_CONFIG` exactly as 00-overview Section 7. Include EVERY getter from the payload table (all 39 rows). Getter bodies are `this.get('snake_case_key', default)` with the documented defaults.
 
 ### 6. `src/v2/renderer/features/Feature.js`
+
 The base class source from 00-overview Section 10, **verbatim** (comment-free — the contract is explained in §10's prose).
 
 ### 7. `src/v2/renderer/core.js` — the feature manager (renderer entry)
+
 Write the following structure. The comments below are INSTRUCTIONS to you, not code to ship — ship comment-free (rule 14):
+
 ```javascript
 const FEATURES = [];
 
@@ -74,6 +84,7 @@ initFeatures();
 startObserver();
 console.log("[SClient] Successfully injected all modules.");
 ```
+
 - `startObserver()`: MutationObserver on `document.body` (childList + subtree), 100ms debounce; for every `f` in `FEATURES` where `f.enabled && !f.injected && typeof f.injectUI === "function"`, call `f.injectUI()` then set `f.injected = true`. Same pattern as old core.js/init.js observer, but generic. Retry: a feature that couldn't find its anchor may set `this.injected = false` itself to be re-invoked on the next mutation (contract in 00-overview §10). Start it after `DOMContentLoaded` if `document.readyState === "loading"`, else immediately.
 - `runCustomJs()`: user custom JS from `SCLIENT_CONFIG.customJs` — create a `<script>` element with `textContent` and append to body, DOMContentLoaded-safe (same pattern as old core.js `applyFeatureStyles` tail). Call it from the boot sequence too.
 - Also in boot: `injectStyle("sclient-custom-css", SCLIENT_CONFIG.customCss)` if non-empty.
@@ -82,6 +93,7 @@ console.log("[SClient] Successfully injected all modules.");
 - `initBridge()` comes from bridge.js.
 
 ## Verification checklist
+
 1. `node --check` passes on every new file.
 2. `grep -rn "function " src/v2/renderer | grep "^.*function "` — confirm the function inventory matches exactly: utils has 6, bridge has the listed API, core has initFeatures/startObserver/runCustomJs.
 3. Grep `window.__SCLIENT_CONFIG__` in `src/v2/renderer/` → must appear ONLY in `config.js`.
@@ -90,4 +102,5 @@ console.log("[SClient] Successfully injected all modules.");
 6. Do NOT modify: anything under `src/` (old), `package.json`, `src/api`, `docs/` (other than report), `node_modules`.
 
 ## Report
+
 List files created, note any verbatim ports that needed the class renames, and confirm the checklist. Await human approval, then commit `feat(v2): foundation`.

@@ -1,6 +1,8 @@
 #sclient-titlebar {
   position: fixed;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 32px;
   background: var(--sclient-bg-surface, #121212);
   z-index: 9999999;
@@ -9,7 +11,7 @@
   align-items: center;
   user-select: none;
   -webkit-app-region: drag;
-  border-bottom: 1px solid var(--sclient-border, rgba(255,255,255,0.05));
+  border-bottom: 1px solid var(--sclient-border, rgba(255, 255, 255, 0.05));
   box-sizing: border-box;
   padding: 0 10px;
 }
@@ -46,7 +48,7 @@
 #sclient-titlebar button {
   background: transparent;
   border: none;
-  color: var(--sclient-text-muted, rgba(255,255,255,0.65));
+  color: var(--sclient-text-muted, rgba(255, 255, 255, 0.65));
   width: 32px;
   height: 32px;
   display: flex;
@@ -60,10 +62,13 @@
 #sclient-titlebar button:hover {
   color: var(--sclient-text-main, #fff);
 }
-header, .header, .header__wrapper {
+header,
+.header,
+.header__wrapper {
   top: 32px !important;
 }
-#content, .l-main {
+#content,
+.l-main {
   padding-top: 32px !important;
 }
 .l-sidebar-right,

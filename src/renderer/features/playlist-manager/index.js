@@ -1398,7 +1398,8 @@ async function pmImport() {
   }
 }
 
-const PLACEHOLDER_ART = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%23222'/></svg>";
+const PLACEHOLDER_ART =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%23222'/></svg>";
 
 class PlaylistManagerFeature extends Feature {
   get featureKey() {
@@ -1470,4 +1471,3 @@ class PlaylistManagerFeature extends Feature {
 
 const PLAYLIST_MANAGER_FEATURE = new PlaylistManagerFeature();
 FEATURES.push(PLAYLIST_MANAGER_FEATURE);
-

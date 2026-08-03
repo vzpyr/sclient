@@ -3,12 +3,15 @@
 **Prereqs:** `docs/00-overview.md` (sections 6, 8, 10, 13). Phases 01–04 done.
 
 ## Goal
+
 Port the lyrics feature (sidebar, synced word-level highlighting, romanize toggle) as `src/v2/renderer/features/lyrics.js`. Renderer-only: it fetches lyrics from `api.lrcmux.dev` directly and calls `sendBridge('romanize', ...)` for romanization (the IPC handler is created in Phase 6 `main/ipc.js` — the renderer just calls it; it will resolve at runtime).
 
 ## Old code to study
+
 - `src/injected/lyrics.js` (entire file)
 
 ## Key refactors vs old code
+
 1. **Player state via bridge, not direct DOM:**
    - Old `fetchLyrics()` read `currentTrackData` global + `navigator.mediaSession.metadata` → new: use `onPlaybackChange` events (`evt.trackData`, `evt.songUrl`) and/or `bridge.getCurrentTrack()`.
    - Old `seekTo()` (defined in lyrics.js) → DELETED here; use `bridge.seekTo(seconds)` (ported in Phase 1).
@@ -25,9 +28,11 @@ Port the lyrics feature (sidebar, synced word-level highlighting, romanize toggl
 8. **Config:** featureKey `features.show_lyrics`, category `playback`.
 
 ## Romanize IPC contract (for later reference)
+
 `sendBridge("romanize", { texts: [...] })` → main returns `results` array (same length, romanized strings). Old handler name and shape preserved (Phase 6).
 
 ## Verification checklist
+
 1. `node --check`.
 2. Grep: no `--sc-` own vars; no direct `.playbackSoundBadge__titleLink` / `navigator.mediaSession` reads (all through bridge/onPlaybackChange); no local `seekTo` definition (uses bridge's).
 3. `document.getElementById("sclient-lyrics-btn")` guard present; `FEATURES.push(LYRICS_FEATURE)` at bottom.
@@ -35,4 +40,5 @@ Port the lyrics feature (sidebar, synced word-level highlighting, romanize toggl
 5. Do NOT touch: `src/`, `main/`, `package.json`, other v2 files.
 
 ## Report
+
 Note any lrcmux API behavior kept (abort controller, level=word), confirm checklist. Await human approval, then commit `feat(v2): lyrics`.

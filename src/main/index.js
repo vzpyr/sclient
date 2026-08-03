@@ -1,4 +1,13 @@
-const { app, components, BrowserWindow, session, Menu, Tray, ipcMain, dialog } = require("electron");
+const {
+  app,
+  components,
+  BrowserWindow,
+  session,
+  Menu,
+  Tray,
+  ipcMain,
+  dialog,
+} = require("electron");
 const path = require("path");
 const fs = require("fs");
 const fetch = require("cross-fetch");
@@ -137,7 +146,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     frame: titlebarStyle === "native",
-    titleBarStyle: titlebarStyle === "custom" ? 'hidden' : 'default',
+    titleBarStyle: titlebarStyle === "custom" ? "hidden" : "default",
     title: "SClient",
     icon: path.join(__dirname, "..", "assets", "32x32.png"),
     backgroundColor: splashBgColor,
@@ -149,7 +158,7 @@ function createWindow() {
     },
   });
 
-  win.once('ready-to-show', () => {
+  win.once("ready-to-show", () => {
     win.show();
   });
 
@@ -158,15 +167,15 @@ function createWindow() {
 
   let splashCssKey = null;
   let isFirstLoad = true;
-  win.webContents.on('did-start-loading', async () => {
+  win.webContents.on("did-start-loading", async () => {
     if (!isFirstLoad) return;
     isFirstLoad = false;
-    
+
     try {
-      const iconPath = path.join(__dirname, '..', 'assets', '128x128.png');
-      const iconBase64 = fs.readFileSync(iconPath).toString('base64');
+      const iconPath = path.join(__dirname, "..", "assets", "128x128.png");
+      const iconBase64 = fs.readFileSync(iconPath).toString("base64");
       const appVersion = app.getVersion();
-      
+
       splashCssKey = await win.webContents.insertCSS(`
         html:not(.sclient-ready) { background: ${splashBgColor} !important; overflow: hidden !important; }
         html:not(.sclient-loaded) body { opacity: 0 !important; overflow: hidden !important; }
@@ -212,9 +221,9 @@ function createWindow() {
 
   win.webContents.on("dom-ready", () => {
     const rendererDir = path.join(__dirname, "..", "renderer");
-    const injectedJs = JS_FILES.map((f) =>
-      fs.readFileSync(path.join(rendererDir, f), "utf8")
-    ).join("\n");
+    const injectedJs = JS_FILES.map((f) => fs.readFileSync(path.join(rendererDir, f), "utf8")).join(
+      "\n"
+    );
 
     const chartPath = path.join(
       __dirname,
@@ -234,7 +243,9 @@ function createWindow() {
       (f) => f !== "titlebar.css" || config.get("features.titlebar_style", "custom") === "custom"
     );
     Promise.all(
-      cssFiles.map((f) => win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8")))
+      cssFiles.map((f) =>
+        win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8"))
+      )
     ).catch((err) => console.error("[SClient] Failed to inject styles:", err));
 
     win.webContents
