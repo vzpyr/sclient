@@ -512,7 +512,7 @@ class SettingsFeature extends Feature {
         <button id="tab-css" class="sclient-btn sclient-btn-primary" style="flex:1;">Custom CSS</button>
         <button id="tab-js" class="sclient-btn" style="flex:1;">Custom JS</button>
       </div>
-      <div style="flex:1 0 400px;min-height:400px;display:flex;flex-direction:column;margin-bottom:20px;position:relative;border:1px solid var(--sclient-border);border-radius:var(--sclient-radius-md);background:#0c0c0c;transition:border-color 0.2s ease;">
+      <div class="sclient-editor-box" style="flex:1 0 400px;min-height:400px;display:flex;flex-direction:column;margin-bottom:20px;position:relative;border:1px solid var(--sclient-border);border-radius:var(--sclient-radius-md);background:var(--sclient-editor-bg);transition:border-color 0.2s ease;">
         <div id="sclient-css-container" style="flex:1;position:relative;overflow:hidden;display:block;">
           <pre id="sclient-css-highlight" aria-hidden="true" style="margin:0;position:absolute;top:0;left:0;width:100%;height:100%;padding:10px;box-sizing:border-box;font-family:'Fira Code',Consolas,monospace;font-size:13px;line-height:1.5;color:#ccc;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;"></pre>
           <textarea id="sclient-css-editor" spellcheck="false" style="margin:0;position:absolute;top:0;left:0;width:100%;height:100%;background:transparent;color:transparent;caret-color:#fff;border:none;font-family:'Fira Code',Consolas,monospace;font-size:13px;line-height:1.5;padding:10px;resize:none;box-sizing:border-box;outline:none;white-space:pre-wrap;word-wrap:break-word;" placeholder="/* Add your custom CSS here */"></textarea>
@@ -562,7 +562,7 @@ class SettingsFeature extends Feature {
         .sclient-field-label { font-size:var(--sclient-text-sm);color:var(--sclient-text-muted);white-space:nowrap; }
         .sclient-field-input { width:160px;flex-shrink:0; }
         .sclient-color-input { width:32px;height:26px;padding:0;border:1px solid var(--sclient-border);border-radius:var(--sclient-radius-sm);cursor:pointer;background:transparent;flex-shrink:0; }
-        #sclient-css-container:focus-within, #sclient-js-container:focus-within { border-color: var(--sclient-accent); }
+        .sclient-editor-box:focus-within { border-color: var(--sclient-accent); }
         .sclient-toggle { position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0; }
         .sclient-toggle input { opacity:0;width:0;height:0; }
         .sclient-toggle-bg { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#333;transition:.3s;border-radius:24px; }

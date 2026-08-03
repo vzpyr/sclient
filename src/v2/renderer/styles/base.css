@@ -28,6 +28,7 @@
   --sclient-syntax-string: #ce9178;
   --sclient-syntax-keyword: #569cd6;
   --sclient-syntax-function: #dcdcaa;
+  --sclient-editor-bg: #0c0c0c;
 }
 body.theme-light {
   --sclient-bg-surface: #ffffff;
@@ -46,6 +47,7 @@ body.theme-light {
   --sclient-syntax-string: #a31515;
   --sclient-syntax-keyword: #0000ff;
   --sclient-syntax-function: #795e26;
+  --sclient-editor-bg: #ffffff;
 }
 .sclient-text-h1 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xxl); font-weight: 700; color: var(--sclient-text-main); }
 .sclient-text-h2 { font-family: var(--sclient-font-sans); font-size: var(--sclient-text-xl); font-weight: 600; color: var(--sclient-text-main); }
@@ -195,11 +197,6 @@ body.theme-light .stats-table td {
 body.theme-light #sclient-accounts-list > div {
   background: var(--sclient-bg-elevated) !important;
   border: 1px solid var(--sclient-border) !important;
-}
-body.theme-light #sclient-css-container,
-body.theme-light #sclient-js-container {
-  background: #ffffff !important;
-  border-top: 1px solid var(--sclient-border) !important;
 }
 body.theme-light #sclient-css-highlight,
 body.theme-light #sclient-js-highlight {
