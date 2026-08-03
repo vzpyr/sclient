@@ -136,101 +136,19 @@ const uiConfig = ipcRenderer.sendSync("get-ui-config");
 const isWindows = process.platform === "win32";
 
 if (uiConfig.titlebarStyle === "custom") {
-  const bgSurfaceVal = uiConfig.customBgColor ? uiConfig.bgColor : "var(--sc-bg-surface, #121212)";
-
   let fontImport = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block');";
-  let fontFamily = "var(--sc-font-sans, 'Inter', sans-serif)";
+  let fontFamily = "var(--sclient-font-sans, 'Inter', sans-serif)";
 
   if (uiConfig.customFont && uiConfig.customFontFamily) {
     const familyUrl = uiConfig.customFontFamily.trim().replace(/\s+/g, "+");
     fontImport = `@import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;600;700;800&display=block');`;
-    fontFamily = `'${uiConfig.customFontFamily}', var(--sc-font-sans, sans-serif)`;
+    fontFamily = `'${uiConfig.customFontFamily}', var(--sclient-font-sans, sans-serif)`;
   }
 
   const style = document.createElement("style");
   style.textContent = `
     ${fontImport}
-    #sclient-titlebar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 32px;
-      background: var(--sc-bg-surface, ${bgSurfaceVal});
-      z-index: 9999999;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      user-select: none;
-      -webkit-app-region: drag;
-      border-bottom: 1px solid var(--sc-border, rgba(255,255,255,0.05));
-      box-sizing: border-box;
-      padding: 0 10px;
-      font-family: ${fontFamily};
-    }
-    
-    #sclient-titlebar .nav-area {
-      display: flex;
-      align-items: center;
-      height: 100%;
-      -webkit-app-region: no-drag;
-    }
-    #sclient-titlebar .title-area {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--sc-text-main, #fff);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      pointer-events: none;
-    }
-    #sclient-titlebar.font-ready .title-area {
-      opacity: 1;
-    }
-    #sclient-titlebar .controls-area {
-      display: flex;
-      align-items: center;
-      height: 100%;
-      -webkit-app-region: no-drag;
-    }
-    #sclient-titlebar button {
-      background: transparent;
-      border: none;
-      color: var(--sc-text-muted, rgba(255,255,255,0.65));
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: color 0.15s ease;
-      padding: 0;
-      margin: 0;
-    }
-    #sclient-titlebar button:hover {
-      color: var(--sc-text-main, #fff);
-    }
-    header, .header, .header__wrapper {
-      top: 32px !important;
-    }
-    #content, .l-main {
-      padding-top: 32px !important;
-    }
-    .l-sidebar-right, 
-    .sclient-floating-btn,
-    #sclient-sidebar-toggle,
-    #sclient-lyrics-sidebar {
-      margin-top: 32px !important;
-    }
-    #sclient-settings-overlay,
-    #sclient-stats-overlay,
-    iframe.webiIframe {
-      top: 32px !important;
-      height: calc(100% - 32px) !important;
-    }
+    #sclient-titlebar { font-family: ${fontFamily}; }
   `;
 
   const injectTitlebar = () => {

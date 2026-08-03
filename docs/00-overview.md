@@ -1,5 +1,7 @@
 # 00 — SClient Refactor: Master Overview
 
+> **STATUS: REFACTOR COMPLETE.** Phases 01–12 are done. The v2 tree was collapsed into `src/` (Phase 12): code now lives directly at `src/main/`, `src/renderer/`, `src/miniplayer/`, `src/preload.js`, `src/api/`. All historical `src/v2` references below describe the build process and are kept for context — mentally map `src/v2/<path>` → `src/<path>` when reading the architecture sections.
+
 > **READ THIS FILE FIRST. ALWAYS.** Every phase doc assumes you have read this file in full.
 > If a phase doc contradicts this file, this file wins. If something is unclear, ask — do not improvise.
 

@@ -14,7 +14,7 @@ function register({ ipcMain, BrowserWindow, win, app }) {
       frame: false,
       resizable: false,
       alwaysOnTop: true,
-      icon: path.join(__dirname, "..", "..", "..", "assets", "32x32.png"),
+      icon: path.join(__dirname, "..", "..", "assets", "32x32.png"),
       webPreferences: {
         nodeIntegration: true,
         contextIsolation: false,

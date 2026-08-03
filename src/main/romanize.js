@@ -1,3 +1,4 @@
+// copy of src/main/romanize.js
 const path = require("path");
 const kuromoji = require("kuromoji");
 const Kuroshiro = require("kuroshiro").default;

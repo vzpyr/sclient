@@ -1,11 +1,9 @@
-const { app, components, BrowserWindow, session, Menu, Tray, ipcMain } = require("electron");
+const { app, components, BrowserWindow, session, Menu, Tray, ipcMain, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const fetch = require("cross-fetch");
 const { ElectronBlocker } = require("@ghostery/adblocker-electron");
 const config = require("./config");
-const ipc = require("./ipc");
-const mpris = require("./mpris");
 
 if (process.platform === "linux" && config.isEnabled("features.mpris")) {
   app.commandLine.appendSwitch("disable-features", "MediaSessionService");
@@ -72,6 +70,40 @@ if (!gotSingleInstanceLock) {
   if (raw) pendingSclientUrl = sanitizeSclientUrl(raw);
 })();
 app.setAsDefaultProtocolClient("sclient");
+
+const JS_FILES = [
+  "utils.js",
+  "bridge.js",
+  "config.js",
+  "features/Feature.js",
+  "features/hides.js",
+  "features/lazy-scroll.js",
+  "features/wide-layout.js",
+  "features/collapsible-sidebar.js",
+  "features/enhanced-header.js",
+  "features/accent.js",
+  "features/adblock.js",
+  "features/artwork-viewer.js",
+  "features/context-menu.js",
+  "features/shuffle.js",
+  "features/effects.js",
+  "features/lyrics.js",
+  "features/downloader.js",
+  "features/discord-rpc.js",
+  "features/mpris.js",
+  "features/lastfm.js",
+  "features/listenbrainz.js",
+  "features/stats.js",
+  "features/playlist-manager/api.js",
+  "features/playlist-manager/state.js",
+  "features/playlist-manager/spotify.js",
+  "features/playlist-manager/index.js",
+  "features/miniplayer.js",
+  "features/settings.js",
+  "core.js",
+];
+
+const CSS_FILES = ["base.css", "titlebar.css", "layout.css", "features.css"];
 
 function createWindow() {
   const titlebarStyle = config.get("features.titlebar_style", "custom");
@@ -179,30 +211,10 @@ function createWindow() {
   }
 
   win.webContents.on("dom-ready", () => {
-    const files = [
-      "core.js",
-      "effects.js",
-      "accent.js",
-      "adblock.js",
-      "shuffle.js",
-      "rpc-bridge.js",
-      "downloader.js",
-      "lyrics.js",
-      "scrobbler.js",
-      "stats.js",
-      "pm/api.js",
-      "pm/state.js",
-      "pm/ui.js",
-      "pm/spotify.js",
-      "settings.js",
-      "contextmenu.js",
-      "init.js",
-    ];
-
-    const injectedDir = path.join(__dirname, "..", "injected");
-    const injectedJs = files
-      .map((f) => fs.readFileSync(path.join(injectedDir, f), "utf8"))
-      .join("\n");
+    const rendererDir = path.join(__dirname, "..", "renderer");
+    const injectedJs = JS_FILES.map((f) =>
+      fs.readFileSync(path.join(rendererDir, f), "utf8")
+    ).join("\n");
 
     const chartPath = path.join(
       __dirname,
@@ -216,6 +228,14 @@ function createWindow() {
     const chartJs = fs.readFileSync(chartPath, "utf8");
 
     const payload = config.buildConfigPayload();
+
+    const stylesDir = path.join(rendererDir, "styles");
+    const cssFiles = CSS_FILES.filter(
+      (f) => f !== "titlebar.css" || config.get("features.titlebar_style", "custom") === "custom"
+    );
+    Promise.all(
+      cssFiles.map((f) => win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8")))
+    ).catch((err) => console.error("[SClient] Failed to inject styles:", err));
 
     win.webContents
       .executeJavaScript(
@@ -252,85 +272,13 @@ app.whenReady().then(async () => {
   console.log(`[SClient] Starting v${app.getVersion()}...`);
   await components.whenReady();
 
-  ipc.register({ ipcMain, session, app });
-
-  let miniWin = null;
-  ipcMain.on("toggle_miniplayer", () => {
-    if (miniWin) {
-      miniWin.close();
-      return;
-    }
-    miniWin = new BrowserWindow({
-      width: 480,
-      height: 180,
-      frame: false,
-      resizable: false,
-      alwaysOnTop: true,
-      icon: path.join(__dirname, "..", "assets", "32x32.png"),
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false,
-      },
-    });
-    miniWin.loadFile(path.join(__dirname, "mini.html"));
-    miniWin.on("closed", () => {
-      miniWin = null;
-      if (win && !win.isDestroyed()) win.show();
-    });
-    if (win && !win.isDestroyed()) win.hide();
-  });
-
-  ipcMain.on("mini_close", () => {
-    if (miniWin) miniWin.close();
-  });
-  ipcMain.on("mini_minimize", () => {
-    if (miniWin) miniWin.minimize();
-  });
-  ipcMain.on("mini_fullscreen", () => {
-    if (miniWin && !miniWin.isDestroyed()) {
-      const willBeFS = !miniWin.isFullScreen();
-      if (willBeFS) {
-        miniWin.setResizable(true);
-        miniWin.setFullScreen(true);
-      } else {
-        miniWin.setFullScreen(false);
-        setTimeout(() => {
-          if (!miniWin.isDestroyed() && !miniWin.isFullScreen()) {
-            if (miniWin.desiredSize) {
-              miniWin.setResizable(true);
-              miniWin.setSize(miniWin.desiredSize.width, miniWin.desiredSize.height);
-            }
-            miniWin.setResizable(false);
-          }
-        }, 100);
-      }
-    }
-  });
-  ipcMain.on("mini_action", (_e, action) => {
-    if (win) win.webContents.send("mini_action", action);
-  });
-  ipcMain.on("mini_update", (_e, data) => {
-    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_update", data);
-  });
-  ipcMain.on("mini_visualizer", (_e, data) => {
-    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_visualizer", data);
-  });
-  ipcMain.on("mini_time", (_e, data) => {
-    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_time", data);
-  });
-  ipcMain.on("resize_mini", (_e, width, height) => {
-    if (miniWin && !miniWin.isDestroyed()) {
-      miniWin.desiredSize = { width, height };
-      if (miniWin.isFullScreen()) return;
-      miniWin.setResizable(true);
-      miniWin.setSize(width, height);
-      setTimeout(() => {
-        if (miniWin && !miniWin.isDestroyed() && !miniWin.isFullScreen()) {
-          miniWin.setResizable(false);
-        }
-      }, 150);
-    }
-  });
+  require("./ipc").register({ ipcMain, session, app, config });
+  require("./features/downloader").register({ ipcMain, app });
+  require("./features/discord-rpc").register({ ipcMain });
+  require("./features/lastfm").register({ ipcMain, config });
+  require("./features/listenbrainz").register({ ipcMain, config });
+  require("./features/stats").register({ ipcMain, dialog, config });
+  require("./features/playlist-manager").register({ ipcMain, dialog });
 
   ipcMain.on("window_minimize", () => {
     if (win) win.minimize();
@@ -347,8 +295,10 @@ app.whenReady().then(async () => {
 
   createWindow();
 
+  require("./features/miniplayer").register({ ipcMain, BrowserWindow, win, app });
+
   if (process.platform === "linux" && config.isEnabled("features.mpris")) {
-    mpris.init({ ipcMain, win });
+    require("./features/mpris").init({ ipcMain, win });
   }
 
   if (pendingSclientUrl && win && !win.isDestroyed()) {
