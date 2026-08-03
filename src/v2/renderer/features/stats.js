@@ -647,7 +647,7 @@ class StatsFeature extends Feature {
         Listening Analytics
       </h2>
       <div style="display: flex; align-items: center; gap: 12px;">
-        <select id="sclient-stats-days-select" class="sc-select">
+        <select id="sclient-stats-days-select" class="sclient-select">
           <option value="">All time</option>
           <option value="1">Last 24h</option>
           <option value="3">Last 3 days</option>
