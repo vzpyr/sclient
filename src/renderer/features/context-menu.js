@@ -63,6 +63,7 @@ class ContextMenuFeature extends Feature {
   }
 
   handleContextMenu(doc, e) {
+    if (doc !== document) syncIframeVars(doc);
     let menuEl = null;
 
     const close = () => {
@@ -437,36 +438,37 @@ function navigateToUrlModal(doc) {
   });
 }
 
+const SCLIENT_IFRAME_VARS = [
+  "--sclient-accent",
+  "--sclient-bg-surface",
+  "--sclient-bg-overlay",
+  "--sclient-bg-elevated",
+  "--sclient-text-main",
+  "--sclient-text-muted",
+  "--sclient-border",
+  "--sclient-border-hover",
+  "--sclient-btn-bg",
+  "--sclient-btn-bg-hover",
+  "--sclient-font-sans",
+  "--sclient-text-xs",
+  "--sclient-text-sm",
+  "--sclient-text-base",
+  "--sclient-text-lg",
+  "--sclient-radius-sm",
+  "--sclient-radius-md",
+  "--sclient-radius-lg",
+  "--sclient-radius-xl",
+];
+
 function injectIframeStyles(doc) {
-  const computed = getComputedStyle(document.documentElement);
-  const vars = [
-    "--sclient-accent",
-    "--sclient-bg-surface",
-    "--sclient-bg-overlay",
-    "--sclient-bg-elevated",
-    "--sclient-text-main",
-    "--sclient-text-muted",
-    "--sclient-border",
-    "--sclient-border-hover",
-    "--sclient-btn-bg",
-    "--sclient-btn-bg-hover",
-    "--sclient-font-sans",
-    "--sclient-text-xs",
-    "--sclient-text-sm",
-    "--sclient-text-base",
-    "--sclient-text-lg",
-    "--sclient-radius-sm",
-    "--sclient-radius-md",
-    "--sclient-radius-lg",
-    "--sclient-radius-xl",
-  ];
-  const decls = vars
-    .map((v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`)
-    .join("\n");
   const style = document.createElement("style");
-  style.setAttribute("data-sclient", "1");
-  style.textContent = [
-    ":root {\n" + decls + "\n}",
+  style.setAttribute("data-sclient-vars", "1");
+  style.textContent = ":root {}";
+  (doc.head || doc.documentElement).appendChild(style);
+
+  const structural = document.createElement("style");
+  structural.setAttribute("data-sclient-structural", "1");
+  structural.textContent = [
     ".sclient-modal-backdrop {",
     "  position:fixed; top:0; left:0; width:100vw; height:100vh;",
     "  background:var(--sclient-bg-overlay);",
@@ -483,7 +485,19 @@ function injectIframeStyles(doc) {
     "}",
     ".sclient-floating-btn:hover { filter:brightness(1.25); }",
   ].join("\n");
-  (doc.head || doc.documentElement).appendChild(style);
+  (doc.head || doc.documentElement).appendChild(structural);
+}
+
+function syncIframeVars(doc) {
+  try {
+    const varStyle = doc.querySelector("style[data-sclient-vars]");
+    if (!varStyle) return;
+    const computed = getComputedStyle(document.documentElement);
+    const decls = SCLIENT_IFRAME_VARS
+      .map((v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`)
+      .join("\n");
+    varStyle.textContent = ":root {\n" + decls + "\n}";
+  } catch (ex) {}
 }
 
 function viewImage(url) {
