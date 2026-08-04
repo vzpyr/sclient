@@ -98,6 +98,10 @@ class LyricsFeature extends Feature {
     this.injectLyricsButton();
   }
 
+  checkInjected() {
+    return !!document.getElementById("sclient-lyrics-btn");
+  }
+
   renderLoop() {
     if (this.lyricsOpen && this.currentSyncedLyrics.length) {
       let activeMedia = getActiveMedia();

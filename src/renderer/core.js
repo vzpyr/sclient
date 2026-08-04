@@ -11,7 +11,11 @@ function startObserver() {
     clearTimeout(obsTimer);
     obsTimer = setTimeout(() => {
       for (const f of FEATURES) {
-        if (f.enabled && !f.injected && typeof f.injectUI === "function") {
+        if (!f.enabled) continue;
+        if (f.injected && typeof f.checkInjected === "function" && !f.checkInjected()) {
+          f.injected = false;
+        }
+        if (!f.injected && typeof f.injectUI === "function") {
           f.injected = true;
           f.injectUI();
         }

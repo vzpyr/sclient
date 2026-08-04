@@ -14,6 +14,10 @@ class DownloaderFeature extends Feature {
     this.injectPlaylistDownloadButton();
   }
 
+  checkInjected() {
+    return !!document.getElementById("sclient-download-btn");
+  }
+
   injectDownloadButton() {
     if (document.getElementById("sclient-download-btn")) return;
 

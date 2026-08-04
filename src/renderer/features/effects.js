@@ -19,6 +19,10 @@ class EffectsFeature extends Feature {
     this.injectEffectsButton();
   }
 
+  checkInjected() {
+    return !!document.getElementById("sclient-effects-btn");
+  }
+
   destroy() {
     if (this.visualizerTimer) {
       clearInterval(this.visualizerTimer);
