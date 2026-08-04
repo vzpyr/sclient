@@ -132,7 +132,7 @@ async function pollPlayback() {
 
   const media = getActiveMedia();
   const position = media ? media.currentTime : 0;
-  const duration = media ? (media.duration || 0) : 0;
+  const duration = media ? media.duration || 0 : 0;
   const isPlaying = media ? !media.paused : false;
 
   let type = "tick";

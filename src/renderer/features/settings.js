@@ -269,7 +269,10 @@ function renderAccounts(overlay) {
                     ? "Clear all cookies and browser data? The app will restart."
                     : "Clear all cookies and browser data for Main profile?";
                 showConfirm(msg).then((ok) => {
-                  if (ok) sendBridge(acc === active ? "clear_data_and_restart" : "clear_data").catch(() => {});
+                  if (ok)
+                    sendBridge(acc === active ? "clear_data_and_restart" : "clear_data").catch(
+                      () => {}
+                    );
                 });
               };
               btns.appendChild(rst);

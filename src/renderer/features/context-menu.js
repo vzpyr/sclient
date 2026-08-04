@@ -493,9 +493,9 @@ function syncIframeVars(doc) {
     const varStyle = doc.querySelector("style[data-sclient-vars]");
     if (!varStyle) return;
     const computed = getComputedStyle(document.body || document.documentElement);
-    const decls = SCLIENT_IFRAME_VARS
-      .map((v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`)
-      .join("\n");
+    const decls = SCLIENT_IFRAME_VARS.map(
+      (v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`
+    ).join("\n");
     varStyle.textContent = ":root {\n" + decls + "\n}";
   } catch (ex) {}
 }
@@ -510,8 +510,7 @@ function viewImage(url) {
   overlay.appendChild(img);
 
   const btnContainer = document.createElement("div");
-  btnContainer.style.cssText =
-    "position:absolute;bottom:20px;right:20px;display:flex;gap:10px;";
+  btnContainer.style.cssText = "position:absolute;bottom:20px;right:20px;display:flex;gap:10px;";
 
   const copyBtn = document.createElement("button");
   copyBtn.className = "sclient-floating-btn";

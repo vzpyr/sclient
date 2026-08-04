@@ -590,7 +590,11 @@ let currentInterpolatedPos = 0;
 let lastKnownTime = Date.now();
 
 ipcRenderer.on("mini_time", (_e, data) => {
-  if (data.isPlaying !== undefined && isPlayingLocal !== data.isPlaying && Date.now() > suppressPlayStateUntil) {
+  if (
+    data.isPlaying !== undefined &&
+    isPlayingLocal !== data.isPlaying &&
+    Date.now() > suppressPlayStateUntil
+  ) {
     isPlayingLocal = data.isPlaying;
     updatePlayPauseUI(isPlayingLocal);
   }

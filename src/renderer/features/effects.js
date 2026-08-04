@@ -63,7 +63,9 @@ class EffectsFeature extends Feature {
         window.__scMedia.push(this);
       }
       if (this.tagName === "AUDIO" || this.tagName === "VIDEO") {
-        feature.applyEffectsToMedia(this).catch((e) => console.error("[SClient] Couldn't apply audio effects:", e));
+        feature
+          .applyEffectsToMedia(this)
+          .catch((e) => console.error("[SClient] Couldn't apply audio effects:", e));
       }
       return originalPlay.apply(this, arguments);
     };

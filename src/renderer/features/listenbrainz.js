@@ -58,13 +58,15 @@ class ListenbrainzFeature extends Feature {
               },
             ],
           };
-    sendBridge("submit_listenbrainz", payload).then((result) => {
-      if (!result || !result.ok) {
-        if (result && this.authCodes.has(result.code)) {
-          this.updateStatus(this.elId, "Auth Error", "#f55");
+    sendBridge("submit_listenbrainz", payload)
+      .then((result) => {
+        if (!result || !result.ok) {
+          if (result && this.authCodes.has(result.code)) {
+            this.updateStatus(this.elId, "Auth Error", "#f55");
+          }
         }
-      }
-    }).catch(() => {});
+      })
+      .catch(() => {});
   }
 
   init() {
