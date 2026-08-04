@@ -196,7 +196,7 @@ class LyricsFeature extends Feature {
     const sidebar = document.createElement("div");
     sidebar.id = "sclient-lyrics-sidebar";
     sidebar.style.cssText = `
-    position: fixed; top: 20px; bottom: 70px; left: -400px; width: 350px;
+    position: fixed; top: 20px; bottom: 68px; left: -400px; width: 350px;
     background: var(--sclient-bg-surface); backdrop-filter: blur(10px);
     border: 1px solid var(--sclient-border); border-radius: 12px;
     box-shadow: 5px 5px 25px rgba(0,0,0,0.5); z-index: 999999;
