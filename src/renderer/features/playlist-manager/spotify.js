@@ -98,97 +98,54 @@ function pmExtractMixType(title) {
 }
 
 function pmScoreMatch(spotifyRow, scTrack) {
-  const isrcA = spotifyRow.isrc ? spotifyRow.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
-  const isrcB =
-    scTrack.publisher_metadata && scTrack.publisher_metadata.isrc
-      ? scTrack.publisher_metadata.isrc.replace(/[-\s]/g, "").toLowerCase()
-      : "";
+  let score = 0;
+  const reasons = [];
 
+  // ISRC match = instant high score
+  const isrcA = spotifyRow.isrc ? spotifyRow.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
+  const isrcB = scTrack.publisher_metadata?.isrc ? scTrack.publisher_metadata.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
   if (isrcA && isrcB && isrcA === isrcB) {
-    return { confidence: "high", score: 100, reason: "ISRC exact", tier: 1 };
+    return { score: 100, reason: "ISRC" };
   }
 
+  // Title similarity
   const normA = pmNormTitle(spotifyRow.title);
   const normB = pmNormTitle(scTrack.title);
+  if (normA === normB) {
+    score += 50;
+    reasons.push("title");
+  } else if (normA && normB) {
+    const tokensA = normA.split(/\s+/).filter(Boolean);
+    const tokensB = normB.split(/\s+/).filter(Boolean);
+    const intersection = tokensA.filter((t) => tokensB.includes(t)).length;
+    const union = new Set([...tokensA, ...tokensB]).size;
+    const jaccard = union === 0 ? 0 : intersection / union;
+    score += Math.floor(jaccard * 40);
+    if (jaccard > 0.5) reasons.push("~title");
+  }
 
-  const tokensA = normA.split(/\s+/).filter(Boolean);
-  const tokensB = normB.split(/\s+/).filter(Boolean);
-
+  // Artist overlap
   const getArtistTokens = (str) => {
     if (!str) return [];
-    return str
-      .toLowerCase()
-      .split(/,|&|\bvs\.?\b|\//)
-      .map((s) => s.replace(/[^a-z0-9]/g, "").trim())
-      .filter(Boolean);
+    return str.toLowerCase().split(/,|&|\bvs\.?\b|\//).map((s) => s.replace(/[^a-z0-9]/g, "").trim()).filter(Boolean);
   };
-
   const artistsA = getArtistTokens(spotifyRow.artists.join(", "));
   const artistsB = getArtistTokens(getArtistFromTrack(scTrack));
-  const artistOverlap =
-    artistsA.some((a) => artistsB.includes(a)) || artistsB.some((b) => artistsA.includes(b));
+  if (artistsA.some((a) => artistsB.includes(a)) || artistsB.some((b) => artistsA.includes(b))) {
+    score += 30;
+    reasons.push("artist");
+  }
 
+  // Duration similarity (skip if 30s = GO+ snippet)
   const durA = spotifyRow.durationMs;
   const durB = scTrack.duration;
-  const durDelta = durB === 30000 ? 0 : Math.abs(durA - durB);
-
-  const mixA = pmExtractMixType(spotifyRow.title);
-  const mixB = pmExtractMixType(scTrack.title);
-  let mixPenalty = 0;
-  if (
-    mixA !== mixB &&
-    (mixA === "remix" ||
-      mixB === "remix" ||
-      mixA === "live" ||
-      mixB === "live" ||
-      mixA === "acoustic" ||
-      mixB === "acoustic")
-  ) {
-    mixPenalty = 25;
+  if (durA && durB && durB !== 30000) {
+    const delta = Math.abs(durA - durB);
+    if (delta < 2000) { score += 15; reasons.push("dur"); }
+    else if (delta < 5000) { score += 8; }
   }
 
-  if (normA === normB && artistOverlap && durDelta <= 2000) {
-    let score = 95 - mixPenalty;
-    if (score >= 85) {
-      return { confidence: "high", score, reason: "title+dur", tier: 2 };
-    }
-  }
-
-  const intersection = tokensA.filter((t) => tokensB.includes(t)).length;
-  const union = new Set([...tokensA, ...tokensB]).size;
-  const jaccard = union === 0 ? 0 : intersection / union;
-
-  const lev = (a, b) => {
-    if (!a.length) return b.length;
-    if (!b.length) return a.length;
-    const matrix = [];
-    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
-    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) == a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
-        else
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
-          );
-      }
-    }
-    return matrix[b.length][a.length];
-  };
-  const levDist = lev(normA, normB);
-  const levNorm =
-    Math.max(normA.length, normB.length) === 0 ? 0 : levDist / Math.max(normA.length, normB.length);
-
-  if ((jaccard >= 0.6 || levNorm <= 0.3) && artistOverlap) {
-    let baseScore = Math.floor(jaccard * 100);
-    if (baseScore > 84) baseScore = 84;
-    let score = baseScore - mixPenalty;
-    if (score < 40) score = 40;
-    return { confidence: "review", score, reason: "fuzzy", tier: 3 };
-  }
-
-  return { confidence: "skip", score: 0, reason: "no match", tier: 4 };
+  return { score, reason: reasons.join("+") || "best guess" };
 }
 
 async function mapLimit(items, limit, asyncFn) {
@@ -257,12 +214,11 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     `
     .pm-sp-row { display: flex; align-items: stretch; border-bottom: 1px solid rgba(255,255,255,0.05); padding: 8px 12px; gap: 12px; font-size:12px; }
     .pm-sp-row.high { background: rgba(50, 200, 50, 0.05); }
-    .pm-sp-row.review { background: rgba(200, 200, 50, 0.05); }
     .pm-sp-row.skip { background: rgba(200, 50, 50, 0.05); opacity: 0.7; }
     .pm-sp-left { flex: 1; min-width: 0; }
     .pm-sp-right { flex: 1; min-width: 0; }
     .pm-sp-score { width: 50px; text-align: right; flex-shrink: 0; font-weight: bold; }
-    .pm-sp-actions { width: 140px; flex-shrink: 0; display:flex; flex-direction:column; gap:6px; }
+    .pm-sp-actions { width: 200px; flex-shrink: 0; display:flex; gap:6px; align-items:center; }
   `
   );
 
@@ -285,8 +241,8 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     <div style="padding:8px 12px;display:flex;font-size:12px;opacity:0.6;border-bottom:1px solid rgba(255,255,255,0.05);">
       <div style="flex:1;">Spotify track</div>
       <div style="flex:1;">SoundCloud match</div>
-      <div style="width:50px;text-align:right;">Cnf</div>
-      <div style="width:140px;padding-left:12px;">Action</div>
+      <div style="width:50px;text-align:right;">Score</div>
+      <div style="width:200px;padding-left:12px;">Action</div>
     </div>
     <div id="pm-sp-list" style="flex:1;overflow-y:auto;min-height:0;"></div>
     <div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:flex-end;align-items:center;">
@@ -301,15 +257,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
 
   dlg.querySelector("#pm-sp-cancel").addEventListener("click", () => back.remove());
   dlg.querySelector("#pm-sp-confirm").addEventListener("click", async () => {
-    const needReview = _pmSpotifyState.rows.filter(
-      (r) => r.resolved && r.confidence === "review" && r.action === "review"
-    ).length;
-    if (needReview > 0) {
-      showToast(
-        `Please accept or skip the ${needReview} track(s) marked 'Review' before importing!`
-      );
-      return;
-    }
+
 
     const confirmBtn = dlg.querySelector("#pm-sp-confirm");
     try {
@@ -405,31 +353,24 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
 
   const updateProgress = () => {
     const resolvedCount = _pmSpotifyState.rows.filter((r) => r.resolved).length;
-    const needReview = _pmSpotifyState.rows.filter(
-      (r) => r.resolved && r.confidence === "review" && r.action === "review"
-    ).length;
     const skippedCount = _pmSpotifyState.rows.filter(
       (r) => r.resolved && r.action === "skip"
     ).length;
-    const readyCount = resolvedCount - needReview - skippedCount;
+    const readyCount = resolvedCount - skippedCount;
 
     let headText = `Spotify CSV Import · resolved ${resolvedCount} / ${_pmSpotifyState.total}`;
     if (resolvedCount === _pmSpotifyState.total) {
-      headText = `Spotify CSV Import · ${needReview} need review · ${skippedCount} skipped · ${readyCount} ready`;
+      headText = `Spotify CSV Import · ${skippedCount} skipped · ${readyCount} matched`;
     }
     dlg.querySelector("#pm-sp-head").textContent = headText;
 
     const confirmBtn = dlg.querySelector("#pm-sp-confirm");
     if (resolvedCount === _pmSpotifyState.total) {
       confirmBtn.disabled = false;
-      if (needReview > 0) {
-        confirmBtn.textContent = `Confirm (${needReview} need review)`;
-      } else {
-        confirmBtn.textContent = `Confirm: import ${readyCount} tracks`;
-      }
+      confirmBtn.textContent = `Import ${readyCount} tracks`;
     } else {
       confirmBtn.disabled = true;
-      confirmBtn.textContent = `Confirm: import ${readyCount} tracks`;
+      confirmBtn.textContent = `Import ${readyCount} tracks`;
     }
     localStorage.setItem("sclient_spotify_draft", JSON.stringify(_pmSpotifyState));
   };
@@ -470,7 +411,7 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       const deltaMs = r.original.durationMs ? r.match.duration - r.original.durationMs : 0;
       let deltaStr = "";
       if (r.match.duration === 30000) {
-        deltaStr = "(GO+ snippet)";
+        deltaStr = "GO+";
       } else {
         const deltaS = (deltaMs / 1000).toFixed(1);
         deltaStr = deltaMs > 0 ? `+${deltaS}s` : `${deltaS}s`;
@@ -478,8 +419,6 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       matchMeta = `${pmFmtDur(r.match.duration)} · ${deltaStr}`;
       if (r.match.artwork_url) thumb = r.match.artwork_url;
     }
-
-    const confEmoji = "";
 
     existing.innerHTML = `
       <div class="pm-sp-left">
@@ -494,31 +433,28 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         </div>
       </div>
       <div class="pm-sp-score">
-        <div>${confEmoji} ${r.score}</div>
+        <div>${r.score}</div>
         <div style="font-size:10px;opacity:0.5;white-space:nowrap;overflow:visible;margin-top:2px;">${r.reason}</div>
       </div>
       <div class="pm-sp-actions"></div>
     `;
 
+    const actionsEl = existing.querySelector(".pm-sp-actions");
+    actionsEl.innerHTML = "";
+
     const actSelect = document.createElement("select");
     actSelect.className = "sclient-select";
-    actSelect.style.width = "100%";
+    actSelect.style.cssText = "width:100%;font-size:11px;";
 
-    if (r.action === "review") {
-      actSelect.innerHTML += `<option value="review" selected>Review ▾ pick match</option>`;
-    }
-    if (r.match && r.action !== "review") {
-      actSelect.innerHTML += `<option value="accept" ${r.action === "accept" ? "selected" : ""}>Accept ▾</option>`;
-    }
-
+    // Top candidates
     r.candidates.forEach((c, i) => {
-      if (c.id !== (r.match ? r.match.id : -1)) {
-        actSelect.innerHTML += `<option value="alt_${i}">Match: ${c.title.slice(0, 25)}</option>`;
-      }
+      const isSelected = r.match && c.id === r.match.id;
+      const label = `${c.title.slice(0, 30)} · ${getArtistFromTrack(c).slice(0, 20)}`;
+      actSelect.innerHTML += `<option value="pick_${i}" ${isSelected ? "selected" : ""}>${label}</option>`;
     });
 
+    actSelect.innerHTML += `<option value="skip" ${r.action === "skip" || !r.match ? "selected" : ""}>Skip</option>`;
     actSelect.innerHTML += `<option value="manual">Manual search…</option>`;
-    actSelect.innerHTML += `<option value="skip" ${r.action === "skip" ? "selected" : ""}>Skip</option>`;
 
     actSelect.addEventListener("change", (e) => {
       const val = e.target.value;
@@ -528,27 +464,18 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
         r.confidence = "skip";
         renderRow(r);
         updateProgress();
-      } else if (val === "accept") {
-        r.action = "accept";
-        renderRow(r);
-        updateProgress();
-      } else if (val.startsWith("alt_")) {
-        const altIdx = parseInt(val.split("_")[1], 10);
-        r.match = r.candidates[altIdx];
-        r.confidence = "review";
-        r.action = "accept";
-        renderRow(r);
-        updateProgress();
       } else if (val === "manual") {
         const searchUI = document.createElement("div");
-        searchUI.style.cssText = "display:flex;gap:4px;margin-top:6px;";
+        searchUI.style.cssText = "display:flex;gap:4px;";
         const qInput = document.createElement("input");
         qInput.type = "text";
         qInput.className = "sclient-input";
         qInput.value = `${r.original.artists[0] || ""} ${r.original.title}`.trim();
+        qInput.style.cssText = "flex:1;min-width:0;font-size:11px;";
         const goBtn = document.createElement("button");
         goBtn.className = "sclient-btn";
         goBtn.textContent = "Go";
+        goBtn.style.cssText = "font-size:11px;";
         searchUI.appendChild(qInput);
         searchUI.appendChild(goBtn);
 
@@ -559,8 +486,10 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
             r.candidates = candidates;
             if (candidates.length > 0) {
               r.match = candidates[0];
-              r.confidence = "review";
+              r.confidence = "high";
               r.action = "accept";
+              r.score = 1;
+              r.reason = "manual";
             } else {
               r.match = null;
               r.confidence = "skip";
@@ -573,12 +502,23 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
             goBtn.disabled = false;
           }
         });
-        existing.querySelector(".pm-sp-actions").appendChild(searchUI);
+        actionsEl.innerHTML = "";
+        actionsEl.appendChild(searchUI);
         qInput.focus();
+      } else if (val.startsWith("pick_")) {
+        const idx = parseInt(val.split("_")[1], 10);
+        r.match = r.candidates[idx];
+        r.action = "accept";
+        r.confidence = "high";
+        const s = pmScoreMatch(r.original, r.match);
+        r.score = s.score;
+        r.reason = s.reason;
+        renderRow(r);
+        updateProgress();
       }
     });
 
-    existing.querySelector(".pm-sp-actions").appendChild(actSelect);
+    actionsEl.appendChild(actSelect);
   };
 
   const searchTrack = async (rowOrig) => {
@@ -591,12 +531,16 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
     while (retries >= 0) {
       try {
         const candidates = await api.search(q);
-        let best = { confidence: "skip", score: 0, reason: "no match", tier: 4, match: null };
+        let best = { score: -1, match: null };
         for (const sc of candidates) {
           const res = pmScoreMatch(rowOrig, sc);
           if (res.score > best.score) {
             best = { ...res, match: sc };
           }
+        }
+        // Always pick best candidate if any results
+        if (!best.match && candidates.length > 0) {
+          best = { score: 0, reason: "first", match: candidates[0] };
         }
         return { candidates, best };
       } catch (e) {
@@ -627,18 +571,11 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       r.action = "skip";
     } else {
       r.candidates = res.candidates;
-      r.confidence = res.best.confidence;
       r.score = res.best.score;
       r.reason = res.best.reason;
       r.match = res.best.match;
-
-      if (r.confidence === "high") {
-        r.action = "accept";
-      } else if (r.confidence === "review") {
-        r.action = "review";
-      } else {
-        r.action = "skip";
-      }
+      r.confidence = r.match ? "high" : "skip";
+      r.action = r.match ? "accept" : "skip";
     }
     renderRow(r);
     updateProgress();
