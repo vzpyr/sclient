@@ -1,5 +1,4 @@
 const path = require("path");
-const fetch = require("cross-fetch");
 
 let Database = null;
 try {

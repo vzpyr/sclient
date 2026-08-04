@@ -30,8 +30,7 @@
     "asarUnpack": [
       "node_modules/youtube-dl-exec/**",
       "node_modules/better-sqlite3/**",
-      "node_modules/keytar/**",
-      "node_modules/abstract-socket/**"
+      "node_modules/keytar/**"
     ],
     "linux": {
       "target": [
@@ -110,7 +109,6 @@
     "@xhayper/discord-rpc": "^1.3.4",
     "better-sqlite3": "^12.11.1",
     "chart.js": "^4.5.1",
-    "cross-fetch": "^4.1.0",
     "keytar": "^7.9.0",
     "kuromoji": "^0.1.2",
     "kuroshiro": "^1.2.0",

@@ -1,5 +1,3 @@
-const fetch = require("cross-fetch");
-
 function register({ ipcMain, config }) {
   ipcMain.handle("submit_listenbrainz", async (_e, args) => {
     try {

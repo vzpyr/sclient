@@ -10,7 +10,6 @@ const {
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const fetch = require("cross-fetch");
 const { ElectronBlocker } = require("@ghostery/adblocker-electron");
 const config = require("./config");
 

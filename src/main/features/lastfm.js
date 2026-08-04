@@ -1,5 +1,4 @@
 const crypto = require("crypto");
-const fetch = require("cross-fetch");
 const { BrowserWindow } = require("electron");
 
 let config = null;
