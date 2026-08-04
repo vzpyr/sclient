@@ -15,7 +15,7 @@ function register({ ipcMain, config }) {
       if (data.code) return { ok: false, code: data.code, message: data.error };
       return { ok: true };
     } catch (e) {
-      console.error("[SClient] Listenbrainz submit error:", e);
+      console.error("[SClient] Couldn't submit to ListenBrainz:", e);
       return { ok: false, code: 0, message: e.message };
     }
   });

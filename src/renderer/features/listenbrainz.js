@@ -64,7 +64,7 @@ class ListenbrainzFeature extends Feature {
           this.updateStatus(this.elId, "Auth Error", "#f55");
         }
       }
-    });
+    }).catch(() => {});
   }
 
   init() {

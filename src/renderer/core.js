@@ -153,7 +153,7 @@ function runCustomJs() {
       else run();
     }
   } catch (e) {
-    console.error("[SClient] Error executing custom JS:", e);
+    console.error("[SClient] Couldn't run custom JS:", e);
   }
 }
 
@@ -170,4 +170,4 @@ applyAppearance();
 runCustomCss();
 runCustomJs();
 startObserver();
-console.log("[SClient] Successfully injected all modules.");
+console.log("[SClient] Injection complete.");

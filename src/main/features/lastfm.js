@@ -35,7 +35,7 @@ async function lastfmCall(method, extra = {}) {
     if (data.error) return { ok: false, code: data.error, message: data.message };
     return { ok: true };
   } catch (e) {
-    console.error("[SClient] Last.fm error:", method, e);
+    console.error(`[SClient] Couldn't call Last.fm ${method}:`, e);
     return { ok: false, code: 0, message: e.message };
   }
 }
@@ -86,7 +86,7 @@ function register({ ipcMain, config: cfg }) {
             settle({ success: true, username: data.session.name });
           }
         } catch (e) {
-          console.error("[SClient] Last.fm auth error:", e);
+          console.error("[SClient] Couldn't authenticate with Last.fm:", e);
           settle({ error: e.message });
         }
       };

@@ -16,23 +16,19 @@ let kuroshiroInitPromise = null;
 function initKuroshiro() {
   if (kuroshiroInitPromise) return kuroshiroInitPromise;
   kuroshiroInitPromise = (async () => {
-    try {
-      const dictPath = path.join(path.dirname(require.resolve("kuromoji")), "..", "dict");
-      const tokenizer = await new Promise((resolve, reject) => {
-        kuromoji.builder({ dicPath: dictPath }).build((err, t) => {
-          if (err) reject(err);
-          else resolve(t);
-        });
+    const dictPath = path.join(path.dirname(require.resolve("kuromoji")), "..", "dict");
+    const tokenizer = await new Promise((resolve, reject) => {
+      kuromoji.builder({ dicPath: dictPath }).build((err, t) => {
+        if (err) reject(err);
+        else resolve(t);
       });
-      kuroshiroInstance = new Kuroshiro();
-      await kuroshiroInstance.init({
-        init: () => Promise.resolve(),
-        parse: (str) => Promise.resolve(tokenizer.tokenize(str)),
-      });
-      kuroshiroReady = true;
-    } catch (e) {
-      console.error("[romanize] kuroshiro init failed:", e);
-    }
+    });
+    kuroshiroInstance = new Kuroshiro();
+    await kuroshiroInstance.init({
+      init: () => Promise.resolve(),
+      parse: (str) => Promise.resolve(tokenizer.tokenize(str)),
+    });
+    kuroshiroReady = true;
   })();
   return kuroshiroInitPromise;
 }

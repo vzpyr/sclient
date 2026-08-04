@@ -1,15 +1,9 @@
+const Player = require("mpris-service");
+
 let player = null;
 let getPositionOverride = null;
 
 function init({ ipcMain, win }) {
-  let Player;
-  try {
-    Player = require("mpris-service");
-  } catch (e) {
-    console.error("[SClient] mpris-service not available:", e.message);
-    return;
-  }
-
   player = Player({
     name: "sclient",
     identity: "SClient",

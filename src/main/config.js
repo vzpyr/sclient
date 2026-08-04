@@ -1,12 +1,8 @@
 const path = require("path");
 const fs = require("fs");
 const { app } = require("electron");
-let keytar = null;
-try {
-  keytar = require("keytar");
-} catch (e) {
-  console.error("[SClient] keytar unavailable, storing secrets in config.json:", e.message);
-}
+const keytar = require("keytar");
+let hasKeyring = true;
 
 const DIR = path.join(app.getPath("userData"), "SClient");
 const FILE = path.join(DIR, "config.json");
@@ -27,7 +23,7 @@ if (fs.existsSync(FILE)) {
   try {
     store = JSON.parse(fs.readFileSync(FILE, "utf8"));
   } catch (e) {
-    console.error("[SClient] Failed to parse config.json, starting fresh.");
+    console.error("[SClient] Couldn't parse config.json, starting fresh.");
   }
 }
 
@@ -36,11 +32,12 @@ const secureCache = {};
 async function initSecure() {
   for (const key of SECURE_KEYS) {
     let stored = null;
-    if (keytar) {
+    if (hasKeyring) {
       try {
         stored = await keytar.getPassword(SERVICE, key);
       } catch (e) {
-        console.error("[SClient] keytar read failed:", key, e);
+        hasKeyring = false;
+        console.error("[SClient] Couldn't read from keyring, falling back to config.json:", e);
       }
       if (stored !== null) {
         secureCache[key] = stored;
@@ -51,12 +48,12 @@ async function initSecure() {
     const raw = resolvePath(key);
     if (typeof raw === "string" && raw !== "") {
       secureCache[key] = raw;
-      if (!keytar) continue;
+      if (!hasKeyring) continue;
       try {
         await keytar.setPassword(SERVICE, key, raw);
         clearRaw(key);
       } catch (e) {
-        console.error("[SClient] keytar migrate failed:", key, e);
+        console.error(`[SClient] Couldn't migrate ${key} to keyring:`, e);
       }
     }
   }
@@ -114,11 +111,11 @@ function setSecure(key, val) {
   if (val === "" || val === null || val === undefined) {
     delete secureCache[key];
     clearRaw(key);
-    if (keytar) keytar.deletePassword(SERVICE, key).catch(() => {});
+    if (hasKeyring) keytar.deletePassword(SERVICE, key).catch(() => {});
     return;
   }
   secureCache[key] = val;
-  if (!keytar) {
+  if (!hasKeyring) {
     assignPath(key, val);
     save();
     return;
@@ -127,7 +124,7 @@ function setSecure(key, val) {
     .setPassword(SERVICE, key, val)
     .then(() => clearRaw(key))
     .catch((e) => {
-      console.error("[SClient] keytar write failed:", key, e);
+      console.error(`[SClient] Couldn't write ${key} to keyring:`, e);
       assignPath(key, val);
       save();
     });

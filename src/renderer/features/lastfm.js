@@ -58,7 +58,7 @@ class LastfmFeature extends Feature {
           this.updateStatus(this.elId, "Auth Error", "#f55");
         }
       }
-    });
+    }).catch(() => {});
   }
 
   init() {

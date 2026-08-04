@@ -68,10 +68,10 @@ class DiscordRpcFeature extends Feature {
             trackId: td && td.id ? td.id : null,
             artistSlug: td && td.user ? td.user.permalink : null,
             trackSlug: td ? td.permalink : null,
-          });
+          }).catch(() => {});
         }
       } catch (e) {
-        console.error("[SClient] Discord RPC bridge error:", e);
+        console.error("[SClient] Couldn't update Discord RPC:", e);
       }
     });
   }

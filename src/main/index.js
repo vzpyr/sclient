@@ -128,7 +128,7 @@ function createWindow() {
       global._blocker = blocker;
       if (config.adblockEnabled) blocker.enableBlockingInSession(ses);
     })
-    .catch((e) => console.error("[SClient] Failed to initialize adblocker:", e));
+    .catch((e) => console.error("[SClient] Couldn't initialize adblocker:", e));
 
   const cleanUA = ses
     .getUserAgent()
@@ -199,7 +199,7 @@ function createWindow() {
         html.sclient-loaded::before, html.sclient-loaded::after { opacity: 0; }
       `);
     } catch (e) {
-      console.error("[SClient] Failed to inject splash CSS:", e);
+      console.error("[SClient] Couldn't inject splash CSS:", e);
     }
   });
 
@@ -245,7 +245,7 @@ function createWindow() {
       cssFiles.map((f) =>
         win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8"))
       )
-    ).catch((err) => console.error("[SClient] Failed to inject styles:", err));
+    ).catch((err) => console.error("[SClient] Couldn't inject styles:", err));
 
     win.webContents
       .executeJavaScript(
@@ -257,11 +257,11 @@ try {
     ${injectedJs}
   })()
 } catch (e) {
-  console.error("[SClient] Injected JS error:", e);
+  console.error("[SClient] Couldn't run injected JS:", e);
 }
 `
       )
-      .catch((err) => console.error("[SClient] Script execution failed:", err));
+      .catch((err) => console.error("[SClient] Couldn't run scripts:", err));
   });
 
   win.on("close", (e) => {
@@ -279,7 +279,7 @@ try {
 app.whenReady().then(async () => {
   if (!gotSingleInstanceLock) return;
   await config.initSecure();
-  console.log(`[SClient] Starting v${app.getVersion()}...`);
+  console.log(`[SClient] Starting v${app.getVersion()}.`);
   await components.whenReady();
 
   require("./ipc").register({ ipcMain, session, app, config });
@@ -356,7 +356,7 @@ app.whenReady().then(async () => {
         win.focus();
       });
     } catch (e) {
-      console.error("[SClient] Failed to create tray:", e);
+      console.error("[SClient] Couldn't create tray:", e);
     }
   }
 });

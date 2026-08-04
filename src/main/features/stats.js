@@ -1,11 +1,5 @@
 const path = require("path");
-
-let Database = null;
-try {
-  Database = require("better-sqlite3");
-} catch (e) {
-  console.error("[SClient] better-sqlite3 not available, stats disabled.");
-}
+const Database = require("better-sqlite3");
 
 let config = null;
 
@@ -16,7 +10,6 @@ let insertStmt = null;
 const credentials = { clientId: null, oauthToken: null };
 
 function getDb() {
-  if (!Database) return null;
   if (db) return db;
   try {
     db = new Database(path.join(config.CONFIG_DIR, "stats.db"));
@@ -37,7 +30,7 @@ function getDb() {
     db.exec("CREATE INDEX IF NOT EXISTS idx_listens_played_at ON listens(played_at)");
     return db;
   } catch (e) {
-    console.error("[SClient] Failed to open stats DB:", e);
+    console.error("[SClient] Couldn't open stats database:", e);
     return null;
   }
 }
@@ -57,7 +50,6 @@ async function syncPlayHistory() {
     });
 
     let url = `https://api-v2.soundcloud.com/me/play-history/tracks?client_id=${credentials.clientId}&limit=50&linked_partitioning=1&app_version=1782999645&app_locale=en`;
-    let total = 0;
 
     while (url) {
       const res = await fetch(url, {
@@ -65,7 +57,7 @@ async function syncPlayHistory() {
       });
       if (!res.ok) {
         const body = await res.text();
-        console.error("[SClient] Stats sync HTTP error:", body.slice(0, 200));
+        console.error("[SClient] Couldn't sync stats:", body.slice(0, 200));
         break;
       }
       const data = await res.json();
@@ -76,13 +68,11 @@ async function syncPlayHistory() {
           track: e.track,
         }));
         insertMany(entries);
-        total += entries.length;
       }
       url = data.next_href || null;
     }
-    if (total > 0) console.log(`[SClient] Stats sync complete (${total} new entries)`);
   } catch (e) {
-    console.error("[SClient] Stats sync error:", e);
+    console.error("[SClient] Couldn't sync stats:", e);
   } finally {
     syncing = false;
   }
@@ -109,7 +99,7 @@ function recordListen(playedAt, trackId, track) {
     }
     insertStmt.run(playedAt, trackId, JSON.stringify(track), "local");
   } catch (e) {
-    console.error("[SClient] Stats record error:", e);
+    console.error("[SClient] Couldn't record stats:", e);
   }
 }
 
@@ -126,7 +116,7 @@ function getData(source) {
     query += " ORDER BY played_at DESC";
     return database.prepare(query).all(...params);
   } catch (e) {
-    console.error("[SClient] Stats get data failed:", e);
+    console.error("[SClient] Couldn't load stats:", e);
     return [];
   }
 }
@@ -136,15 +126,14 @@ function wipeDb() {
   if (!database) return;
   try {
     database.exec("DELETE FROM listens");
-    console.log("[SClient] Stats DB wiped.");
   } catch (e) {
-    console.error("[SClient] Stats wipe failed:", e);
+    console.error("[SClient] Couldn't wipe stats:", e);
   }
 }
 
 function exportDb(savePath) {
   const currentDb = getDb();
-  if (!currentDb) throw new Error("Stats DB not initialized");
+  if (!currentDb) throw new Error("Stats database not open");
 
   const newDb = new Database(savePath);
   newDb.pragma("journal_mode = WAL");
@@ -172,7 +161,7 @@ function exportDb(savePath) {
 
 function importDb(openPath, overwrite = false) {
   const currentDb = getDb();
-  if (!currentDb) throw new Error("Stats DB not initialized");
+  if (!currentDb) throw new Error("Stats database not open");
 
   const impDb = new Database(openPath);
   const hasListens = impDb

@@ -63,7 +63,7 @@ class EffectsFeature extends Feature {
         window.__scMedia.push(this);
       }
       if (this.tagName === "AUDIO" || this.tagName === "VIDEO") {
-        feature.applyEffectsToMedia(this).catch(console.error);
+        feature.applyEffectsToMedia(this).catch((e) => console.error("[SClient] Couldn't apply audio effects:", e));
       }
       return originalPlay.apply(this, arguments);
     };
@@ -256,7 +256,7 @@ class EffectsFeature extends Feature {
     try {
       await this.setupAudioNodes(ctxToUse);
     } catch (e) {
-      console.error("[SClient] Audio nodes setup failed:", e);
+      console.error("[SClient] Couldn't set up audio nodes:", e);
     }
 
     if (!sclientSourceNodes.has(el)) {

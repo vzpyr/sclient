@@ -236,7 +236,6 @@ function renderAccounts(overlay) {
                 sendBridge("set_active_account", { name: acc })
                   .then(() => sendBridge("restart_app"))
                   .catch((e) => {
-                    console.error("[SClient] Account switch failed:", e);
                     showToast("Switch Error: " + e);
                   });
               btns.appendChild(sw);
@@ -253,7 +252,6 @@ function renderAccounts(overlay) {
                     sendBridge("delete_account", { name: acc })
                       .then(() => renderAccounts(overlay))
                       .catch((e) => {
-                        console.error("[SClient] Account delete failed:", e);
                         showToast("Delete Error: " + e);
                       });
                 });
@@ -271,7 +269,7 @@ function renderAccounts(overlay) {
                     ? "Clear all cookies and browser data? The app will restart."
                     : "Clear all cookies and browser data for Main profile?";
                 showConfirm(msg).then((ok) => {
-                  if (ok) sendBridge(acc === active ? "clear_data_and_restart" : "clear_data");
+                  if (ok) sendBridge(acc === active ? "clear_data_and_restart" : "clear_data").catch(() => {});
                 });
               };
               btns.appendChild(rst);
@@ -283,12 +281,10 @@ function renderAccounts(overlay) {
           }
         })
         .catch((e) => {
-          console.error("[SClient] Set active account failed:", e);
           showToast("Active Account Error: " + e);
         });
     })
     .catch((e) => {
-      console.error("[SClient] Get accounts failed:", e);
       showToast("Get Accounts Error: " + e);
     });
 }
@@ -303,7 +299,6 @@ function addAccount(overlay) {
     .then(() => sendBridge("set_active_account", { name }))
     .then(() => sendBridge("restart_app"))
     .catch((e) => {
-      console.error("[SClient] Add account failed:", e);
       showToast("Add Account Error: " + e);
     });
 }
@@ -384,7 +379,6 @@ function saveSettings(overlay) {
   sendBridge("save_custom_files", payload)
     .then(() => window.location.reload())
     .catch((e) => {
-      console.error("[SClient] Settings save failed:", e);
       showToast("Failed to save: " + e);
     });
 }

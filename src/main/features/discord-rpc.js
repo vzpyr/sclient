@@ -29,7 +29,7 @@ async function updateRpc({
   if (!rpc) {
     rpc = new Client({ clientId: CLIENT_ID, transport: { type: "ipc" } });
     login = rpc.login().catch((e) => {
-      console.error("[SClient] RPC Login failed:", e);
+      console.error("[SClient] Couldn't log into Discord RPC:", e);
       rpc = null;
       login = null;
     });
@@ -41,7 +41,7 @@ async function updateRpc({
     if (rpc && rpc.user) {
       rpc.user
         .clearActivity()
-        .catch((e) => console.error("[SClient] RPC clear activity failed:", e));
+        .catch((e) => console.error("[SClient] Couldn't clear Discord activity:", e));
     }
     return;
   }
@@ -71,7 +71,7 @@ async function updateRpc({
   if (rpc && rpc.user) {
     rpc.user
       .setActivity(activity)
-      .catch((e) => console.error("[SClient] RPC set activity failed:", e));
+      .catch((e) => console.error("[SClient] Couldn't update Discord activity:", e));
   }
 }
 

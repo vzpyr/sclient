@@ -214,7 +214,7 @@ class StatsFeature extends Feature {
       });
       this.setStatus("Recorded!", "#5f5");
     } catch (e) {
-      console.error("[SClient] Stats record listen failed:", e);
+      console.error("[SClient] Couldn't record stats:", e);
       this.setStatus("Error", "#f55");
     }
   }

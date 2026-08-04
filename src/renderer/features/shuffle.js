@@ -92,7 +92,7 @@ class ShuffleFeature extends Feature {
             headers: response.headers,
           });
         } catch (e) {
-          console.error("[SClient] Fetch interception error:", e);
+          console.error("[SClient] Couldn't process playlist fetch:", e);
           return origFetch.apply(this, args);
         }
       }
@@ -197,7 +197,7 @@ class ShuffleFeature extends Feature {
             this.dispatchEvent(new Event("loadend"));
           })
           .catch((err) => {
-            console.error("[SClient] XHR Hydration failed:", err);
+            console.error("[SClient] Couldn't hydrate playlist:", err);
             origSend.call(this, body);
           });
         return;

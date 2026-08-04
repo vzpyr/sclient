@@ -376,7 +376,6 @@ function pmOpenSpotifyReviewModal(spotifyRows, resumedState = null) {
       back.remove();
     } catch (e) {
       showToast("Error during import: " + (e.message || e));
-      console.error("[SClient] Playlist chunk creation error:", e);
       confirmBtn.disabled = false;
       confirmBtn.textContent = "Confirm (Error)";
     }
