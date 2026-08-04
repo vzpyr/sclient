@@ -892,7 +892,6 @@ body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8
           </div>
           <div style="display:flex;gap:8px;">
             <button id="pm-import-btn" class="sclient-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Import</button>
-            <button id="pm-spotify-btn" class="sclient-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Spotify CSV</button>
           </div>
         </div>
         <div id="pm-sidebar-list" class="pm-sidebar-list"></div>
@@ -933,7 +932,6 @@ body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8
   });
   document.getElementById("pm-new-btn").addEventListener("click", pmNewPlaylist);
   document.getElementById("pm-import-btn").addEventListener("click", pmImport);
-  document.getElementById("pm-spotify-btn").addEventListener("click", pmSpotifyImport);
 
   document.addEventListener("keydown", _pmEsc);
 }
@@ -1274,6 +1272,17 @@ async function pmImport() {
     return;
   }
   if (!fileText) return;
+
+  const trimmed = fileText.trimStart();
+  if (trimmed.startsWith("Track Name") || trimmed.startsWith("track name") ||
+      (trimmed.includes(",") && /isrc|artist name|track name/i.test(trimmed.split("\n")[0]))) {
+    let rows;
+    try { rows = pmParseSpotifyCsv(fileText); }
+    catch (e) { showToast(e.message); return; }
+    pmOpenSpotifyModal(rows);
+    return;
+  }
+
   let data;
   try {
     data = JSON.parse(fileText);
@@ -1292,7 +1301,7 @@ async function pmImport() {
     sharing = data.sharing || sharing;
     tracks = data.tracks;
   } else if (data && Array.isArray(data.playlists)) {
-    showToast("Multi-playlist exports aren’t supported for import — pick a single-playlist JSON.");
+    showToast("Import one playlist at a time.");
     return;
   } else {
     showToast("Unrecognized playlist JSON (expected {title, tracks:[ids]})");

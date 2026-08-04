@@ -21,7 +21,7 @@ SClient adds several enhancements and quality of life features to the standard w
 
 ### 🔌 Integrations & Tools
 
-- **Playlist Manager**: Manage (import, export, re-order etc.) your playlists in a custom, dedicated overlay.
+- **Playlist Manager**: Manage (import, export, re-order etc.) your playlists in a custom, dedicated overlay. Includes support for Exportify .csv exports.
 - **Real-time Audio Effects**: Built-in playback speed/pitch shifting/manipulation and reverb effects
 - **Track/Playlist Downloader**: Download tracks and playlists directly from the player interface or on the playlist page using `youtube-dl`.
 - **Lyrics Integration**: Access synced lyrics in a sidebar (or mini player) for the current song directly from the playback bar with romanization (provided by `lrcmux.dev`).
