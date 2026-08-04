@@ -26,10 +26,14 @@ class ContextMenuFeature extends Feature {
         if (!doc) return;
         if (!doc.__sclient_cm) {
           doc.__sclient_cm = true;
+          injectIframeStyles(doc);
           doc.addEventListener("contextmenu", (e) => this.handleContextMenu(doc, e));
           if (!ifr.__sclient_cm_hooked) {
             ifr.__sclient_cm_hooked = true;
-            ifr.addEventListener("load", () => inject(ifr));
+            ifr.addEventListener("load", () => {
+              doc.__sclient_cm = false;
+              inject(ifr);
+            });
           }
         }
       } catch (ex) {}
@@ -167,7 +171,7 @@ class ContextMenuFeature extends Feature {
       if (imgUrl) {
         items.push(
           buildItem("View image", () => {
-            viewImage(doc, imgUrl);
+            viewImage(imgUrl);
           })
         );
       }
@@ -433,31 +437,78 @@ function navigateToUrlModal(doc) {
   });
 }
 
-function viewImage(doc, url) {
-  const overlay = doc.createElement("div");
+function injectIframeStyles(doc) {
+  const computed = getComputedStyle(document.documentElement);
+  const vars = [
+    "--sclient-accent",
+    "--sclient-bg-surface",
+    "--sclient-bg-overlay",
+    "--sclient-bg-elevated",
+    "--sclient-text-main",
+    "--sclient-text-muted",
+    "--sclient-border",
+    "--sclient-border-hover",
+    "--sclient-btn-bg",
+    "--sclient-btn-bg-hover",
+    "--sclient-font-sans",
+    "--sclient-text-xs",
+    "--sclient-text-sm",
+    "--sclient-text-base",
+    "--sclient-text-lg",
+    "--sclient-radius-sm",
+    "--sclient-radius-md",
+    "--sclient-radius-lg",
+    "--sclient-radius-xl",
+  ];
+  const decls = vars
+    .map((v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`)
+    .join("\n");
+  const style = document.createElement("style");
+  style.setAttribute("data-sclient", "1");
+  style.textContent = [
+    ":root {\n" + decls + "\n}",
+    ".sclient-modal-backdrop {",
+    "  position:fixed; top:0; left:0; width:100vw; height:100vh;",
+    "  background:var(--sclient-bg-overlay);",
+    "  z-index:9999999;",
+    "  display:flex; align-items:center; justify-content:center;",
+    "  backdrop-filter:blur(4px);",
+    "  opacity:0; transition:opacity 0.2s ease;",
+    "}",
+    ".sclient-floating-btn {",
+    "  background:var(--sclient-bg-elevated); color:var(--sclient-text-main);",
+    "  border:1px solid var(--sclient-border); border-radius:50%;",
+    "  width:40px; height:40px; display:flex; align-items:center; justify-content:center;",
+    "  cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2); padding:0; outline:none;",
+    "}",
+    ".sclient-floating-btn:hover { filter:brightness(1.25); }",
+  ].join("\n");
+  (doc.head || doc.documentElement).appendChild(style);
+}
+
+function viewImage(url) {
+  const overlay = document.createElement("div");
   overlay.className = "sclient-modal-backdrop";
-  const img = doc.createElement("img");
+  const img = document.createElement("img");
   img.src = url;
   img.style.cssText =
     "max-width:90vw;max-height:90vh;border-radius:var(--sclient-radius-lg);box-shadow:0 10px 40px rgba(0,0,0,0.5);object-fit:contain;transform:scale(0.95);transition:transform 0.2s ease;";
   overlay.appendChild(img);
 
-  const btnContainer = doc.createElement("div");
+  const btnContainer = document.createElement("div");
   btnContainer.style.cssText =
-    "position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px;";
+    "position:absolute;bottom:20px;right:20px;display:flex;gap:10px;";
 
-  const copyBtn = doc.createElement("button");
+  const copyBtn = document.createElement("button");
   copyBtn.className = "sclient-floating-btn";
-  copyBtn.style.cssText = "position: static !important; backdrop-filter: blur(4px);";
-  copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+  copyBtn.style.cssText = "position:static !important;backdrop-filter:blur(4px);";
+  copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
   copyBtn.onclick = (ev) => {
     ev.stopPropagation();
     fetch(url)
-      .then((r) => {
-        return r.blob();
-      })
+      .then((r) => r.blob())
       .then((blob) => {
-        const canvas = doc.createElement("canvas");
+        const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         const imgObj = new Image();
         imgObj.onload = () => {
@@ -465,57 +516,43 @@ function viewImage(doc, url) {
           canvas.height = imgObj.height;
           ctx.drawImage(imgObj, 0, 0);
           canvas.toBlob((pngBlob) => {
-            const item = {};
-            item[pngBlob.type] = pngBlob;
             navigator.clipboard
-              .write([new ClipboardItem(item)])
-              .then(() => {
-                showToast("Image copied to clipboard.");
-              })
-              .catch((e) => {
-                showToast("Copy failed: " + e.message);
-              });
+              .write([new ClipboardItem({ [pngBlob.type]: pngBlob })])
+              .then(() => showToast("Image copied to clipboard."))
+              .catch((e) => showToast("Copy failed: " + e.message));
           }, "image/png");
         };
         imgObj.src = URL.createObjectURL(blob);
       })
-      .catch((e) => {
-        showToast("Fetch failed: " + e.message);
-      });
+      .catch((e) => showToast("Fetch failed: " + e.message));
   };
 
-  const saveBtn = doc.createElement("button");
+  const saveBtn = document.createElement("button");
   saveBtn.className = "sclient-floating-btn";
-  saveBtn.style.cssText = "position: static !important; backdrop-filter: blur(4px);";
-  saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download-icon lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`;
+  saveBtn.style.cssText = "position:static !important;backdrop-filter:blur(4px);";
+  saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`;
   saveBtn.onclick = (ev) => {
     ev.stopPropagation();
     fetch(url)
-      .then((r) => {
-        return r.blob();
-      })
+      .then((r) => r.blob())
       .then((blob) => {
         const objUrl = URL.createObjectURL(blob);
-        const a = doc.createElement("a");
+        const a = document.createElement("a");
         a.href = objUrl;
         a.download = url.split("/").pop().split("?")[0] || "soundcloud_image.jpg";
-        doc.body.appendChild(a);
+        document.body.appendChild(a);
         a.click();
-        doc.body.removeChild(a);
-        setTimeout(() => {
-          URL.revokeObjectURL(objUrl);
-        }, 1000);
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
       })
-      .catch((e) => {
-        showToast("Download failed: " + e.message);
-      });
+      .catch((e) => showToast("Download failed: " + e.message));
   };
 
   btnContainer.appendChild(copyBtn);
   btnContainer.appendChild(saveBtn);
   overlay.appendChild(btnContainer);
 
-  doc.body.appendChild(overlay);
+  document.body.appendChild(overlay);
   requestAnimationFrame(() => {
     overlay.style.opacity = "1";
     img.style.transform = "scale(1)";
@@ -523,9 +560,7 @@ function viewImage(doc, url) {
   overlay.addEventListener("click", () => {
     overlay.style.opacity = "0";
     img.style.transform = "scale(0.95)";
-    setTimeout(() => {
-      overlay.remove();
-    }, 200);
+    setTimeout(() => overlay.remove(), 200);
   });
 }
 
