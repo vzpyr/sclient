@@ -79,6 +79,7 @@ header,
 }
 #sclient-settings-overlay,
 #sclient-stats-overlay,
+#sclient-playlists-overlay,
 iframe.webiIframe {
   top: 32px !important;
   height: calc(100% - 32px) !important;
