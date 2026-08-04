@@ -99,22 +99,11 @@ let playbackTimer = null;
 const PLAYBACK_SEL = ".playbackSoundBadge__titleLink";
 let currentSongUrl = null;
 let currentTrackData = null;
-let currentDuration = 0;
-
-function parseTime(str) {
-  if (!str) return 0;
-  const m = str.match(/\d+:\d+(?::\d+)?/);
-  if (!m) return 0;
-  const parts = m[0].split(":").map(Number);
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
-  if (parts.length === 2) return parts[0] * 60 + parts[1];
-  return 0;
-}
 
 function onPlaybackChange(cb) {
   playbackListeners.push(cb);
   if (playbackListeners.length === 1) {
-    playbackTimer = setInterval(pollPlayback, 2000);
+    playbackTimer = setInterval(pollPlayback, 1000);
   }
   return () => {
     const idx = playbackListeners.indexOf(cb);
@@ -139,14 +128,12 @@ async function pollPlayback() {
   }
 
   const songUrl = titleLink.href.split("?")[0];
-  const isPlaying = navigator.mediaSession && navigator.mediaSession.playbackState === "playing";
   const now = Date.now();
 
-  const passed = document.querySelector(".playbackTimeline__timePassed");
-  const dur = document.querySelector(".playbackTimeline__duration");
-  const position = passed ? parseTime(passed.textContent) : 0;
-  const duration = dur ? parseTime(dur.textContent) : 0;
-  currentDuration = duration;
+  const media = getActiveMedia();
+  const position = media ? media.currentTime : 0;
+  const duration = media ? (media.duration || 0) : 0;
+  const isPlaying = media ? !media.paused : false;
 
   let type = "tick";
   if (songUrl !== currentSongUrl) {
@@ -175,21 +162,16 @@ function getCurrentTrack() {
 }
 
 function seekTo(seconds) {
-  if (!currentDuration) return;
-  const bar = document.querySelector(".playbackTimeline__progressWrapper");
-  if (!bar) return;
-
-  const percentage = Math.min(Math.max(seconds / currentDuration, 0), 1);
-  const rect = bar.getBoundingClientRect();
-  const x = rect.left + rect.width * percentage;
-  const y = rect.top + rect.height / 2;
-
-  bar.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: x, clientY: y }));
-  bar.dispatchEvent(new MouseEvent("mouseup", { bubbles: true, clientX: x, clientY: y }));
+  const media = getActiveMedia();
+  if (!media) return;
+  media.currentTime = Math.max(0, seconds);
 }
 
 function getActiveMedia() {
-  return (window.__scMedia || []).find((m) => m.duration > 0);
+  const tracked = (window.__scMedia || []).find((m) => m.duration > 0);
+  if (tracked) return tracked;
+  const all = Array.from(document.querySelectorAll("audio, video"));
+  return all.find((m) => !m.paused && m.duration > 0) || all.find((m) => m.duration > 0);
 }
 
 function playerCommand(action, value) {

@@ -153,6 +153,7 @@ let isLikedLocal = false;
 let loopStateLocal = "none";
 let currentAccent = "#f50";
 let playbackRateLocal = 1;
+let suppressPlayStateUntil = 0;
 
 let lyricsOpenLocal = false;
 let currentSyncedLyrics = [];
@@ -167,6 +168,7 @@ let romanizeEnabled = false;
 $("btn-playpause").addEventListener("click", () => {
   isPlayingLocal = !isPlayingLocal;
   updatePlayPauseUI(isPlayingLocal);
+  suppressPlayStateUntil = Date.now() + 500;
   ipcRenderer.send("mini_action", "playpause");
 });
 $("btn-next").addEventListener("click", () => ipcRenderer.send("mini_action", "next"));
@@ -284,7 +286,7 @@ ipcRenderer.on("mini_update", (_e, data) => {
     currentArtworkUrl = null;
   }
 
-  if (data.isPlaying !== undefined) {
+  if (data.isPlaying !== undefined && Date.now() > suppressPlayStateUntil) {
     isPlayingLocal = data.isPlaying;
     updatePlayPauseUI(isPlayingLocal);
   }
@@ -599,7 +601,7 @@ let currentInterpolatedPos = 0;
 let lastKnownTime = Date.now();
 
 ipcRenderer.on("mini_time", (_e, data) => {
-  if (data.isPlaying !== undefined && isPlayingLocal !== data.isPlaying) {
+  if (data.isPlaying !== undefined && isPlayingLocal !== data.isPlaying && Date.now() > suppressPlayStateUntil) {
     isPlayingLocal = data.isPlaying;
     updatePlayPauseUI(isPlayingLocal);
   }
