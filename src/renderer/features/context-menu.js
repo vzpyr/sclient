@@ -492,7 +492,7 @@ function syncIframeVars(doc) {
   try {
     const varStyle = doc.querySelector("style[data-sclient-vars]");
     if (!varStyle) return;
-    const computed = getComputedStyle(document.documentElement);
+    const computed = getComputedStyle(document.body || document.documentElement);
     const decls = SCLIENT_IFRAME_VARS
       .map((v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`)
       .join("\n");
