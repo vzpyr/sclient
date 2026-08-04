@@ -531,22 +531,6 @@ function updateLyricsUI(pos) {
   const accent = currentAccent || "#f50";
 
   if (activeIdx !== currentHighlightedIndex) {
-    if (currentHighlightedIndex >= 0 && currentHighlightedIndex < currentSyncedLyrics.length) {
-      const oldEl = currentSyncedLyrics[currentHighlightedIndex].element;
-      if (oldEl) {
-        oldEl.querySelectorAll(".lyric-word").forEach((w) => {
-          w.classList.remove("sung");
-          w.style.background = "";
-          w.style.webkitBackgroundClip = "";
-          w.style.backgroundClip = "";
-          w.style.color = "";
-        });
-        oldEl.style.background = "";
-        oldEl.style.webkitBackgroundClip = "";
-        oldEl.style.backgroundClip = "";
-        oldEl.style.color = "";
-      }
-    }
     currentHighlightedIndex = activeIdx;
     currentSyncedLyrics.forEach((l, i) => {
       if (!l.element) return;
@@ -554,10 +538,15 @@ function updateLyricsUI(pos) {
         l.element.className = "lyric-line active";
         l.element.style.color = l.element.querySelector(".lyric-word") ? "" : accent;
         l.element.scrollIntoView({ behavior: "smooth", block: "center" });
-      } else if (i < activeIdx) {
-        l.element.className = "lyric-line past";
       } else {
-        l.element.className = "lyric-line";
+        l.element.querySelectorAll(".lyric-word").forEach((w) => {
+          w.classList.remove("sung");
+          w.style.background = "";
+          w.style.webkitBackgroundClip = "";
+          w.style.backgroundClip = "";
+          w.style.color = "";
+        });
+        l.element.className = i < activeIdx ? "lyric-line past" : "lyric-line";
       }
     });
   }

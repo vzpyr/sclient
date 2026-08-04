@@ -129,27 +129,25 @@ class LyricsFeature extends Feature {
     const accent = getAccent();
 
     if (activeIdx !== this.currentHighlightedIndex) {
-      if (this.currentHighlightedIndex >= 0 && this.currentHighlightedIndex < lineEls.length) {
-        lineEls[this.currentHighlightedIndex]
-          .querySelectorAll(".sclient-lyric-word")
-          .forEach((w) => {
-            w.classList.remove("sung");
-            w.style.background = "";
-            w.style.webkitBackgroundClip = "";
-            w.style.backgroundClip = "";
-            w.style.color = "";
-          });
-      }
       this.currentHighlightedIndex = activeIdx;
       lineEls.forEach((el, i) => {
         if (i === activeIdx) {
           const hasWords = el.querySelector(".sclient-lyric-word");
           el.style.cssText = `transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; transform-origin: center; color: ${hasWords ? "var(--sclient-text-main)" : accent}; font-weight: bold; transform: scale(1.1); opacity: 1; filter: blur(0px);`;
           el.scrollIntoView({ behavior: "smooth", block: "center" });
-        } else if (i < activeIdx) {
-          el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sclient-text-muted); font-weight: normal; transform: scale(0.95); opacity: 0.4; filter: blur(2px);`;
         } else {
-          el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sclient-text-main); font-weight: normal; transform: scale(0.95); opacity: 1; filter: blur(0px);`;
+          el.querySelectorAll(".sclient-lyric-word").forEach((w) => {
+            w.classList.remove("sung");
+            w.style.background = "";
+            w.style.webkitBackgroundClip = "";
+            w.style.backgroundClip = "";
+            w.style.color = "";
+          });
+          if (i < activeIdx) {
+            el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sclient-text-muted); font-weight: normal; transform: scale(0.95); opacity: 0.4; filter: blur(2px);`;
+          } else {
+            el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sclient-text-main); font-weight: normal; transform: scale(0.95); opacity: 1; filter: blur(0px);`;
+          }
         }
       });
     }
