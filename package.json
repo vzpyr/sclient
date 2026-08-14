@@ -1,7 +1,7 @@
 {
   "name": "sclient",
   "desktopName": "com.vzpyr.sclient.desktop",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Customizable cross-platform desktop client for SoundCloud",
   "main": "src/main/index.js",
   "scripts": {
@@ -19,10 +19,10 @@
     "appId": "com.vzpyr.sclient",
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "productName": "SClient",
-    "electronVersion": "43.0.0+wvcus",
+    "electronVersion": "43.2.0+wvcus",
     "electronDownload": {
       "mirror": "https://github.com/castlabs/electron-releases/releases/download/",
-      "customDir": "v43.0.0+wvcus"
+      "customDir": "v43.2.0+wvcus"
     },
     "directories": {
       "buildResources": "icons"
@@ -100,27 +100,27 @@
   "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
-    "electron": "github:castlabs/electron-releases#v43.0.0+wvcus",
+    "electron": "github:castlabs/electron-releases#v43.2.0+wvcus",
     "electron-builder": "^26.15.3",
-    "prettier": "^3.9.5"
+    "prettier": "^3.9.6"
   },
   "dependencies": {
-    "@ghostery/adblocker-electron": "^2.18.1",
+    "@ghostery/adblocker-electron": "^2.18.2",
     "@xhayper/discord-rpc": "^1.3.4",
-    "better-sqlite3": "^12.11.1",
+    "better-sqlite3": "^13.0.3",
     "chart.js": "^4.5.1",
     "keytar": "^7.9.0",
     "kuromoji": "^0.1.2",
     "kuroshiro": "^1.2.0",
+    "mpris-service": "^2.1.2",
     "pinyin": "^4.0.0",
     "transliteration": "^2.6.1",
-    "mpris-service": "^2.1.2",
-    "youtube-dl-exec": "^3.1.9"
+    "youtube-dl-exec": "^3.1.12"
   },
   "allowScripts": {
-    "better-sqlite3@12.11.1": true,
+    "better-sqlite3@13.0.3": true,
     "electron-winstaller@5.4.0": true,
-    "youtube-dl-exec@3.1.9": true,
+    "youtube-dl-exec@3.1.12": true,
     "keytar@7.9.0": true
   }
 }
