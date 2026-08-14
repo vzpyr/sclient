@@ -2,6 +2,22 @@
 
 Customizable cross-platform desktop client for SoundCloud
 
+<table>
+  <tr>
+    <td><img src="screenshots/dark.png" alt="Dark"></td>
+    <td><img src="screenshots/light.png" alt="Light"></td>
+  </tr>
+</table>
+
+<br>
+
+<table>
+  <tr>
+    <td><img src="screenshots/mini-player.png" alt="Mini player"></td>
+    <td><img src="screenshots/mini-player-lyrics.png" alt="Mini player with lyrics"></td>
+  </tr>
+</table>
+
 ## Features
 
 SClient adds several enhancements and quality of life features to the standard web player.
