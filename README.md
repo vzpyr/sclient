@@ -2,101 +2,78 @@
 
 Customizable cross-platform desktop client for SoundCloud
 
-<table>
-  <tr>
-    <td><img src="screenshots/dark.png" alt="Dark"></td>
-    <td><img src="screenshots/light.png" alt="Light"></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="screenshots/dark.png" width="49%">
+  <img src="screenshots/light.png" width="49%">
+</p>
 
-<br>
-
-<table>
-  <tr>
-    <td><img src="screenshots/mini-player.png" alt="Mini player"></td>
-    <td><img src="screenshots/mini-player-lyrics.png" alt="Mini player with lyrics"></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="screenshots/mini-player.png" width="49%">
+  <img src="screenshots/mini-player-lyrics.png" width="49%">
+</p>
 
 ## Features
 
-SClient adds several enhancements and quality of life features to the standard web player.
-
-### 🛡️ Privacy & Security
-
-- **Zero Telemetry**: SClient collects absolutely no data.
-- **Adblocker**: Ads, trackers and telemetry can be blocked natively (using Ghostery).
-
-### 🎧 Playback & Discovery
-
-- **DRM Support**: DRM-protected tracks can be played using proper Widevine DRM out of the box (Castlabs Electron, works on both Linux and Windows).
-- **Region Bypass**: Experimental built-in proxy support to bypass geographic track restrictions. Use the free public proxy (accessible within the app) or self-host your own.
-  - **🚀 Usage:** The proxy server code can be found in `src/api/index.js` and is ready to be deployed (also contains /redirect path).
-  - **⚠️ Disclaimer:** Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. You should self-host it for maximum security (e.g. via Vercel, US).
-- **True Shuffle**: Fixes the default shuffle behavior (by 1. pre-loading the entire playlist or 2. shuffling at API level, experimental).
-
-### 🔌 Integrations & Tools
-
-- **Playlist Manager**: Manage (import, export, re-order etc.) your playlists in a custom, dedicated overlay. Includes support for Exportify .csv exports.
-- **Real-time Audio Effects**: Built-in playback speed/pitch shifting/manipulation and reverb effects
-- **Track/Playlist Downloader**: Download tracks and playlists directly from the player interface or on the playlist page using `youtube-dl`.
-- **Lyrics Integration**: Access synced lyrics in a sidebar (or mini player) for the current song directly from the playback bar with romanization (provided by `lrcmux.dev`).
-- **ListenBrainz and Last.fm Scrobbling**: Automatically scrobble your active song. Sensitive information is securely stored using safeStorage.
-- **Discord Rich Presence**: Share what you are currently listening to on Discord.
-- **Listening Stats & Analytics**: Track your listening history locally and view detailed analytics (also allows importing, exporting and merging DB's).
-
-### 🎨 Customization & UI Tweaks
-
-- **Mini Player**: Access a compact player window for distraction-free listening with integrated lyrics, a visualizer and a dedicated fullscreen mode.
-- **Extensive UI Customization**: Personalize the interface layout, colors, typography, and navigation elements, while hiding clutter and unnecessary prompts.
-- **Custom CSS/JS Editor**: Inject your own custom CSS and JavaScript by writing code directly into a textbox.
-- **Multi-Account Support**: Manage (create, switch, delete) multiple isolated profiles.
-- **System Tray**: Let SClient run in the background.
-
-### ⚠️ ToS Disclaimer
-
-Note that some of the features (Adblocker, Track Downloader, Proxying etc.) may conflict with SoundCloud's ToS. Most likely, nothing will happen, but keep this in mind.
+- **Zero Telemetry & Adblocker:** Collects no data; blocks ads, trackers, and telemetry natively (via Ghostery)
+- **DRM Support:** DRM-protected tracks work out of the box using proper Widevine DRM (Castlabs Electron on Linux and Windows)
+- **Region Bypass:** Built-in proxy support to bypass geographic track restrictions (use the public proxy in-app or self-host `src/api/index.js`)
+- **Audio & Playback:** Real-time playback speed, pitch shifting, and reverb effects; true shuffle (pre-loads playlist / API-level shuffle)
+- **Integrations:** Synced romanized lyrics (via `lrcmux.dev`), Last.fm and ListenBrainz scrobbling (encrypted via Electron `safeStorage`), Discord Rich Presence, and track/playlist downloader via `youtube-dl`
+- **Customization & UI:** Compact mini-player with lyrics and audio visualizer, live custom CSS/JS editor, layout/theme customization, multi-account profile manager, and system tray background support
+- **Playlist Manager & Stats:** Dedicated overlay to import, export (Exportify `.csv` support), and re-order playlists; local listening history and stats analytics
 
 ## Installation
 
-You can install SClient by downloading a pre-built binary or by compiling it from source.
+Download the latest release for your OS from the [Releases](https://github.com/vzpyr/sclient/releases) page:
 
-### Pre-built Releases
+- **Linux:** `.deb`, `.rpm`, `.AppImage`, `.flatpak`
+- **Windows:** `.exe` (Setup), `.exe` (Portable)
 
-Check the Releases page to download the latest version for your operating system.
+## Building from Source
 
-- Linux: .deb, .rpm, .AppImage, .flatpak
-- Windows: .exe (Setup), .exe (Portable)
+### Prerequisites
 
-### Build from Source
+- Node.js 18+ and npm
 
-Requirements: Node.js and npm installed on your system.
+### Desktop (Linux, Windows)
 
-1. Clone this repository and navigate into the project directory.
-2. Install the required dependencies:
+```bash
+git clone https://github.com/vzpyr/sclient.git
+cd sclient
+npm install
+```
 
-- `npm install`
+Linux:
 
-3. Build the application for your operating system:
+```bash
+npm run build:linux
+```
 
-- Linux: `npm run build:linux`
-- Windows: `npm run build:win` (see Windows DRM section below before building)
+Windows:
 
-All compiled binaries will go to the `dist` directory.
+```bash
+npm run build:win
+```
+
+Compiled binaries land in `dist/`
 
 ### Windows DRM (Widevine VMP)
 
-Windows enforces VMP (Verified Media Path) for Widevine DRM, which requires a production signature on the executable. This is handled automatically during `npm run build:win` via the `afterSign` hook.
+Windows enforces VMP (Verified Media Path) for Widevine DRM, which requires a signature on the executable. This is handled automatically during `npm run build:win` via the `afterSign` hook.
 
-**One-time setup:**
+One-time setup:
 
-1. `python3 -m pip install castlabs-evs`
-2. `python3 -m castlabs_evs.account signup`
-3. `npm run vmp:sign` (re-run after `npm install` updates the electron binary)
+```bash
+python3 -m pip install castlabs-evs
+python3 -m castlabs_evs.account signup
+npm run vmp:sign
+```
+
+_(Re-run `npm run vmp:sign` if `npm install` updates the Electron binary)_
 
 ## Usage
 
-- Press Ctrl + I or use the new gear icon in the header to open the settings menu.
+- Press `Ctrl + I` or click the gear icon in the header to open settings
 
 ## License
 
