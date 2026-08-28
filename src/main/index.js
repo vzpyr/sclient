@@ -113,6 +113,12 @@ const JS_FILES = [
 
 const CSS_FILES = ["base.css", "titlebar.css", "layout.css", "features.css"];
 
+function luminance(hex) {
+  const rgb = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(rgb.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
 function createWindow() {
   const titlebarStyle = config.get("features.titlebar_style", "custom");
   const isWindows = process.platform === "win32";
@@ -140,6 +146,10 @@ function createWindow() {
 
   const customBgEnabled = config.isEnabled("features.custom_bg_color");
   const splashBgColor = customBgEnabled ? config.get("features.bg_color", "#000000") : "#121212";
+  const splashTextColor =
+    customBgEnabled && luminance(splashBgColor) > 0.45
+      ? "rgba(0, 0, 0, 0.4)"
+      : "rgba(255, 255, 255, 0.35)";
 
   win = new BrowserWindow({
     width: 1280,
@@ -191,7 +201,7 @@ function createWindow() {
         }
         html::after {
           content: "v${appVersion}"; position: fixed; bottom: 24px; left: 0; right: 0;
-          text-align: center; color: rgba(255, 255, 255, 0.35);
+          text-align: center; color: ${splashTextColor};
           font-family: 'Inter', sans-serif; font-size: 11px; letter-spacing: 0.5px;
           z-index: 9999999999; pointer-events: none;
           opacity: 1; transition: opacity 1.0s ease-out;

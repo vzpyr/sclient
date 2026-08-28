@@ -19,8 +19,7 @@ function readConfigValue(key, fallback) {
 const AUXILIARY = {
   appearance: [
     {
-      label: "Custom Background Color",
-      description: "Dark mode only",
+      label: "Custom Background",
       toggleKey: "features.custom_bg_color",
       fields: [{ type: "color", key: "features.bg_color", label: "Background Color" }],
     },

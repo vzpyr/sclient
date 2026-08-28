@@ -36,10 +36,10 @@ const SCLIENT_CONFIG = {
   get wideLayoutWidth() {
     return this.get("wide_layout_width", "1200");
   },
-  get customBgColor() {
+  get customBackgroundColor() {
     return this.get("custom_bg_color", false);
   },
-  get bgColor() {
+  get backgroundColor() {
     return this.get("bg_color", "#000000");
   },
   get adblock() {

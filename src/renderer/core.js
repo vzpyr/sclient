@@ -43,96 +43,98 @@ function applyAppearance() {
     injectStyle("sclient-global-font", css);
     injectToIframes("sclient-global-font", css);
   }
-  if (SCLIENT_CONFIG.customBgColor) {
-    const bgColor = SCLIENT_CONFIG.bgColor;
-    document.documentElement.style.setProperty("--sclient-bg-surface", bgColor);
-    document.documentElement.style.setProperty("--sclient-bg-elevated", bgColor);
+  if (SCLIENT_CONFIG.customBackgroundColor) {
+    const bgColor = SCLIENT_CONFIG.backgroundColor;
     injectStyle(
-      "sclient-custom-bg-color",
+      "sclient-custom-background-color",
       `
-      .theme-dark {
+      :root {
+        --mui-palette-background-default: ${bgColor} !important;
+        --sclient-bg-surface: ${bgColor} !important;
+        --sclient-bg-elevated: ${bgColor} !important;
+      }
+      body.theme-dark, body.theme-light {
         --background-surface-color: ${bgColor} !important;
+        --background-highlight-color: ${bgColor} !important;
+        --surface-color: ${bgColor} !important;
+        --highlight-color: ${bgColor} !important;
         --button-secondary-background-color: ${bgColor} !important;
         --button-secondary-selected-background-color: ${bgColor} !important;
-        --highlight-color: ${bgColor} !important;
-        --surface-color: ${bgColor} !important;
+        --button-secondary-selected-active-background-color: ${bgColor} !important;
+        --button-tertiary-background-color: ${bgColor} !important;
+        --button-tertiary-selected-background-color: ${bgColor} !important;
+        --button-tertiary-selected-active-background-color: ${bgColor} !important;
+        --sclient-bg-surface: ${bgColor} !important;
+        --sclient-bg-elevated: ${bgColor} !important;
       }
-      .theme-dark div.MuiBox-root.mui-1i9nq8r { background-color: ${bgColor} !important; }
-      .theme-dark, .theme-dark *, .theme-dark body, .theme-dark html {
+      body.theme-dark *, body.theme-light * {
         --mui-palette-background-default: ${bgColor} !important;
+      }
+      body.theme-dark div.MuiBox-root.mui-1i9nq8r,
+      body.theme-light div.MuiBox-root.mui-1i9nq8r {
+        background-color: ${bgColor} !important;
       }
     `
     );
 
-    const syncIframeTheme = () => {
-      const isDark = document.body && document.body.classList.contains("theme-dark");
+    const syncBackgroundIframes = () => {
+      const bgStyle = document.getElementById("sclient-custom-background-color");
+      if (!bgStyle) return;
       document.querySelectorAll("iframe").forEach((iframe) => {
         try {
           if (iframe.contentDocument && iframe.contentDocument.head) {
-            if (!iframe.contentDocument.getElementById("sclient-custom-bg-color")) {
-              const el = document.getElementById("sclient-custom-bg-color");
-              if (el) iframe.contentDocument.head.appendChild(el.cloneNode(true));
+            if (!iframe.contentDocument.getElementById("sclient-custom-background-color")) {
+              iframe.contentDocument.head.appendChild(bgStyle.cloneNode(true));
             }
-            let fs = iframe.contentDocument.getElementById("sclient-custom-bg-iframe-force");
-            if (!fs) {
-              fs = document.createElement("style");
-              fs.id = "sclient-custom-bg-iframe-force";
-              fs.textContent = `
+            let force = iframe.contentDocument.getElementById("sclient-custom-background-force");
+            if (!force) {
+              force = document.createElement("style");
+              force.id = "sclient-custom-background-force";
+              force.textContent = `
                 :root, html, body {
                   --mui-palette-background-default: ${bgColor} !important;
                   --background-surface-color: ${bgColor} !important;
+                  --background-highlight-color: ${bgColor} !important;
                   --button-secondary-background-color: ${bgColor} !important;
                   --button-secondary-selected-background-color: ${bgColor} !important;
                   --highlight-color: ${bgColor} !important;
                   --surface-color: ${bgColor} !important;
                 }
               `;
-              iframe.contentDocument.head.appendChild(fs);
+              iframe.contentDocument.head.appendChild(force);
             }
-            fs.disabled = !isDark;
           }
         } catch (e) {}
       });
     };
 
-    syncIframeTheme();
+    syncBackgroundIframes();
 
-    const iframeObs = new MutationObserver((mutations) => {
+    const backgroundObs = new MutationObserver((mutations) => {
       let shouldSync = false;
       for (const mut of mutations) {
-        if (
-          mut.type === "attributes" &&
-          mut.target === document.body &&
-          mut.attributeName === "class"
-        ) {
-          shouldSync = true;
-          break;
-        }
         for (const node of mut.addedNodes) {
           if (node.tagName === "IFRAME") {
-            node.addEventListener("load", syncIframeTheme);
+            node.addEventListener("load", syncBackgroundIframes);
             shouldSync = true;
           } else if (node.querySelectorAll) {
             const iframes = node.querySelectorAll("iframe");
             if (iframes.length > 0) {
-              iframes.forEach((ifr) => ifr.addEventListener("load", syncIframeTheme));
+              iframes.forEach((ifr) => ifr.addEventListener("load", syncBackgroundIframes));
               shouldSync = true;
             }
           }
         }
       }
-      if (shouldSync) syncIframeTheme();
+      if (shouldSync) syncBackgroundIframes();
     });
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => {
-        iframeObs.observe(document.documentElement, { childList: true, subtree: true });
-        iframeObs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+        backgroundObs.observe(document.documentElement, { childList: true, subtree: true });
       });
     } else {
-      iframeObs.observe(document.documentElement, { childList: true, subtree: true });
-      if (document.body)
-        iframeObs.observe(document.body, { attributes: true, attributeFilter: ["class"] });
+      backgroundObs.observe(document.documentElement, { childList: true, subtree: true });
     }
   }
 }
