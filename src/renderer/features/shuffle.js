@@ -32,7 +32,6 @@ class ShuffleFeature extends Feature {
   init() {
     if (this.enabled) return;
     super.init();
-    // This feature patches global fetch/XHR permanently and cannot be unpatched.
     this.installPatches();
     this.on(document, "click", (e) => this.onShuffleClick(e), true);
   }
