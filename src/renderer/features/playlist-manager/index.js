@@ -347,7 +347,7 @@ function pmRenderTracks() {
           <span class="pm-track-idx">${i + 1}</span>
           <span class="pm-track-art"><img src="${pmTrackArt(t)}" loading="lazy"/><button class="pm-track-play" data-url="${t.permalink_url || ""}" title="Play on SoundCloud (opens in a new tab)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button></span>
           <span class="pm-track-body">
-            <span class="pm-track-title" data-loop-data="${t.permalink_url || ""}">${(t.title || "Unknown").replace(/</g, "&lt;")}</span>
+            <span class="pm-track-title">${(t.title || "Unknown").replace(/</g, "&lt;")}</span>
             <span class="pm-track-artist">${(getArtistFromTrack(t) || "").replace(/</g, "&lt;")} · ${handlePath}</span>
           </span>
           <span class="pm-track-dur">${pmFmtDur(t.duration)}</span>
