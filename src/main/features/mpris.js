@@ -67,8 +67,7 @@ function init({ ipcMain, win }) {
   ipcMain.on("mpris_update", (_e, data) => {
     if (!player) return;
 
-    const { title, artist, artwork, isPlaying, position, duration, songUrl } =
-      data;
+    const { title, artist, artwork, isPlaying, position, duration, songUrl } = data;
 
     player.playbackStatus = isPlaying ? "Playing" : "Paused";
 

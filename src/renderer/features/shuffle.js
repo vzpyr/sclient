@@ -56,9 +56,7 @@ class ShuffleFeature extends Feature {
           const data = await clone.json();
 
           if (data && data.tracks && Array.isArray(data.tracks)) {
-            const stubIds = data.tracks
-              .filter((t) => !t.title && t.id)
-              .map((t) => t.id);
+            const stubIds = data.tracks.filter((t) => !t.title && t.id).map((t) => t.id);
 
             if (stubIds.length > 0) {
               const clientId = new URL(url).searchParams.get("client_id");
@@ -68,10 +66,10 @@ class ShuffleFeature extends Feature {
                   chunks.push(
                     window
                       .fetch(
-                        `https://api-v2.soundcloud.com/tracks?ids=${stubIds.slice(i, i + 50).join(",")}&client_id=${clientId}`,
+                        `https://api-v2.soundcloud.com/tracks?ids=${stubIds.slice(i, i + 50).join(",")}&client_id=${clientId}`
                       )
                       .then((r) => r.json())
-                      .catch(() => []),
+                      .catch(() => [])
                   );
                 }
                 const results = await Promise.all(chunks);
@@ -83,9 +81,7 @@ class ShuffleFeature extends Feature {
                     });
                 });
 
-                data.tracks = data.tracks.map((t) =>
-                  !t.title && map[t.id] ? map[t.id] : t,
-                );
+                data.tracks = data.tracks.map((t) => (!t.title && map[t.id] ? map[t.id] : t));
               }
             }
           }
@@ -135,24 +131,21 @@ class ShuffleFeature extends Feature {
           .then((r) => r.json())
           .then(async (data) => {
             if (data && data.tracks && Array.isArray(data.tracks)) {
-              const stubIds = data.tracks
-                .filter((t) => !t.title && t.id)
-                .map((t) => t.id);
+              const stubIds = data.tracks.filter((t) => !t.title && t.id).map((t) => t.id);
 
               if (stubIds.length > 0) {
-                const clientId = new URL(
-                  this._scUrl,
-                  window.location.origin,
-                ).searchParams.get("client_id");
+                const clientId = new URL(this._scUrl, window.location.origin).searchParams.get(
+                  "client_id"
+                );
                 if (clientId) {
                   const chunks = [];
                   for (let i = 0; i < stubIds.length; i += 50) {
                     chunks.push(
                       fetch(
-                        `https://api-v2.soundcloud.com/tracks?ids=${stubIds.slice(i, i + 50).join(",")}&client_id=${clientId}`,
+                        `https://api-v2.soundcloud.com/tracks?ids=${stubIds.slice(i, i + 50).join(",")}&client_id=${clientId}`
                       )
                         .then((r) => r.json())
-                        .catch(() => []),
+                        .catch(() => [])
                     );
                   }
                   const results = await Promise.all(chunks);
@@ -163,9 +156,7 @@ class ShuffleFeature extends Feature {
                         map[t.id] = t;
                       });
                   });
-                  data.tracks = data.tracks.map((t) =>
-                    !t.title && map[t.id] ? map[t.id] : t,
-                  );
+                  data.tracks = data.tracks.map((t) => (!t.title && map[t.id] ? map[t.id] : t));
                 }
               }
             }
@@ -178,10 +169,7 @@ class ShuffleFeature extends Feature {
             ) {
               for (let i = data.tracks.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
-                [data.tracks[i], data.tracks[j]] = [
-                  data.tracks[j],
-                  data.tracks[i],
-                ];
+                [data.tracks[i], data.tracks[j]] = [data.tracks[j], data.tracks[i]];
               }
             }
 
@@ -197,9 +185,7 @@ class ShuffleFeature extends Feature {
             });
             Object.defineProperty(this, "getResponseHeader", {
               value: (hdr) =>
-                hdr.toLowerCase() === "content-type"
-                  ? "application/json; charset=utf-8"
-                  : null,
+                hdr.toLowerCase() === "content-type" ? "application/json; charset=utf-8" : null,
             });
 
             if (this.onreadystatechange) this.onreadystatechange();
@@ -220,11 +206,7 @@ class ShuffleFeature extends Feature {
   }
 
   async onShuffleClick(e) {
-    if (
-      !SCLIENT_CONFIG.trueShuffle ||
-      SCLIENT_CONFIG.trueShuffleMode !== "native" ||
-      !e.isTrusted
-    )
+    if (!SCLIENT_CONFIG.trueShuffle || SCLIENT_CONFIG.trueShuffleMode !== "native" || !e.isTrusted)
       return;
 
     const shuffleBtn = e.target.closest(".shuffleControl");
@@ -242,9 +224,7 @@ class ShuffleFeature extends Feature {
     const queueBtn = document.querySelector(".playbackSoundBadge__showQueue");
     if (!queueBtn) return;
 
-    const queueOpen = !!document.querySelector(
-      ".playControls__queue .queue.m-visible",
-    );
+    const queueOpen = !!document.querySelector(".playControls__queue .queue.m-visible");
 
     const hideFallback = document.createElement("style");
     hideFallback.textContent = ".queue__fallback { display: none !important; }";
@@ -276,14 +256,12 @@ class ShuffleFeature extends Feature {
             clientY: rect.top + rect.height / 2,
             bubbles: true,
             cancelable: true,
-          }),
+          })
         );
 
         await new Promise((r) => setTimeout(r, 80));
 
-        const items = document.querySelectorAll(
-          ".queue__itemWrapper:not(.queue__fallback)",
-        );
+        const items = document.querySelectorAll(".queue__itemWrapper:not(.queue__fallback)");
         if (items.length === 0) {
           blank++;
           if (blank > 10) break;

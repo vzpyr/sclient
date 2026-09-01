@@ -12,11 +12,7 @@ function startObserver() {
     obsTimer = setTimeout(() => {
       for (const f of FEATURES) {
         if (!f.enabled) continue;
-        if (
-          f.injected &&
-          typeof f.checkInjected === "function" &&
-          !f.checkInjected()
-        ) {
+        if (f.injected && typeof f.checkInjected === "function" && !f.checkInjected()) {
           f.injected = false;
         }
         if (!f.injected && typeof f.injectUI === "function") {
@@ -27,8 +23,7 @@ function startObserver() {
     }, 100);
   });
 
-  const begin = () =>
-    observer.observe(document.body, { childList: true, subtree: true });
+  const begin = () => observer.observe(document.body, { childList: true, subtree: true });
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", begin);
   } else {
@@ -38,9 +33,7 @@ function startObserver() {
 
 function applyAppearance() {
   if (SCLIENT_CONFIG.customFont && SCLIENT_CONFIG.customFontFamily) {
-    const familyUrl = SCLIENT_CONFIG.customFontFamily
-      .trim()
-      .replace(/\s+/g, "+");
+    const familyUrl = SCLIENT_CONFIG.customFontFamily.trim().replace(/\s+/g, "+");
     const css = `
       @import url('https://fonts.googleapis.com/css2?family=${familyUrl}:wght@400;500;700&display=swap');
       html, body, * {
@@ -81,27 +74,19 @@ function applyAppearance() {
       body.theme-light div.MuiBox-root.mui-1i9nq8r {
         background-color: ${bgColor} !important;
       }
-    `,
+    `
     );
 
     const syncBackgroundIframes = () => {
-      const bgStyle = document.getElementById(
-        "sclient-custom-background-color",
-      );
+      const bgStyle = document.getElementById("sclient-custom-background-color");
       if (!bgStyle) return;
       document.querySelectorAll("iframe").forEach((iframe) => {
         try {
           if (iframe.contentDocument && iframe.contentDocument.head) {
-            if (
-              !iframe.contentDocument.getElementById(
-                "sclient-custom-background-color",
-              )
-            ) {
+            if (!iframe.contentDocument.getElementById("sclient-custom-background-color")) {
               iframe.contentDocument.head.appendChild(bgStyle.cloneNode(true));
             }
-            let force = iframe.contentDocument.getElementById(
-              "sclient-custom-background-force",
-            );
+            let force = iframe.contentDocument.getElementById("sclient-custom-background-force");
             if (!force) {
               force = document.createElement("style");
               force.id = "sclient-custom-background-force";
@@ -135,9 +120,7 @@ function applyAppearance() {
           } else if (node.querySelectorAll) {
             const iframes = node.querySelectorAll("iframe");
             if (iframes.length > 0) {
-              iframes.forEach((ifr) =>
-                ifr.addEventListener("load", syncBackgroundIframes),
-              );
+              iframes.forEach((ifr) => ifr.addEventListener("load", syncBackgroundIframes));
               shouldSync = true;
             }
           }
@@ -148,23 +131,16 @@ function applyAppearance() {
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", () => {
-        backgroundObs.observe(document.documentElement, {
-          childList: true,
-          subtree: true,
-        });
+        backgroundObs.observe(document.documentElement, { childList: true, subtree: true });
       });
     } else {
-      backgroundObs.observe(document.documentElement, {
-        childList: true,
-        subtree: true,
-      });
+      backgroundObs.observe(document.documentElement, { childList: true, subtree: true });
     }
   }
 }
 
 function runCustomCss() {
-  if (SCLIENT_CONFIG.customCss)
-    injectStyle("sclient-custom-css", SCLIENT_CONFIG.customCss);
+  if (SCLIENT_CONFIG.customCss) injectStyle("sclient-custom-css", SCLIENT_CONFIG.customCss);
 }
 
 function runCustomJs() {
@@ -175,8 +151,7 @@ function runCustomJs() {
         s.textContent = SCLIENT_CONFIG.customJs;
         document.body.appendChild(s);
       };
-      if (document.readyState === "loading")
-        document.addEventListener("DOMContentLoaded", run);
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
       else run();
     }
   } catch (e) {

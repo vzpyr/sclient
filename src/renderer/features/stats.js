@@ -138,8 +138,7 @@ class StatsFeature extends Feature {
           this.hasRecorded = false;
           this.startTime = evt.timestamp;
           if (evt.trackData) {
-            this.threshold =
-              Math.min(evt.trackData.duration / 1000 / 2, 240) * 1000;
+            this.threshold = Math.min(evt.trackData.duration / 1000 / 2, 240) * 1000;
             if (evt.isPlaying) this.setStatus("Listening...", "#789cff");
           } else {
             this.trackData = null;
@@ -148,10 +147,7 @@ class StatsFeature extends Feature {
         }
 
         if (this.trackData && evt.isPlaying) {
-          if (
-            !this.hasRecorded &&
-            evt.timestamp - this.startTime >= this.threshold
-          ) {
+          if (!this.hasRecorded && evt.timestamp - this.startTime >= this.threshold) {
             this.record(this.trackData, Date.now());
             this.hasRecorded = true;
           } else if (!this.hasRecorded) {
@@ -160,7 +156,7 @@ class StatsFeature extends Feature {
         } else if (!evt.isPlaying && this.trackData) {
           this.setStatus(
             this.hasRecorded ? "Recorded!" : "Paused",
-            this.hasRecorded ? "#5f5" : "#f9a826",
+            this.hasRecorded ? "#5f5" : "#f9a826"
           );
         }
       });
@@ -198,8 +194,7 @@ class StatsFeature extends Feature {
       const artist = getArtistFromTrack(t);
       const publisher =
         (t.publisher_metadata &&
-          (t.publisher_metadata.publisher ||
-            t.publisher_metadata.writer_composer)) ||
+          (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
         (t.user && (t.user.username || t.user.full_name)) ||
         t.label_name ||
         (t.publisher_metadata && t.publisher_metadata.artist) ||
@@ -233,19 +228,16 @@ class StatsFeature extends Feature {
   }
 
   wireFilters() {
-    document
-      .querySelectorAll("#sclient-stats-content .sclient-btn[data-source]")
-      .forEach((b) => {
-        b.addEventListener("click", () => {
-          this.currentSource = b.dataset.source;
-          this.renderAnalytics();
-        });
+    document.querySelectorAll("#sclient-stats-content .sclient-btn[data-source]").forEach((b) => {
+      b.addEventListener("click", () => {
+        this.currentSource = b.dataset.source;
+        this.renderAnalytics();
       });
+    });
   }
 
   upsertChart(id, index, config) {
-    const existing =
-      index < this.activeCharts.length ? this.activeCharts[index] : null;
+    const existing = index < this.activeCharts.length ? this.activeCharts[index] : null;
     if (existing && existing.canvas && existing.canvas.id === id) {
       existing.data = config.data;
       existing.options = config.options;
@@ -295,10 +287,7 @@ class StatsFeature extends Feature {
     let entries = data.map((d) => {
       let track;
       try {
-        track =
-          typeof d.track_json === "string"
-            ? JSON.parse(d.track_json)
-            : d.track_json;
+        track = typeof d.track_json === "string" ? JSON.parse(d.track_json) : d.track_json;
       } catch (e) {
         track = {};
       }
@@ -323,13 +312,8 @@ class StatsFeature extends Feature {
     }
 
     const totalPlays = entries.length;
-    const totalDuration = entries.reduce(
-      (s, e) => s + (e.track.duration || 0),
-      0,
-    );
-    const uniqueArtists = new Set(
-      entries.map((e) => getArtistFromTrack(e.track)),
-    ).size;
+    const totalDuration = entries.reduce((s, e) => s + (e.track.duration || 0), 0);
+    const uniqueArtists = new Set(entries.map((e) => getArtistFromTrack(e.track))).size;
     const uniqueTracks = new Set(entries.map((e) => e.track_id)).size;
 
     const artistCounts = {};
@@ -376,10 +360,7 @@ class StatsFeature extends Feature {
       dayCounts[new Date(e.played_at).getDay()]++;
     });
 
-    const recent =
-      this.currentLimit === "all"
-        ? entries
-        : entries.slice(0, this.currentLimit);
+    const recent = this.currentLimit === "all" ? entries : entries.slice(0, this.currentLimit);
     const accent = getAccent();
     const colors = [accent, ...CHART_COLORS];
 
@@ -438,7 +419,7 @@ class StatsFeature extends Feature {
                 <td style="color: #aaa;">${getArtistFromTrack(e.track)}</td>
                 <td style="color: #888;">${getGenre(e.track)}</td>
                 <td style="color: #888;">${fmtDuration(e.track.duration || 0)}</td>
-              </tr>`,
+              </tr>`
               )
               .join("")}
           </tbody>
@@ -454,8 +435,7 @@ class StatsFeature extends Feature {
     const limitSel = document.getElementById("sclient-stats-limit-select");
     if (limitSel) {
       limitSel.addEventListener("change", () => {
-        this.currentLimit =
-          limitSel.value === "all" ? "all" : parseInt(limitSel.value);
+        this.currentLimit = limitSel.value === "all" ? "all" : parseInt(limitSel.value);
         this.renderAnalytics();
       });
     }
@@ -464,11 +444,8 @@ class StatsFeature extends Feature {
 
     const isLight = document.body.classList.contains("theme-light");
     Chart.defaults.color = isLight ? "#444" : "#888";
-    Chart.defaults.borderColor = isLight
-      ? "rgba(0,0,0,0.1)"
-      : "rgba(255,255,255,0.06)";
-    Chart.defaults.font.family =
-      "'Inter', system-ui, -apple-system, sans-serif";
+    Chart.defaults.borderColor = isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.06)";
+    Chart.defaults.font.family = "'Inter', system-ui, -apple-system, sans-serif";
 
     this.upsertChart("sclient-chart-artists", 0, {
       type: "bar",
@@ -479,9 +456,7 @@ class StatsFeature extends Feature {
           {
             label: "Plays",
             data: topArtists.map((a) => a[1]),
-            backgroundColor: topArtists.map(
-              (_, i) => colors[i % colors.length] + "99",
-            ),
+            backgroundColor: topArtists.map((_, i) => colors[i % colors.length] + "99"),
             borderColor: topArtists.map((_, i) => colors[i % colors.length]),
             borderWidth: 1,
             borderRadius: 4,
@@ -507,15 +482,13 @@ class StatsFeature extends Feature {
       indexAxis: "y",
       data: {
         labels: topTracks.map((t) =>
-          t.title.length > 30 ? t.title.slice(0, 30) + "..." : t.title,
+          t.title.length > 30 ? t.title.slice(0, 30) + "..." : t.title
         ),
         datasets: [
           {
             label: "Plays",
             data: topTracks.map((t) => t.count),
-            backgroundColor: topTracks.map(
-              (_, i) => colors[i % colors.length] + "99",
-            ),
+            backgroundColor: topTracks.map((_, i) => colors[i % colors.length] + "99"),
             borderColor: topTracks.map((_, i) => colors[i % colors.length]),
             borderWidth: 1,
             borderRadius: 4,
@@ -551,9 +524,7 @@ class StatsFeature extends Feature {
         datasets: [
           {
             data: genreData,
-            backgroundColor: genreLabels.map(
-              (_, i) => colors[i % colors.length] + "CC",
-            ),
+            backgroundColor: genreLabels.map((_, i) => colors[i % colors.length] + "CC"),
             borderColor: "rgba(10,10,10,0.5)",
             borderWidth: 2,
           },
@@ -616,9 +587,7 @@ class StatsFeature extends Feature {
           {
             label: "Plays",
             data: dayCounts,
-            backgroundColor: DAYS.map(
-              (_, i) => colors[i % colors.length] + "88",
-            ),
+            backgroundColor: DAYS.map((_, i) => colors[i % colors.length] + "88"),
             borderColor: DAYS.map((_, i) => colors[i % colors.length]),
             borderWidth: 1,
             borderRadius: 6,
@@ -649,8 +618,7 @@ class StatsFeature extends Feature {
 
     const overlay = document.getElementById("sclient-stats-overlay");
     if (overlay) {
-      overlay.style.display =
-        overlay.style.display === "flex" ? "none" : "flex";
+      overlay.style.display = overlay.style.display === "flex" ? "none" : "flex";
       if (overlay.style.display === "flex") {
         this.currentSource = "";
         this.renderAnalytics();
@@ -720,65 +688,53 @@ class StatsFeature extends Feature {
       document.removeEventListener("keydown", onEsc);
     };
 
-    document
-      .getElementById("sclient-stats-close-btn")
-      .addEventListener("click", close);
+    document.getElementById("sclient-stats-close-btn").addEventListener("click", close);
 
-    document
-      .getElementById("sclient-stats-days-select")
-      .addEventListener("change", () => {
-        const val = document.getElementById("sclient-stats-days-select").value;
-        this.currentDays = val ? parseInt(val) : null;
+    document.getElementById("sclient-stats-days-select").addEventListener("change", () => {
+      const val = document.getElementById("sclient-stats-days-select").value;
+      this.currentDays = val ? parseInt(val) : null;
+      this.renderAnalytics();
+    });
+
+    document.getElementById("sclient-stats-export-btn").addEventListener("click", async () => {
+      try {
+        await sendBridge("stats_export_db");
+        if (typeof showToast !== "undefined") showToast("Stats exported successfully");
+      } catch (e) {
+        if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
+          if (typeof showToast !== "undefined") showToast("Export failed: " + e.message);
+        }
+      }
+    });
+
+    document.getElementById("sclient-stats-import-btn").addEventListener("click", async () => {
+      try {
+        const filePath = await sendBridge("stats_pick_import_file");
+        if (!filePath) return;
+
+        let overwrite = false;
+        if (typeof showConfirm !== "undefined") {
+          const choice = await showConfirm(
+            "You selected a database file to import.\n\nDo you want to completely overwrite your existing stats, or merge them together?",
+            [
+              { id: "cancel", text: "Cancel", type: "secondary" },
+              { id: "merge", text: "Merge", type: "primary" },
+              { id: "overwrite", text: "Overwrite", type: "danger" },
+            ]
+          );
+          if (choice === "cancel" || choice === false) return;
+          overwrite = choice === "overwrite";
+        }
+
+        await sendBridge("stats_execute_import", { filePath, overwrite });
+        if (typeof showToast !== "undefined") showToast("Stats imported successfully");
         this.renderAnalytics();
-      });
-
-    document
-      .getElementById("sclient-stats-export-btn")
-      .addEventListener("click", async () => {
-        try {
-          await sendBridge("stats_export_db");
-          if (typeof showToast !== "undefined")
-            showToast("Stats exported successfully");
-        } catch (e) {
-          if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
-            if (typeof showToast !== "undefined")
-              showToast("Export failed: " + e.message);
-          }
+      } catch (e) {
+        if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
+          if (typeof showToast !== "undefined") showToast("Import failed: " + e.message);
         }
-      });
-
-    document
-      .getElementById("sclient-stats-import-btn")
-      .addEventListener("click", async () => {
-        try {
-          const filePath = await sendBridge("stats_pick_import_file");
-          if (!filePath) return;
-
-          let overwrite = false;
-          if (typeof showConfirm !== "undefined") {
-            const choice = await showConfirm(
-              "You selected a database file to import.\n\nDo you want to completely overwrite your existing stats, or merge them together?",
-              [
-                { id: "cancel", text: "Cancel", type: "secondary" },
-                { id: "merge", text: "Merge", type: "primary" },
-                { id: "overwrite", text: "Overwrite", type: "danger" },
-              ],
-            );
-            if (choice === "cancel" || choice === false) return;
-            overwrite = choice === "overwrite";
-          }
-
-          await sendBridge("stats_execute_import", { filePath, overwrite });
-          if (typeof showToast !== "undefined")
-            showToast("Stats imported successfully");
-          this.renderAnalytics();
-        } catch (e) {
-          if (e.message !== "cancelled" && e.message !== "Error: cancelled") {
-            if (typeof showToast !== "undefined")
-              showToast("Import failed: " + e.message);
-          }
-        }
-      });
+      }
+    });
   }
 }
 

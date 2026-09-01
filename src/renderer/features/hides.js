@@ -12,10 +12,7 @@ class HideUpsellFeature extends Feature {
   init() {
     if (this.enabled) return;
     super.init();
-    this.addStyle(
-      "sclient-hide-upsell",
-      ".header__upsellWrapper { display: none !important; }",
-    );
+    this.addStyle("sclient-hide-upsell", ".header__upsellWrapper { display: none !important; }");
   }
 }
 
@@ -35,7 +32,7 @@ class HideArtistsFeature extends Feature {
     super.init();
     this.addStyle(
       "sclient-hide-artists",
-      ".header__forArtistsButton, .sidebarModule:has(.sidebarModule__webiEmbeddedModule) { display: none !important; }",
+      ".header__forArtistsButton, .sidebarModule:has(.sidebarModule__webiEmbeddedModule) { display: none !important; }"
     );
   }
 }

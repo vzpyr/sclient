@@ -31,10 +31,7 @@ class LazyScrollFeature extends Feature {
       scrolling = !scrolling;
       if (scrolling) {
         btn.classList.add("active");
-        this.interval = setInterval(
-          () => window.scrollBy({ top: 300, behavior: "auto" }),
-          16,
-        );
+        this.interval = setInterval(() => window.scrollBy({ top: 300, behavior: "auto" }), 16);
       } else {
         btn.classList.remove("active");
         clearInterval(this.interval);

@@ -74,38 +74,27 @@ function register({ ipcMain, session, app }) {
         const oldAdblock = config.adblockEnabled;
         config.adblockEnabled = !!value;
         config.set("features.adblock", String(Boolean(value)));
-        if (
-          oldAdblock !== config.adblockEnabled &&
-          global._blocker &&
-          global._session
-        ) {
-          if (config.adblockEnabled)
-            global._blocker.enableBlockingInSession(global._session);
+        if (oldAdblock !== config.adblockEnabled && global._blocker && global._session) {
+          if (config.adblockEnabled) global._blocker.enableBlockingInSession(global._session);
           else global._blocker.disableBlockingInSession(global._session);
         }
       } else {
         config.set(key, typeof value === "boolean" ? String(value) : value);
-        if (key === "stats.api_sync")
-          config.statsApiSyncEnabled = Boolean(value);
-        if (key === "stats.local_tracking")
-          config.statsLocalTrackingEnabled = Boolean(value);
+        if (key === "stats.api_sync") config.statsApiSyncEnabled = Boolean(value);
+        if (key === "stats.local_tracking") config.statsLocalTrackingEnabled = Boolean(value);
       }
     }
   });
 
   ipcMain.handle("get_active_account", () => config.getActiveAccount());
-  ipcMain.handle("set_active_account", (_e, args) =>
-    config.setActiveAccount(args.name),
-  );
+  ipcMain.handle("set_active_account", (_e, args) => config.setActiveAccount(args.name));
 
   ipcMain.handle("get_accounts", () => {
     const dir = path.join(app.getPath("userData"), "Partitions");
     if (!fs.existsSync(dir)) return ["main"];
     const accs = [
       "main",
-      ...fs
-        .readdirSync(dir)
-        .filter((f) => fs.statSync(path.join(dir, f)).isDirectory()),
+      ...fs.readdirSync(dir).filter((f) => fs.statSync(path.join(dir, f)).isDirectory()),
     ];
     return [...new Set(accs)];
   });
@@ -127,16 +116,12 @@ function register({ ipcMain, session, app }) {
   });
 
   ipcMain.handle("clear_data", async () => {
-    await session
-      .fromPartition(partitionName(config.getActiveAccount()))
-      .clearStorageData();
+    await session.fromPartition(partitionName(config.getActiveAccount())).clearStorageData();
     return "done";
   });
 
   ipcMain.handle("clear_data_and_restart", async () => {
-    await session
-      .fromPartition(partitionName(config.getActiveAccount()))
-      .clearStorageData();
+    await session.fromPartition(partitionName(config.getActiveAccount())).clearStorageData();
     app.relaunch({ args: [path.join(__dirname, "..", "..")] });
     app.exit(0);
   });

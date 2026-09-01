@@ -24,7 +24,7 @@ class MprisFeature extends Feature {
         evt.trackData && evt.trackData.artwork_url
           ? evt.trackData.artwork_url.replace(
               /-(t50x50|badge|large|t120x120)\.(jpg|png)/i,
-              "-t500x500.$2",
+              "-t500x500.$2"
             )
           : "";
       window.postMessage(
@@ -41,16 +41,12 @@ class MprisFeature extends Feature {
             volume: getActiveMedia()?.volume ?? 1,
           },
         },
-        "*",
+        "*"
       );
     });
 
     const onCommand = (event) => {
-      if (
-        event.source !== window ||
-        !event.data ||
-        event.data.source !== "sclient-mpris-command"
-      )
+      if (event.source !== window || !event.data || event.data.source !== "sclient-mpris-command")
         return;
       const data = event.data.data;
       if (data) playerCommand(data);

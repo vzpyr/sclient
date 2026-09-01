@@ -32,9 +32,7 @@ class DiscordRpcFeature extends Feature {
         if (!meta) return;
 
         const title = meta.title || "";
-        const artist = evt.trackData
-          ? getArtistFromTrack(evt.trackData)
-          : meta.artist || "";
+        const artist = evt.trackData ? getArtistFromTrack(evt.trackData) : meta.artist || "";
         const playing = evt.isPlaying;
 
         let artwork = "";
@@ -45,8 +43,7 @@ class DiscordRpcFeature extends Feature {
         let timeEnd = 0;
         if (playing) {
           timeStart = Math.floor(evt.timestamp - evt.position * 1000);
-          if (evt.duration > 0)
-            timeEnd = Math.floor(timeStart + evt.duration * 1000);
+          if (evt.duration > 0) timeEnd = Math.floor(timeStart + evt.duration * 1000);
         }
 
         const drift = Math.abs(timeStart - this.last.timeStart);

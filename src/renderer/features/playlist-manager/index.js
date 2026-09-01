@@ -15,9 +15,7 @@ function pmSortedFiltered() {
   if (q) list = list.filter((p) => (p.title || "").toLowerCase().includes(q));
   switch (_pmState.sortMode) {
     case "modified":
-      list.sort((a, b) =>
-        (b.last_modified || "").localeCompare(a.last_modified || ""),
-      );
+      list.sort((a, b) => (b.last_modified || "").localeCompare(a.last_modified || ""));
       break;
     case "count":
       list.sort((a, b) => pmTrackCount(b) - pmTrackCount(a));
@@ -57,18 +55,14 @@ function pmRenderSidebar() {
           ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
           : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
       const subtitle =
-        count === 0
-          ? "empty"
-          : `${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}`;
+        count === 0 ? "empty" : `${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}`;
       return `<div class="pm-pl${active ? " pm-pl-active" : ""}" data-pid="${p.id}" data-title="${(
         p.title || ""
       ).replace(
         /"/g,
-        "&quot;",
+        "&quot;"
       )}" tabindex="0" style="display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;cursor:pointer;transition:background .15s;${
-        active
-          ? `background:${accent}22;box-shadow:inset 2px 0 0 ${accent};`
-          : ""
+        active ? `background:${accent}22;box-shadow:inset 2px 0 0 ${accent};` : ""
       }">
         <div style="width:40px;height:40px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#222;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/></div>
         <div style="min-width:0;flex:1;">
@@ -97,9 +91,7 @@ function pmRenderSidebar() {
       } catch (_) {}
       el.classList.add("pm-droptarget");
     });
-    el.addEventListener("dragleave", () =>
-      el.classList.remove("pm-droptarget"),
-    );
+    el.addEventListener("dragleave", () => el.classList.remove("pm-droptarget"));
     el.addEventListener("drop", (e) => {
       e.preventDefault();
       el.classList.remove("pm-droptarget");
@@ -182,7 +174,7 @@ function _pmEnsureDetailStyle() {
     .pm-chip { display:inline-flex; align-items:center; gap:4px; background:${accent}33; color:#fff; padding:2px 8px; border-radius:12px; font-size:12px; }
     .pm-chip-x { cursor:pointer; opacity:0.7; }
     .pm-chip-x:hover { opacity:1; }
-    `,
+    `
   );
 }
 
@@ -194,16 +186,13 @@ function pmRenderDetailHeader() {
   if (!pl) return;
   const accent = getAccent();
   const count = pmTrackCount(pl);
-  const total =
-    pl.duration || (pl.tracks || []).reduce((s, t) => s + (t.duration || 0), 0);
+  const total = pl.duration || (pl.tracks || []).reduce((s, t) => s + (t.duration || 0), 0);
   const badge =
     pl.sharing === "private"
       ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
       : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
   const plPermalink =
-    pl.user && pl.permalink
-      ? `/${pl.user.permalink}/sets/${pl.permalink}`
-      : pl.permalink_url || "";
+    pl.user && pl.permalink ? `/${pl.user.permalink}/sets/${pl.permalink}` : pl.permalink_url || "";
   const secretLink =
     pl.sharing === "private" && pl.secret_token && pl.permalink_url
       ? pl.permalink_url.endsWith("/" + pl.secret_token)
@@ -252,18 +241,14 @@ function pmRenderDetailHeader() {
     secretLinkBtn.addEventListener("click", () => {
       navigator.clipboard.writeText(secretLink).then(
         () => showToast("Secret link copied to clipboard!"),
-        () => showToast("Failed to copy secret link."),
+        () => showToast("Failed to copy secret link.")
       );
     });
   }
 
   pane.querySelector("#pm-edit-btn").addEventListener("click", pmOpenEditor);
-  pane
-    .querySelector("#pm-export-btn")
-    .addEventListener("click", () => pmExportPlaylist());
-  pane
-    .querySelector("#pm-delete-btn")
-    .addEventListener("click", pmDeletePlaylist);
+  pane.querySelector("#pm-export-btn").addEventListener("click", () => pmExportPlaylist());
+  pane.querySelector("#pm-delete-btn").addEventListener("click", pmDeletePlaylist);
   pane.querySelector("#pm-track-filter").addEventListener("input", (e) => {
     _pmState.trackFilterText = e.target.value;
     pmRenderTracks();
@@ -317,12 +302,8 @@ function pmRenderBulkBar() {
   bar
     .querySelector("#pm-bulk-copy")
     .addEventListener("click", () => pmCopyToDialog([..._pmState.selection]));
-  bar
-    .querySelector("#pm-bulk-remove")
-    .addEventListener("click", () => pmRemoveSelected());
-  bar
-    .querySelector("#pm-bulk-export")
-    .addEventListener("click", () => pmExportSelectedJSON());
+  bar.querySelector("#pm-bulk-remove").addEventListener("click", () => pmRemoveSelected());
+  bar.querySelector("#pm-bulk-export").addEventListener("click", () => pmExportSelectedJSON());
 }
 
 function pmRenderTracks() {
@@ -370,9 +351,7 @@ function pmRenderTracksKeepScroll() {
 }
 
 function pmOrderedSelectedIds(pl) {
-  return (pl.tracks || [])
-    .map((t) => t.id)
-    .filter((id) => _pmState.selection.has(id));
+  return (pl.tracks || []).map((t) => t.id).filter((id) => _pmState.selection.has(id));
 }
 
 function pmWireTracks() {
@@ -423,7 +402,7 @@ function pmWireTracks() {
         pmCloseContextMenu();
         pmNavigateInPlace(btn.dataset.url);
       },
-      true,
+      true
     );
 
     row.addEventListener("contextmenu", (e) => {
@@ -448,10 +427,7 @@ function pmWireTracks() {
         const scroll = document.getElementById("pm-track-scroll");
         if (scroll)
           scroll.querySelectorAll(".pm-track").forEach((r) => {
-            r.classList.toggle(
-              "pm-track-selected",
-              Number(r.dataset.id) === id,
-            );
+            r.classList.toggle("pm-track-selected", Number(r.dataset.id) === id);
           });
         pmRenderBulkBar();
       }
@@ -475,8 +451,7 @@ function pmWireTracks() {
   scroll.ondragover = (e) => {
     if (!_pmState.dragging) return;
     e.preventDefault();
-    if (_pmState.dragging.fromPlaylist !== (pmCurrent() && pmCurrent().id))
-      return;
+    if (_pmState.dragging.fromPlaylist !== (pmCurrent() && pmCurrent().id)) return;
     pmClearDropIndicator();
     const row = e.target.closest(".pm-track");
     if (!row) {
@@ -490,10 +465,7 @@ function pmWireTracks() {
     row.classList.add(after ? "pm-drop-after" : "pm-drop-before");
   };
   scroll.ondrop = (e) => {
-    if (
-      !_pmState.dragging ||
-      _pmState.dragging.fromPlaylist !== (pmCurrent() && pmCurrent().id)
-    )
+    if (!_pmState.dragging || _pmState.dragging.fromPlaylist !== (pmCurrent() && pmCurrent().id))
       return;
     e.preventDefault();
     const pl = pmCurrent();
@@ -510,8 +482,7 @@ function pmWireTracks() {
       const placeAfter = e.clientY > rect.top + rect.height / 2;
       const cutoff = placeAfter ? fullIdx + 1 : fullIdx;
       let rIdx = 0;
-      for (let i = 0; i < cutoff; i++)
-        if (!draggedIds.includes(all[i].id)) rIdx++;
+      for (let i = 0; i < cutoff; i++) if (!draggedIds.includes(all[i].id)) rIdx++;
       insertRestIndex = rIdx;
     }
 
@@ -532,11 +503,7 @@ function pmClearDropIndicator() {
 async function pmApplyNewOrder(newIds) {
   const pl = pmCurrent();
   if (!pl) return;
-  if (
-    JSON.stringify(newIds) ===
-    JSON.stringify((pl.tracks || []).map((t) => t.id))
-  )
-    return;
+  if (JSON.stringify(newIds) === JSON.stringify((pl.tracks || []).map((t) => t.id))) return;
 
   const byId = new Map((pl.tracks || []).map((t) => [t.id, t]));
 
@@ -563,14 +530,10 @@ async function pmRemoveSelected(idsArg) {
   const ids = Array.isArray(idsArg) ? idsArg : [..._pmState.selection];
   if (ids.length === 0) return;
   if (ids.length > 5) {
-    const ok = await showConfirm(
-      `Remove ${ids.length} tracks from "${pl.title || "Untitled"}"?`,
-    );
+    const ok = await showConfirm(`Remove ${ids.length} tracks from "${pl.title || "Untitled"}"?`);
     if (!ok) return;
   }
-  const newIds = (pl.tracks || [])
-    .map((t) => t.id)
-    .filter((id) => !ids.includes(id));
+  const newIds = (pl.tracks || []).map((t) => t.id).filter((id) => !ids.includes(id));
   const byId = new Map((pl.tracks || []).map((t) => [t.id, t]));
   const prevTracks = pl.tracks.slice();
   const prevDur = pl.duration;
@@ -596,9 +559,7 @@ async function pmRemoveSelected(idsArg) {
 }
 
 async function pmCopyTo(targetPl, ids) {
-  const newIds = (targetPl.tracks || [])
-    .map((t) => t.id)
-    .filter((id) => !ids.includes(id));
+  const newIds = (targetPl.tracks || []).map((t) => t.id).filter((id) => !ids.includes(id));
   newIds.push(...ids);
   try {
     await api.putTracks(targetPl.id, newIds);
@@ -611,13 +572,8 @@ async function pmCopyTo(targetPl, ids) {
         return ((src && src.tracks) || []).find((t) => t.id === id);
       })
       .filter(Boolean);
-    targetPl.duration = targetPl.tracks.reduce(
-      (s, t) => s + (t.duration || 0),
-      0,
-    );
-    showToast(
-      `Copied ${ids.length} track${ids.length === 1 ? "" : "s"} to "${targetPl.title}"`,
-    );
+    targetPl.duration = targetPl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
+    showToast(`Copied ${ids.length} track${ids.length === 1 ? "" : "s"} to "${targetPl.title}"`);
     pmRenderSidebar();
   } catch (e) {
     showToast("Error: " + (e.message || e));
@@ -628,9 +584,7 @@ async function pmMoveTo(targetPl, ids) {
   const src = pmCurrent();
   if (!src || src.id === targetPl.id) return;
 
-  const srcNew = (src.tracks || [])
-    .map((t) => t.id)
-    .filter((id) => !ids.includes(id));
+  const srcNew = (src.tracks || []).map((t) => t.id).filter((id) => !ids.includes(id));
   try {
     await api.putTracks(src.id, srcNew);
   } catch (e) {
@@ -649,20 +603,13 @@ async function pmMoveTo(targetPl, ids) {
   _pmState.selection = new Set();
   _pmState.anchorId = null;
 
-  const tgtNew = (targetPl.tracks || [])
-    .map((t) => t.id)
-    .filter((id) => !ids.includes(id));
+  const tgtNew = (targetPl.tracks || []).map((t) => t.id).filter((id) => !ids.includes(id));
   tgtNew.push(...ids);
   try {
     await api.putTracks(targetPl.id, tgtNew);
     targetPl.tracks = [...(targetPl.tracks || []), ...moved];
-    targetPl.duration = targetPl.tracks.reduce(
-      (s, t) => s + (t.duration || 0),
-      0,
-    );
-    showToast(
-      `Moved ${ids.length} track${ids.length === 1 ? "" : "s"} to "${targetPl.title}"`,
-    );
+    targetPl.duration = targetPl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
+    showToast(`Moved ${ids.length} track${ids.length === 1 ? "" : "s"} to "${targetPl.title}"`);
   } catch (e) {
     showToast("Move failed, restoring source: " + (e.message || e));
     try {
@@ -688,11 +635,7 @@ function pmOpenContextMenu(x, y) {
   const accent = getAccent();
   const n = _pmState.selection.size;
   const items = [
-    {
-      label: `Remove from playlist`,
-      danger: true,
-      act: () => pmRemoveSelected(),
-    },
+    { label: `Remove from playlist`, danger: true, act: () => pmRemoveSelected() },
     { label: `Copy to…`, act: () => pmCopyToDialog([..._pmState.selection]) },
     { label: `Move to…`, act: () => pmMoveToDialog([..._pmState.selection]) },
     { label: `Export selected as JSON`, act: pmExportSelectedJSON },
@@ -712,9 +655,7 @@ function pmOpenContextMenu(x, y) {
     }
     const el = document.createElement("div");
     el.className =
-      "pm-ctx-item" +
-      (it.danger ? " pm-ctx-danger" : "") +
-      (it.disabled ? " pm-ctx-disabled" : "");
+      "pm-ctx-item" + (it.danger ? " pm-ctx-danger" : "") + (it.disabled ? " pm-ctx-disabled" : "");
     el.textContent = it.label;
     if (!it.disabled)
       el.addEventListener("click", () => {
@@ -730,8 +671,7 @@ function pmOpenContextMenu(x, y) {
   _pmState.contextMenu = menu;
 
   const dismiss = (ev) => {
-    if (_pmState.contextMenu && _pmState.contextMenu.contains(ev.target))
-      return;
+    if (_pmState.contextMenu && _pmState.contextMenu.contains(ev.target)) return;
     pmCloseContextMenu();
     document.removeEventListener("mousedown", dismiss, true);
     document.removeEventListener("keydown", dismiss, true);
@@ -787,10 +727,7 @@ function pmPickPlaylist(title, excludePid) {
 
 async function pmCopyToDialog(ids) {
   if (ids.length === 0) return;
-  const targetId = await pmPickPlaylist(
-    "Copy to playlist…",
-    _pmState.selectedId,
-  );
+  const targetId = await pmPickPlaylist("Copy to playlist…", _pmState.selectedId);
   if (targetId == null) return;
   const target = _pmState.playlists.find((p) => p.id === targetId);
   if (target) await pmCopyTo(target, ids);
@@ -798,10 +735,7 @@ async function pmCopyToDialog(ids) {
 
 async function pmMoveToDialog(ids) {
   if (ids.length === 0) return;
-  const targetId = await pmPickPlaylist(
-    "Move to playlist…",
-    _pmState.selectedId,
-  );
+  const targetId = await pmPickPlaylist("Move to playlist…", _pmState.selectedId);
   if (targetId == null) return;
   const target = _pmState.playlists.find((p) => p.id === targetId);
   if (target) await pmMoveTo(target, ids);
@@ -834,15 +768,13 @@ async function pmDeletePlaylist() {
   const pl = pmCurrent();
   if (!pl) return;
   const ok = await showConfirm(
-    `Delete playlist "${pl.title || "Untitled"}"? This cannot be undone.`,
+    `Delete playlist "${pl.title || "Untitled"}"? This cannot be undone.`
   );
   if (!ok) return;
   try {
     await api.del(pl.id);
     _pmState.playlists = _pmState.playlists.filter((p) => p.id !== pl.id);
-    _pmState.selectedId = _pmState.playlists.length
-      ? _pmState.playlists[0].id
-      : null;
+    _pmState.selectedId = _pmState.playlists.length ? _pmState.playlists[0].id : null;
     _pmState.selection = new Set();
     _pmState.anchorId = null;
     pmRenderSidebar();
@@ -864,10 +796,7 @@ async function pmExportSelectedJSON() {
 async function pmExportJSON(defaultName, obj) {
   try {
     const content = JSON.stringify(obj, null, 2);
-    const res = await sendBridge("playlist_save_file", {
-      defaultName,
-      content,
-    });
+    const res = await sendBridge("playlist_save_file", { defaultName, content });
     if (res && res.canceled) return;
     showToast("Exported " + defaultName);
   } catch (e) {
@@ -930,7 +859,7 @@ function createPlaylistManagerOverlay() {
     .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--sclient-bg-surface); }
 .sclient-select { -webkit-appearance:none; appearance:none; background:var(--sclient-bg-surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 10px center / 16px 16px; border:1px solid var(--sclient-border); color:var(--sclient-text-main); border-radius:var(--sclient-radius-md); padding:8px 32px 8px 12px; font-family:var(--sclient-font-sans); font-size:var(--sclient-text-base); height:37px; box-sizing:border-box; outline:none; cursor:pointer; }
 body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>"); }
-    `,
+    `
   );
 
   const overlay = document.createElement("div");
@@ -989,9 +918,7 @@ body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8
   }
 
   document.getElementById("pm-close-btn").addEventListener("click", close);
-  document
-    .getElementById("pm-refresh-btn")
-    .addEventListener("click", pmRefresh);
+  document.getElementById("pm-refresh-btn").addEventListener("click", pmRefresh);
   document.getElementById("pm-sort").value = _pmState.sortMode;
   document.getElementById("pm-sort").addEventListener("change", (e) => {
     _pmState.sortMode = e.target.value;
@@ -1003,9 +930,7 @@ body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8
     _pmState.filterText = e.target.value;
     pmRenderSidebar();
   });
-  document
-    .getElementById("pm-new-btn")
-    .addEventListener("click", pmNewPlaylist);
+  document.getElementById("pm-new-btn").addEventListener("click", pmNewPlaylist);
   document.getElementById("pm-import-btn").addEventListener("click", pmImport);
 
   document.addEventListener("keydown", _pmEsc);
@@ -1073,9 +998,7 @@ function pmOpenEditor() {
   const dlg = document.createElement("div");
   dlg.style.cssText = `background:var(--sclient-bg-elevated);border:1px solid var(--sclient-border);border-radius:12px;width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);`;
 
-  const releaseDate = pl.release_date
-    ? String(pl.release_date).slice(0, 10)
-    : "";
+  const releaseDate = pl.release_date ? String(pl.release_date).slice(0, 10) : "";
   dlg.innerHTML = `
     <div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
       <div style="font-size:16px;font-weight:600;">Edit playlist details</div>
@@ -1171,8 +1094,7 @@ function pmOpenEditor() {
     const open = advWrap.style.display !== "none";
     advWrap.style.display = open ? "none" : "block";
     const advSpan = advToggle.querySelector("span");
-    if (advSpan)
-      advSpan.textContent = open ? "▸ Advanced details" : "▾ Advanced details";
+    if (advSpan) advSpan.textContent = open ? "▸ Advanced details" : "▾ Advanced details";
   });
 
   let chips = (pl.tag_list || "")
@@ -1185,7 +1107,7 @@ function pmOpenEditor() {
     wrap.innerHTML = chips
       .map(
         (c, i) =>
-          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`,
+          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`
       )
       .join("");
     wrap.querySelectorAll(".pm-chip-x").forEach((x) => {
@@ -1247,7 +1169,7 @@ function pmOpenEditor() {
     if (secretInput.value && !secretInput.value.startsWith("(")) {
       navigator.clipboard.writeText(secretInput.value).then(
         () => showToast("Secret link copied"),
-        () => showToast("Copy failed"),
+        () => showToast("Copy failed")
       );
     }
   });
@@ -1279,8 +1201,7 @@ function pmOpenEditor() {
       Object.assign(pl, merged || {});
 
       if (!pl.tracks) pl.tracks = [];
-      pl.duration =
-        pl.duration || pl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
+      pl.duration = pl.duration || pl.tracks.reduce((s, t) => s + (t.duration || 0), 0);
       pmRenderSidebar();
       pmRenderDetail();
       pmCloseEditor();
@@ -1296,16 +1217,13 @@ function pmOpenEditor() {
 function pmBuildExport(pl, onlyIds) {
   const allTracks = pl.tracks || [];
   const selectedSet = onlyIds && onlyIds.length ? new Set(onlyIds) : null;
-  const filteredTracks = selectedSet
-    ? allTracks.filter((t) => selectedSet.has(t.id))
-    : allTracks;
+  const filteredTracks = selectedSet ? allTracks.filter((t) => selectedSet.has(t.id)) : allTracks;
 
   const tracksExport = filteredTracks.map((t) => {
     const artist = getArtistFromTrack(t);
     const publisher =
       (t.publisher_metadata &&
-        (t.publisher_metadata.publisher ||
-          t.publisher_metadata.writer_composer)) ||
+        (t.publisher_metadata.publisher || t.publisher_metadata.writer_composer)) ||
       (t.user && (t.user.username || t.user.full_name)) ||
       t.label_name ||
       (t.publisher_metadata && t.publisher_metadata.artist) ||
@@ -1359,8 +1277,7 @@ async function pmImport() {
   if (
     trimmed.startsWith("Track Name") ||
     trimmed.startsWith("track name") ||
-    (trimmed.includes(",") &&
-      /isrc|artist name|track name/i.test(trimmed.split("\n")[0]))
+    (trimmed.includes(",") && /isrc|artist name|track name/i.test(trimmed.split("\n")[0]))
   ) {
     let rows;
     try {
@@ -1404,21 +1321,10 @@ async function pmImport() {
   for (const t of tracks) {
     let id;
     if (typeof t === "number" && Number.isFinite(t)) id = t;
-    else if (typeof t === "string" && /^\d+$/.test(t.trim()))
-      id = Number(t.trim());
-    else if (
-      t &&
-      typeof t === "object" &&
-      typeof t.id === "number" &&
-      Number.isFinite(t.id)
-    )
+    else if (typeof t === "string" && /^\d+$/.test(t.trim())) id = Number(t.trim());
+    else if (t && typeof t === "object" && typeof t.id === "number" && Number.isFinite(t.id))
       id = t.id;
-    else if (
-      t &&
-      typeof t === "object" &&
-      typeof t.id === "string" &&
-      /^\d+$/.test(t.id.trim())
-    )
+    else if (t && typeof t === "object" && typeof t.id === "string" && /^\d+$/.test(t.id.trim()))
       id = Number(t.id.trim());
     else {
       dropped++;
@@ -1433,12 +1339,11 @@ async function pmImport() {
     showToast(
       dropped
         ? `No importable track ids found (${dropped} entries skipped)`
-        : "No importable tracks found",
+        : "No importable tracks found"
     );
     return;
   }
-  if (dropped > 0)
-    showToast(`Skipped ${dropped} non-id entr${dropped === 1 ? "y" : "ies"}`);
+  if (dropped > 0) showToast(`Skipped ${dropped} non-id entr${dropped === 1 ? "y" : "ies"}`);
 
   const mode = await showConfirm(
     `Import ${trackIds.length} track${trackIds.length === 1 ? "" : "s"} as a new playlist, or merge into an existing one?`,
@@ -1446,7 +1351,7 @@ async function pmImport() {
       { id: "cancel", text: "Cancel", type: "secondary" },
       { id: "new", text: "New playlist", type: "primary" },
       { id: "merge", text: "Merge into existing…", type: "secondary" },
-    ],
+    ]
   );
   if (mode === "cancel" || mode === false) return;
 
@@ -1470,10 +1375,7 @@ async function pmImport() {
     return;
   }
 
-  const targetId = await pmPickPlaylist(
-    "Merge into playlist…",
-    _pmState.selectedId,
-  );
+  const targetId = await pmPickPlaylist("Merge into playlist…", _pmState.selectedId);
   if (targetId == null) return;
   const target = _pmState.playlists.find((p) => p.id === targetId);
   if (!target) return;
@@ -1483,7 +1385,7 @@ async function pmImport() {
       { id: "cancel", text: "Cancel", type: "secondary" },
       { id: "append", text: "Append", type: "primary" },
       { id: "replace", text: "Replace", type: "danger" },
-    ],
+    ]
   );
   if (replace === "cancel" || replace === false) return;
   let newIds;
@@ -1550,8 +1452,7 @@ class PlaylistManagerFeature extends Feature {
       if (e.key !== "Delete") return;
       const overlay = document.getElementById("sclient-playlists-overlay");
       if (!overlay || overlay.style.display !== "flex") return;
-      const tag =
-        (document.activeElement && document.activeElement.tagName) || "";
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
       if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
       if (_pmState.editor || _pmState.contextMenu) return;
       if (_pmState.selection.size > 0) {

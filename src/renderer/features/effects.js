@@ -65,9 +65,7 @@ class EffectsFeature extends Feature {
       if (this.tagName === "AUDIO" || this.tagName === "VIDEO") {
         feature
           .applyEffectsToMedia(this)
-          .catch((e) =>
-            console.error("[SClient] Couldn't apply audio effects:", e),
-          );
+          .catch((e) => console.error("[SClient] Couldn't apply audio effects:", e));
       }
       return originalPlay.apply(this, arguments);
     };
@@ -187,8 +185,7 @@ class EffectsFeature extends Feature {
     this.on(reverbCheck, "change", updateEffects);
 
     this.cleanup.push(() => {
-      if (btnContainer.parentNode)
-        btnContainer.parentNode.removeChild(btnContainer);
+      if (btnContainer.parentNode) btnContainer.parentNode.removeChild(btnContainer);
     });
   }
 
@@ -218,8 +215,7 @@ class EffectsFeature extends Feature {
         const activeMedia = media.find((m) => !m.paused);
         if (!activeMedia) return;
 
-        if (!dataArray)
-          dataArray = new Uint8Array(window.sclientAnalyser.frequencyBinCount);
+        if (!dataArray) dataArray = new Uint8Array(window.sclientAnalyser.frequencyBinCount);
         window.sclientAnalyser.getByteFrequencyData(dataArray);
 
         window.postMessage(
@@ -227,7 +223,7 @@ class EffectsFeature extends Feature {
             source: "sclient-mini-visualizer",
             data: Array.from(dataArray),
           },
-          "*",
+          "*"
         );
       }, 66);
     }
@@ -255,9 +251,7 @@ class EffectsFeature extends Feature {
       ctxToUse = data.externalCtx || sclientAudioCtx;
     } else {
       if (!sclientAudioCtx)
-        sclientAudioCtx = new (
-          window.AudioContext || window.webkitAudioContext
-        )();
+        sclientAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
       ctxToUse = sclientAudioCtx;
     }
 
@@ -272,18 +266,10 @@ class EffectsFeature extends Feature {
         const source = ctxToUse.createMediaElementSource(el);
         source.connect(ctxToUse.sclientAnalyser);
         ctxToUse.sclientAnalyser.connect(ctxToUse.destination);
-        sclientSourceNodes.set(el, {
-          source,
-          connectedReverb: false,
-          externalCtx: null,
-        });
+        sclientSourceNodes.set(el, { source, connectedReverb: false, externalCtx: null });
       } catch (e) {
         if (e.name === "InvalidStateError") {
-          sclientSourceNodes.set(el, {
-            source: null,
-            connectedReverb: false,
-            externalCtx: null,
-          });
+          sclientSourceNodes.set(el, { source: null, connectedReverb: false, externalCtx: null });
         } else {
           throw e;
         }

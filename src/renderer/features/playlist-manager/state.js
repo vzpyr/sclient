@@ -46,11 +46,7 @@ function pmCurrent() {
 
 function pmTrackCount(pl) {
   if (!pl) return 0;
-  return pl.track_count != null
-    ? pl.track_count
-    : pl.tracks
-      ? pl.tracks.length
-      : 0;
+  return pl.track_count != null ? pl.track_count : pl.tracks ? pl.tracks.length : 0;
 }
 
 async function pmHydrateCurrent() {
@@ -67,28 +63,21 @@ async function pmHydrateCurrent() {
   if (!full || !Array.isArray(full.tracks)) return;
 
   Object.assign(pl, full);
-  const ids = (pl.tracks || [])
-    .map((t) => t && t.id)
-    .filter((id) => id != null);
+  const ids = (pl.tracks || []).map((t) => t && t.id).filter((id) => id != null);
   if (ids.length === 0) {
     _pmState.hydrated.add(pl.id);
     return;
   }
 
   const byId = new Map();
-  for (const t of pl.tracks)
-    if (t && t.id != null && t.title) byId.set(t.id, t);
+  for (const t of pl.tracks) if (t && t.id != null && t.title) byId.set(t.id, t);
   const need = ids.filter((id) => !byId.has(id));
   if (need.length > 0) {
     for (let i = 0; i < need.length; i += 50) {
       const chunk = need.slice(i, i + 50);
       try {
         const res = await api.tracks(chunk);
-        const list = Array.isArray(res)
-          ? res
-          : res && res.collection
-            ? res.collection
-            : [];
+        const list = Array.isArray(res) ? res : res && res.collection ? res.collection : [];
         for (const t of list) if (t && t.id != null) byId.set(t.id, t);
       } catch (_) {}
     }

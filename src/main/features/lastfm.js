@@ -32,8 +32,7 @@ async function lastfmCall(method, extra = {}) {
       body: new URLSearchParams({ ...params, api_sig, format: "json" }),
     });
     const data = await res.json();
-    if (data.error)
-      return { ok: false, code: data.error, message: data.message };
+    if (data.error) return { ok: false, code: data.error, message: data.message };
     return { ok: true };
   } catch (e) {
     console.error(`[SClient] Couldn't call Last.fm ${method}:`, e);
@@ -66,29 +65,23 @@ function register({ ipcMain, config: cfg }) {
       });
 
       win.loadURL(
-        `https://www.last.fm/api/auth/?api_key=${apiKey}&cb=https://soundcloud.com/discover`,
+        `https://www.last.fm/api/auth/?api_key=${apiKey}&cb=https://soundcloud.com/discover`
       );
 
       const handle = async (url) => {
         try {
           const token = new URL(url).searchParams.get("token");
           if (!token) return;
-          const sig = lastfmSig(
-            { method: "auth.getSession", api_key: apiKey, token },
-            secret,
-          );
+          const sig = lastfmSig({ method: "auth.getSession", api_key: apiKey, token }, secret);
           const res = await fetch(
-            `https://ws.audioscrobbler.com/2.0/?method=auth.getSession&api_key=${apiKey}&token=${token}&api_sig=${sig}&format=json`,
+            `https://ws.audioscrobbler.com/2.0/?method=auth.getSession&api_key=${apiKey}&token=${token}&api_sig=${sig}&format=json`
           );
           const data = await res.json();
           if (!win.isDestroyed()) win.close();
           if (data.error) {
             settle({ error: data.message });
           } else {
-            config.setSecure(
-              "integrations.lastfm.session_key",
-              data.session.key,
-            );
+            config.setSecure("integrations.lastfm.session_key", data.session.key);
             config.set("integrations.lastfm.username", data.session.name);
             settle({ success: true, username: data.session.name });
           }

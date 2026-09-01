@@ -41,9 +41,7 @@ class DownloaderFeature extends Feature {
       if (!current || !current.songUrl) return;
       const fullUrl = current.songUrl;
 
-      document
-        .querySelectorAll(".sclient-download-toast")
-        .forEach((t) => t.remove());
+      document.querySelectorAll(".sclient-download-toast").forEach((t) => t.remove());
 
       const toast = document.createElement("div");
       toast.className = "sclient-download-toast";
@@ -125,9 +123,7 @@ class DownloaderFeature extends Feature {
       return;
     }
 
-    const buttonGroup = document.querySelector(
-      ".listenEngagement__footer .sc-button-group",
-    );
+    const buttonGroup = document.querySelector(".listenEngagement__footer .sc-button-group");
     if (!buttonGroup) {
       this.injected = false;
       return;
@@ -151,9 +147,7 @@ class DownloaderFeature extends Feature {
       e.preventDefault();
       let fullUrl = window.location.href.split("?")[0];
 
-      document
-        .querySelectorAll(".sclient-download-toast")
-        .forEach((t) => t.remove());
+      document.querySelectorAll(".sclient-download-toast").forEach((t) => t.remove());
 
       const toast = document.createElement("div");
       toast.className = "sclient-download-toast";
@@ -199,7 +193,7 @@ class DownloaderFeature extends Feature {
             `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(fullUrl)}&client_id=${cid}`,
             {
               headers: { Authorization: `OAuth ${tok}` },
-            },
+            }
           );
           if (res.ok) {
             const data = await res.json();

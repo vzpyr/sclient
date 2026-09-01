@@ -11,8 +11,7 @@ const hasFfmpeg = (() => {
 
 const ytdlexec = require("youtube-dl-exec");
 let ytdlBin = ytdlexec.constants.YOUTUBE_DL_PATH;
-if (ytdlBin.includes("app.asar"))
-  ytdlBin = ytdlBin.replace("app.asar", "app.asar.unpacked");
+if (ytdlBin.includes("app.asar")) ytdlBin = ytdlBin.replace("app.asar", "app.asar.unpacked");
 const ytdl = ytdlexec.create(ytdlBin);
 
 function register({ ipcMain, app }) {
@@ -48,9 +47,7 @@ function register({ ipcMain, app }) {
         const parts = stdoutBuf.split(/[\r\n]+/);
         stdoutBuf = parts.pop();
         for (const part of parts) {
-          const vmatch = part.match(
-            /\[download\] Downloading (?:video|item) (\d+) of (\d+)/,
-          );
+          const vmatch = part.match(/\[download\] Downloading (?:video|item) (\d+) of (\d+)/);
           if (vmatch) {
             currentTrack = parseInt(vmatch[1], 10);
             totalTracks = parseInt(vmatch[2], 10);
@@ -59,13 +56,8 @@ function register({ ipcMain, app }) {
           if (match && match[1]) {
             const pct = parseFloat(match[1]);
             const finalPct =
-              args.isPlaylist && totalTracks
-                ? ((currentTrack - 1) * 100 + pct) / totalTracks
-                : pct;
-            _e.sender.send("download_progress", {
-              url: args.url,
-              percent: finalPct.toFixed(1),
-            });
+              args.isPlaylist && totalTracks ? ((currentTrack - 1) * 100 + pct) / totalTracks : pct;
+            _e.sender.send("download_progress", { url: args.url, percent: finalPct.toFixed(1) });
           }
         }
 
@@ -73,13 +65,8 @@ function register({ ipcMain, app }) {
         if (matchEnd && matchEnd[1]) {
           const pct = parseFloat(matchEnd[1]);
           const finalPct =
-            args.isPlaylist && totalTracks
-              ? ((currentTrack - 1) * 100 + pct) / totalTracks
-              : pct;
-          _e.sender.send("download_progress", {
-            url: args.url,
-            percent: finalPct.toFixed(1),
-          });
+            args.isPlaylist && totalTracks ? ((currentTrack - 1) * 100 + pct) / totalTracks : pct;
+          _e.sender.send("download_progress", { url: args.url, percent: finalPct.toFixed(1) });
         }
       });
 
@@ -90,42 +77,27 @@ function register({ ipcMain, app }) {
 
       proc.on("close", (code) => {
         const hasFatalError =
-          stderr.includes("Unable to download JSON metadata") ||
-          stderr.includes("HTTP Error");
+          stderr.includes("Unable to download JSON metadata") || stderr.includes("HTTP Error");
         if (code === 0 || (args.isPlaylist && !hasFatalError)) {
           resolve();
         } else {
           if (stderr.includes("DRM protected")) {
-            reject(
-              new Error(
-                "This track is DRM protected and cannot be downloaded.",
-              ),
-            );
+            reject(new Error("This track is DRM protected and cannot be downloaded."));
           } else if (hasFatalError) {
-            reject(
-              new Error(
-                "Rate limited by SoundCloud. Please wait a few minutes.",
-              ),
-            );
+            reject(new Error("Rate limited by SoundCloud. Please wait a few minutes."));
           } else {
-            const lines = stderr
-              .split("\n")
-              .filter((l) => l.includes("ERROR:"));
+            const lines = stderr.split("\n").filter((l) => l.includes("ERROR:"));
             reject(
               new Error(
-                lines.length > 0
-                  ? lines.join(" | ")
-                  : `Unknown youtube-dl error. (${stderr})`,
-              ),
+                lines.length > 0 ? lines.join(" | ") : `Unknown youtube-dl error. (${stderr})`
+              )
             );
           }
         }
       });
 
       proc.on("error", (err) => {
-        reject(
-          new Error(`Unknown download error: ${err.message || err.toString()}`),
-        );
+        reject(new Error(`Unknown download error: ${err.message || err.toString()}`));
       });
     });
   });

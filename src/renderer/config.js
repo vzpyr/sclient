@@ -1,8 +1,5 @@
 const SCLIENT_CONFIG = {
-  _data:
-    (typeof window.__SCLIENT_CONFIG__ !== "undefined" &&
-      window.__SCLIENT_CONFIG__) ||
-    {},
+  _data: (typeof window.__SCLIENT_CONFIG__ !== "undefined" && window.__SCLIENT_CONFIG__) || {},
 
   get(key, fallback = "") {
     const v = this._data[key];

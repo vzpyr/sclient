@@ -40,30 +40,20 @@ class MiniplayerFeature extends Feature {
             isPlaying: evt.isPlaying,
             position: evt.position,
             duration: evt.duration,
-            isLiked: likeBtn
-              ? likeBtn.classList.contains("sc-button-selected")
-              : false,
-            isShuffled: shuffleBtn
-              ? shuffleBtn.classList.contains("m-shuffling")
-              : false,
+            isLiked: likeBtn ? likeBtn.classList.contains("sc-button-selected") : false,
+            isShuffled: shuffleBtn ? shuffleBtn.classList.contains("m-shuffling") : false,
             loopState: loopState,
             accent: getAccent(),
-            playbackRate: window.sclient_effects
-              ? window.sclient_effects.speed
-              : 1,
+            playbackRate: window.sclient_effects ? window.sclient_effects.speed : 1,
             showVisualizer: SCLIENT_CONFIG.showVisualizer,
           },
         },
-        "*",
+        "*"
       );
     });
 
     const onAction = (event) => {
-      if (
-        event.source !== window ||
-        !event.data ||
-        event.data.source !== "sclient-mini-action"
-      )
+      if (event.source !== window || !event.data || event.data.source !== "sclient-mini-action")
         return;
       playerCommand(event.data.action);
     };
@@ -73,14 +63,11 @@ class MiniplayerFeature extends Feature {
       let media = window.__scMedia || [];
       if (media.length === 0) {
         if (!this.cachedMedia) {
-          this.cachedMedia = Array.from(
-            document.querySelectorAll("audio, video"),
-          );
+          this.cachedMedia = Array.from(document.querySelectorAll("audio, video"));
         }
         media = this.cachedMedia;
       }
-      const activeMedia =
-        media.find((m) => !m.paused && m.duration > 0) || media[0];
+      const activeMedia = media.find((m) => !m.paused && m.duration > 0) || media[0];
 
       if (activeMedia && !activeMedia.paused) {
         window.postMessage(
@@ -88,7 +75,7 @@ class MiniplayerFeature extends Feature {
             source: "sclient-mini-time",
             data: { position: activeMedia.currentTime, isPlaying: true },
           },
-          "*",
+          "*"
         );
       }
     };

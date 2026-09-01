@@ -4,10 +4,7 @@ function pmNormTitle(s) {
     .toLowerCase()
     .replace(/[({[][^)\]}]*[)\]}]/g, " ")
     .replace(/\bfeat\.?\b|\bft\.?\b|\bprod\.? by\b/g, " ")
-    .replace(
-      /\bfree download\b|\bofficial (audio|video|music video|visualizer)\b/g,
-      " ",
-    )
+    .replace(/\bfree download\b|\bofficial (audio|video|music video|visualizer)\b/g, " ")
     .replace(/\b(remix|edit|live|acoustic|bootleg|mix|radio edit)\b/g, " $1 ")
     .replace(/\s*\bslash\b\s*|\s+\/\s+/g, " ")
     .replace(/[^a-z0-9\s]/g, " ")
@@ -19,11 +16,8 @@ function pmScoreMatch(spotifyRow, scTrack) {
   let score = 0;
   const tags = [];
 
-  const isrcA = spotifyRow.isrc
-    ? spotifyRow.isrc.replace(/[-\s]/g, "").toLowerCase()
-    : "";
-  const isrcB =
-    scTrack.publisher_metadata?.isrc?.replace(/[-\s]/g, "").toLowerCase() || "";
+  const isrcA = spotifyRow.isrc ? spotifyRow.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
+  const isrcB = scTrack.publisher_metadata?.isrc?.replace(/[-\s]/g, "").toLowerCase() || "";
   if (isrcA && isrcB && isrcA === isrcB) return { score: 100, reason: "I" };
 
   const normA = pmNormTitle(spotifyRow.title);
@@ -53,10 +47,7 @@ function pmScoreMatch(spotifyRow, scTrack) {
       : [];
   const artA = splitArtists(spotifyRow.artists.join(", "));
   const artB = splitArtists(getArtistFromTrack(scTrack));
-  if (
-    artA.some((a) => artB.includes(a)) ||
-    artB.some((b) => artA.includes(b))
-  ) {
+  if (artA.some((a) => artB.includes(a)) || artB.some((b) => artA.includes(b))) {
     score += 30;
     tags.push("a");
   }
@@ -109,8 +100,7 @@ function pmParseSpotifyCsv(text) {
   const h = rows[0].map((x) => x.toLowerCase());
   const ti = h.findIndex((x) => x.includes("track name"));
   const ai = h.findIndex((x) => x.includes("artist name"));
-  if (ti === -1 || ai === -1)
-    throw new Error("Not an exportify CSV (missing columns)");
+  if (ti === -1 || ai === -1) throw new Error("Not an exportify CSV (missing columns)");
 
   let di = -1;
   for (let i = 0; i < h.length; i++) {
@@ -149,7 +139,7 @@ async function mapLimit(items, limit, fn) {
           const idx = i++;
           res[idx] = await fn(items[idx], idx);
         }
-      }),
+      })
   );
   return res;
 }
@@ -214,7 +204,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     .spm-search { display:flex; gap:4px; }
     .spm-search input { flex:1; min-width:0; font-size:var(--sclient-text-xs); }
     .spm-search button { font-size:var(--sclient-text-xs); }
-  `,
+  `
   );
 
   const back = document.createElement("div");
@@ -266,9 +256,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     btn.disabled = true;
     btn.textContent = "Importing...";
 
-    const valid = _pmSpotifyState.rows.filter(
-      (r) => r.action !== "skip" && r.match,
-    );
+    const valid = _pmSpotifyState.rows.filter((r) => r.action !== "skip" && r.match);
     const ids = valid.map((r) => r.match.id);
     if (!ids.length) {
       showToast("No tracks to import.");
@@ -279,13 +267,11 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     }
 
     const chunks = [];
-    for (let i = 0; i < ids.length; i += 500)
-      chunks.push(ids.slice(i, i + 500));
+    for (let i = 0; i < ids.length; i += 500) chunks.push(ids.slice(i, i + 500));
 
     const created = [];
     let ok = 0;
-    const title =
-      dlg.querySelector("#spm-title").value.trim() || "Spotify Import";
+    const title = dlg.querySelector("#spm-title").value.trim() || "Spotify Import";
     const sharing = dlg.querySelector("#spm-sharing").value;
 
     for (let i = 0; i < chunks.length; i++) {
@@ -298,21 +284,16 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
           ok += chunks[i].length;
         } else throw new Error("Bad response");
       } catch {
-        const cont = await showConfirm(
-          `Playlist chunk ${i + 1} failed. Continue?`,
-          [
-            { id: "no", text: "Cancel", type: "secondary" },
-            { id: "yes", text: "Continue", type: "primary" },
-          ],
-        );
+        const cont = await showConfirm(`Playlist chunk ${i + 1} failed. Continue?`, [
+          { id: "no", text: "Cancel", type: "secondary" },
+          { id: "yes", text: "Continue", type: "primary" },
+        ]);
         if (cont !== "yes") break;
       }
     }
 
     if (created.length) await pmSelectPlaylist(created[0].id);
-    const skipped = _pmSpotifyState.rows.filter(
-      (r) => r.action === "skip",
-    ).length;
+    const skipped = _pmSpotifyState.rows.filter((r) => r.action === "skip").length;
     showToast(`Imported ${ok} tracks (${skipped} skipped)`);
     localStorage.removeItem("sclient_spotify_draft");
     back.style.opacity = "0";
@@ -338,9 +319,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
 
   const updateHead = () => {
     const done = _pmSpotifyState.rows.filter((r) => r.resolved).length;
-    const skip = _pmSpotifyState.rows.filter(
-      (r) => r.resolved && r.action === "skip",
-    ).length;
+    const skip = _pmSpotifyState.rows.filter((r) => r.resolved && r.action === "skip").length;
     const ready = done - skip;
     const head = dlg.querySelector("#spm-head");
     head.textContent =
@@ -350,10 +329,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     const btn = dlg.querySelector("#spm-confirm");
     btn.disabled = done < _pmSpotifyState.total;
     btn.textContent = `Import ${ready} tracks`;
-    localStorage.setItem(
-      "sclient_spotify_draft",
-      JSON.stringify(_pmSpotifyState),
-    );
+    localStorage.setItem("sclient_spotify_draft", JSON.stringify(_pmSpotifyState));
   };
 
   const renderRow = (r) => {
@@ -362,9 +338,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
       el = document.createElement("div");
       el.id = `spm-r-${r.idx}`;
       el.dataset.idx = r.idx;
-      const before = Array.from(list.children).find(
-        (c) => +c.dataset.idx > r.idx,
-      );
+      const before = Array.from(list.children).find((c) => +c.dataset.idx > r.idx);
       before ? list.insertBefore(el, before) : list.appendChild(el);
     }
 
@@ -385,13 +359,9 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
 
     if (r.match) {
       matchTitle = `${r.match.title} · ${getArtistFromTrack(r.match)}`;
-      const d = r.original.durationMs
-        ? r.match.duration - r.original.durationMs
-        : 0;
+      const d = r.original.durationMs ? r.match.duration - r.original.durationMs : 0;
       const dStr =
-        r.match.duration === 30000
-          ? "GO+"
-          : `${d > 0 ? "+" : ""}${(d / 1000).toFixed(1)}s`;
+        r.match.duration === 30000 ? "GO+" : `${d > 0 ? "+" : ""}${(d / 1000).toFixed(1)}s`;
       matchMeta = `${pmFmtDur(r.match.duration)} · ${dStr}`;
       thumb = r.match.artwork_url || "";
     }
@@ -491,8 +461,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     renderRow(r);
     let retries = 4,
       backoff = 800;
-    const q =
-      `${r.original.artists[0] || ""} ${pmNormTitle(r.original.title)}`.trim();
+    const q = `${r.original.artists[0] || ""} ${pmNormTitle(r.original.title)}`.trim();
     let res;
     while (retries >= 0) {
       try {
@@ -502,8 +471,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
           const s = pmScoreMatch(r.original, c);
           if (s.score > best.score) best = { ...s, match: c };
         }
-        if (!best.match && cands.length)
-          best = { score: 0, reason: "-", match: cands[0] };
+        if (!best.match && cands.length) best = { score: 0, reason: "-", match: cands[0] };
         res = { candidates: cands, best };
         break;
       } catch (e) {

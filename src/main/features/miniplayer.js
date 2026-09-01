@@ -20,9 +20,7 @@ function register({ ipcMain, BrowserWindow, win, app }) {
         contextIsolation: false,
       },
     });
-    miniWin.loadFile(
-      path.join(__dirname, "..", "..", "miniplayer", "index.html"),
-    );
+    miniWin.loadFile(path.join(__dirname, "..", "..", "miniplayer", "index.html"));
     miniWin.on("closed", () => {
       miniWin = null;
       if (win && !win.isDestroyed()) win.show();
@@ -48,10 +46,7 @@ function register({ ipcMain, BrowserWindow, win, app }) {
           if (!miniWin.isDestroyed() && !miniWin.isFullScreen()) {
             if (miniWin.desiredSize) {
               miniWin.setResizable(true);
-              miniWin.setSize(
-                miniWin.desiredSize.width,
-                miniWin.desiredSize.height,
-              );
+              miniWin.setSize(miniWin.desiredSize.width, miniWin.desiredSize.height);
             }
             miniWin.setResizable(false);
           }
@@ -63,16 +58,13 @@ function register({ ipcMain, BrowserWindow, win, app }) {
     if (win && !win.isDestroyed()) win.webContents.send("mini_action", action);
   });
   ipcMain.on("mini_update", (_e, data) => {
-    if (miniWin && !miniWin.isDestroyed())
-      miniWin.webContents.send("mini_update", data);
+    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_update", data);
   });
   ipcMain.on("mini_visualizer", (_e, data) => {
-    if (miniWin && !miniWin.isDestroyed())
-      miniWin.webContents.send("mini_visualizer", data);
+    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_visualizer", data);
   });
   ipcMain.on("mini_time", (_e, data) => {
-    if (miniWin && !miniWin.isDestroyed())
-      miniWin.webContents.send("mini_time", data);
+    if (miniWin && !miniWin.isDestroyed()) miniWin.webContents.send("mini_time", data);
   });
   ipcMain.on("resize_mini", (_e, width, height) => {
     if (miniWin && !miniWin.isDestroyed()) {
