@@ -53,7 +53,7 @@ class LyricsFeature extends Feature {
 		#sclient-lyrics-romanize-btn.active {
 			color: var(--sclient-accent);
 		}
-	`
+	`,
     );
     this.unsubscribePlayback = onPlaybackChange((evt) => {
       this.lastKnownPosition = evt.position;
@@ -107,7 +107,8 @@ class LyricsFeature extends Feature {
       let activeMedia = getActiveMedia();
       if (!activeMedia) {
         const media = Array.from(document.querySelectorAll("audio, video"));
-        activeMedia = media.find((m) => !m.paused && m.duration > 0) || media[0];
+        activeMedia =
+          media.find((m) => !m.paused && m.duration > 0) || media[0];
       }
 
       if (activeMedia) {
@@ -128,7 +129,9 @@ class LyricsFeature extends Feature {
     if (!this.lyricsOpen || !this.currentSyncedLyrics.length) return;
 
     const effectivePos = pos + this.lyricsOffset;
-    const activeIdx = this.currentSyncedLyrics.findLastIndex((l) => effectivePos >= l.start - 0.1);
+    const activeIdx = this.currentSyncedLyrics.findLastIndex(
+      (l) => effectivePos >= l.start - 0.1,
+    );
     const lineEls = document.querySelectorAll(".sclient-lyric-line");
     const accent = getAccent();
 
@@ -229,24 +232,34 @@ class LyricsFeature extends Feature {
     document.body.appendChild(sidebar);
 
     this.on(document.getElementById("sclient-lyrics-close-btn"), "click", () =>
-      this.toggleLyrics()
+      this.toggleLyrics(),
     );
 
-    this.on(document.getElementById("sclient-lyrics-offset-slider"), "input", (e) => {
-      this.lyricsOffset = parseFloat(e.target.value);
-      document.getElementById("sclient-lyrics-offset-val").innerText =
-        (this.lyricsOffset > 0 ? "+" : "") + this.lyricsOffset.toFixed(1) + "s";
-      this.currentHighlightedIndex = -999;
-      this.updateLyricsUI(this.currentInterpolatedPos);
-    });
+    this.on(
+      document.getElementById("sclient-lyrics-offset-slider"),
+      "input",
+      (e) => {
+        this.lyricsOffset = parseFloat(e.target.value);
+        document.getElementById("sclient-lyrics-offset-val").innerText =
+          (this.lyricsOffset > 0 ? "+" : "") +
+          this.lyricsOffset.toFixed(1) +
+          "s";
+        this.currentHighlightedIndex = -999;
+        this.updateLyricsUI(this.currentInterpolatedPos);
+      },
+    );
 
-    this.on(document.getElementById("sclient-lyrics-romanize-btn"), "click", async () => {
-      this.romanizeEnabled = !this.romanizeEnabled;
-      document
-        .getElementById("sclient-lyrics-romanize-btn")
-        .classList.toggle("active", this.romanizeEnabled);
-      await this.romanizeAllLines();
-    });
+    this.on(
+      document.getElementById("sclient-lyrics-romanize-btn"),
+      "click",
+      async () => {
+        this.romanizeEnabled = !this.romanizeEnabled;
+        document
+          .getElementById("sclient-lyrics-romanize-btn")
+          .classList.toggle("active", this.romanizeEnabled);
+        await this.romanizeAllLines();
+      },
+    );
   }
 
   async romanizeAllLines() {
@@ -303,7 +316,9 @@ class LyricsFeature extends Feature {
 
     let results;
     try {
-      results = await sendBridge("romanize", { texts: items.map((it) => it.text) });
+      results = await sendBridge("romanize", {
+        texts: items.map((it) => it.text),
+      });
     } catch (e) {
       results = items.map((it) => it.text);
     }
@@ -333,7 +348,7 @@ class LyricsFeature extends Feature {
       return line.words
         .map(
           (w) =>
-            `<span class="sclient-lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`
+            `<span class="sclient-lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`,
         )
         .join("");
     }
@@ -363,7 +378,7 @@ class LyricsFeature extends Feature {
     try {
       const res = await fetch(
         `https://api.lrcmux.dev/get?artist=${encodeURIComponent(artist)}&title=${encodeURIComponent(title)}&level=word&format=json`,
-        { signal: abortCtrl.signal }
+        { signal: abortCtrl.signal },
       );
       if (!res.ok) throw new Error("Not found");
       const data = await res.json();
@@ -372,7 +387,9 @@ class LyricsFeature extends Feature {
         this.currentSyncedLyrics = [];
         this.currentHighlightedIndex = -1;
         this.lyricsOffset = 0;
-        const offsetContainer = document.getElementById("sclient-lyrics-offset-container");
+        const offsetContainer = document.getElementById(
+          "sclient-lyrics-offset-container",
+        );
 
         const hasSync = data.lines?.length > 0 && data.meta?.level !== "none";
 
@@ -380,7 +397,8 @@ class LyricsFeature extends Feature {
           if (offsetContainer) {
             offsetContainer.style.display = "flex";
             document.getElementById("sclient-lyrics-offset-slider").value = 0;
-            document.getElementById("sclient-lyrics-offset-val").innerText = "0.0s";
+            document.getElementById("sclient-lyrics-offset-val").innerText =
+              "0.0s";
           }
           const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
           if (rBtn) rBtn.style.display = "flex";
@@ -390,32 +408,40 @@ class LyricsFeature extends Feature {
             const start = line.start / 1000;
             const end = line.end / 1000;
             html += `<div class="sclient-lyric-line" data-start="${start}" data-end="${end}" style="transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; color: var(--sclient-text-main); transform: scale(0.95); transform-origin: center; cursor: pointer;">${this.renderLineWords(line)}</div>`;
-            this.currentSyncedLyrics.push({ start, end, words: line.words || null });
+            this.currentSyncedLyrics.push({
+              start,
+              end,
+              words: line.words || null,
+            });
           }
           content.innerHTML = html + `</div>`;
 
-          document.getElementById("sclient-lyrics-lines").addEventListener("click", (e) => {
-            const lineEl = e.target.closest(".sclient-lyric-line");
-            if (!lineEl) return;
-            const wordEl = e.target.closest(".sclient-lyric-word");
-            const t = parseFloat(
-              wordEl ? wordEl.getAttribute("data-start") : lineEl.getAttribute("data-start")
-            );
-            if (!isNaN(t)) {
-              const targetPos = Math.max(0, t - this.lyricsOffset);
-              seekTo(targetPos);
-              this.lastKnownPosition = targetPos;
-              this.lastUpdateTime = Date.now();
-              this.currentHighlightedIndex = -999;
-              this.updateLyricsUI(targetPos);
-            }
-          });
+          document
+            .getElementById("sclient-lyrics-lines")
+            .addEventListener("click", (e) => {
+              const lineEl = e.target.closest(".sclient-lyric-line");
+              if (!lineEl) return;
+              const wordEl = e.target.closest(".sclient-lyric-word");
+              const t = parseFloat(
+                wordEl
+                  ? wordEl.getAttribute("data-start")
+                  : lineEl.getAttribute("data-start"),
+              );
+              if (!isNaN(t)) {
+                const targetPos = Math.max(0, t - this.lyricsOffset);
+                seekTo(targetPos);
+                this.lastKnownPosition = targetPos;
+                this.lastUpdateTime = Date.now();
+                this.currentHighlightedIndex = -999;
+                this.updateLyricsUI(targetPos);
+              }
+            });
           if (this.romanizeEnabled) this.romanizeAllLines();
         } else if (data.lines && data.lines.length > 0) {
           const linesHtml = data.lines
             .map(
               (l) =>
-                `<div style="font-size: 16px; color: var(--sclient-text-main);">${esc((l.text || "").trim() || " ")}</div>`
+                `<div style="font-size: 16px; color: var(--sclient-text-main);">${esc((l.text || "").trim() || " ")}</div>`,
             )
             .join("");
           content.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">${linesHtml}</div>`;
@@ -432,7 +458,9 @@ class LyricsFeature extends Feature {
     } catch (e) {
       if (e && e.name === "AbortError") return;
       if (content && this.lyricsTrack === key) {
-        const offsetContainer = document.getElementById("sclient-lyrics-offset-container");
+        const offsetContainer = document.getElementById(
+          "sclient-lyrics-offset-container",
+        );
         if (offsetContainer) offsetContainer.style.display = "none";
         const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
         if (rBtn) rBtn.style.display = "none";
@@ -455,11 +483,13 @@ class LyricsFeature extends Feature {
     </div>
   `;
 
-    document.getElementById("sclient-lyrics-manual-search").addEventListener("click", () => {
-      const a = document.getElementById("sclient-lyrics-manual-artist").value;
-      const t = document.getElementById("sclient-lyrics-manual-title").value;
-      if (a && t) this.doFetch(a, t);
-    });
+    document
+      .getElementById("sclient-lyrics-manual-search")
+      .addEventListener("click", () => {
+        const a = document.getElementById("sclient-lyrics-manual-artist").value;
+        const t = document.getElementById("sclient-lyrics-manual-title").value;
+        if (a && t) this.doFetch(a, t);
+      });
   }
 
   fetchLyrics() {
@@ -472,7 +502,8 @@ class LyricsFeature extends Feature {
     if (current.trackData) {
       title = current.trackData.title || "";
       artist =
-        (current.trackData.publisher_metadata && current.trackData.publisher_metadata.artist) ||
+        (current.trackData.publisher_metadata &&
+          current.trackData.publisher_metadata.artist) ||
         (current.trackData.user && current.trackData.user.username) ||
         "";
     }

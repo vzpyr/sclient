@@ -39,7 +39,10 @@ class AdblockFeature extends Feature {
             value: 4,
             writable: false,
           });
-          Object.defineProperty(this, "status", { value: 200, writable: false });
+          Object.defineProperty(this, "status", {
+            value: 200,
+            writable: false,
+          });
           Object.defineProperty(this, "responseText", {
             value: "{}",
             writable: false,

@@ -81,7 +81,8 @@ function showConfirm(message, options) {
     const msg = document.createElement("div");
     msg.textContent = message;
     msg.className = "sclient-text-body";
-    msg.style.cssText = "font-weight: 500; margin-bottom: 24px; font-size: var(--sclient-text-lg);";
+    msg.style.cssText =
+      "font-weight: 500; margin-bottom: 24px; font-size: var(--sclient-text-lg);";
     modal.appendChild(msg);
 
     const btnRow = document.createElement("div");

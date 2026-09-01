@@ -28,7 +28,7 @@ class EnhancedHeaderFeature extends Feature {
       .header__right > ul:has(.header__moreButton:not(#sclient-settings-btn)) { order: 8 !important; }
       .headerSearch__input { border-radius: 50px !important; background: var(--sclient-bg-surface) !important; border: 1px solid var(--sclient-border) !important; }
       .headerSearch { margin: 0 8px !important; }
-    `
+    `,
     );
   }
 
@@ -41,7 +41,8 @@ class EnhancedHeaderFeature extends Feature {
       "font-size: 0; line-height: 0; display: flex; align-items: center; justify-content: center;";
     const icon = document.createElement("div");
     icon.className = "sclient-svg-container";
-    icon.style.cssText = "display: flex; align-items: center; justify-content: center;";
+    icon.style.cssText =
+      "display: flex; align-items: center; justify-content: center;";
     icon.innerHTML = svgHtml;
     container.appendChild(icon);
   }
@@ -61,48 +62,50 @@ class EnhancedHeaderFeature extends Feature {
     }
 
     const notif = document.querySelector(
-      ".header__userNavActivitiesButton .notificationIcon > div:first-child"
+      ".header__userNavActivitiesButton .notificationIcon > div:first-child",
     );
     if (notif) {
       this.safeReplaceSvg(
         notif,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
       );
       notif.title = "Notifications";
     }
 
     const msg = document.querySelector(
-      ".header__userNavMessagesButton .notificationIcon > div:first-child"
+      ".header__userNavMessagesButton .notificationIcon > div:first-child",
     );
     if (msg) {
       this.safeReplaceSvg(
         msg,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>',
       );
       msg.title = "Messages";
     }
 
-    const chevron = document.querySelector(".header__userNavUsernameButtonIcon > div:first-child");
+    const chevron = document.querySelector(
+      ".header__userNavUsernameButtonIcon > div:first-child",
+    );
     if (chevron)
       this.safeReplaceSvg(
         chevron,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
       );
 
     const more = document.querySelector(
-      "a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child"
+      "a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child",
     );
     if (more)
       this.safeReplaceSvg(
         more,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
       );
 
     const upload = document.querySelector(".uploadButton__title");
     if (upload) {
       this.safeReplaceSvg(
         upload,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>',
       );
       const upBtn = document.querySelector(".uploadButton");
       if (upBtn) upBtn.title = "Upload";
@@ -112,16 +115,18 @@ class EnhancedHeaderFeature extends Feature {
     if (artist) {
       this.safeReplaceSvg(
         artist,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h4"/><path d="M14 8h.01"/><path d="M18 8h.01"/><path d="M2 12h20"/><path d="M6 12v4"/><path d="M10 12v4"/><path d="M14 12v4"/><path d="M18 12v4"/></svg>',
       );
       artist.title = "Artist Studio";
     }
 
-    const searchBtn = document.querySelector(".headerSearch__submit > div:first-child");
+    const searchBtn = document.querySelector(
+      ".headerSearch__submit > div:first-child",
+    );
     if (searchBtn) {
       this.safeReplaceSvg(
         searchBtn,
-        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>',
       );
     }
   }
@@ -151,13 +156,15 @@ class EnhancedHeaderFeature extends Feature {
 
     nav.insertBefore(
       makeBtn("sclient-nav-fwd-btn", "Forward", true, "m9 18 6-6-6-6", () =>
-        window.history.forward()
+        window.history.forward(),
       ),
-      nav.firstChild
+      nav.firstChild,
     );
     nav.insertBefore(
-      makeBtn("sclient-nav-back-btn", "Back", false, "m15 18-6-6 6-6", () => window.history.back()),
-      nav.firstChild
+      makeBtn("sclient-nav-back-btn", "Back", false, "m15 18-6-6 6-6", () =>
+        window.history.back(),
+      ),
+      nav.firstChild,
     );
   }
 

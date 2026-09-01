@@ -42,7 +42,8 @@ if (proxyCfg.enabled && proxyCfg.url && proxyCfg.url.startsWith("http")) {
 }
 
 const ua = navigator.userAgent;
-const chromeVersion = (ua.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/) || [])[1] || "120.0.0.0";
+const chromeVersion =
+  (ua.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/) || [])[1] || "120.0.0.0";
 const majorVersion = chromeVersion.split(".")[0];
 
 const PLATFORMS = { win32: "Windows", darwin: "macOS", linux: "Linux" };
@@ -89,7 +90,7 @@ window.addEventListener("message", (event) => {
     .then((result) => {
       window.postMessage(
         { source: "sclient-bridge-reply", callbackId, success: true, result },
-        "*"
+        "*",
       );
     })
     .catch((err) => {
@@ -100,13 +101,16 @@ window.addEventListener("message", (event) => {
           success: false,
           error: err.message,
         },
-        "*"
+        "*",
       );
     });
 });
 
 ipcRenderer.on("download_progress", (_event, data) => {
-  window.postMessage({ source: "sclient-bridge-event", event: "download_progress", data }, "*");
+  window.postMessage(
+    { source: "sclient-bridge-event", event: "download_progress", data },
+    "*",
+  );
 });
 
 window.addEventListener("message", (event) => {
@@ -173,11 +177,16 @@ if (uiConfig.titlebarStyle === "custom") {
 
     document.body.appendChild(titlebar);
 
-    document.getElementById("sclient-back-btn").onclick = () => window.history.back();
-    document.getElementById("sclient-fwd-btn").onclick = () => window.history.forward();
-    document.getElementById("sclient-min-btn").onclick = () => ipcRenderer.send("window_minimize");
-    document.getElementById("sclient-max-btn").onclick = () => ipcRenderer.send("window_maximize");
-    document.getElementById("sclient-close-btn").onclick = () => ipcRenderer.send("window_close");
+    document.getElementById("sclient-back-btn").onclick = () =>
+      window.history.back();
+    document.getElementById("sclient-fwd-btn").onclick = () =>
+      window.history.forward();
+    document.getElementById("sclient-min-btn").onclick = () =>
+      ipcRenderer.send("window_minimize");
+    document.getElementById("sclient-max-btn").onclick = () =>
+      ipcRenderer.send("window_maximize");
+    document.getElementById("sclient-close-btn").onclick = () =>
+      ipcRenderer.send("window_close");
 
     document.fonts.ready.then(() => {
       titlebar.classList.add("font-ready");
@@ -193,9 +202,11 @@ if (uiConfig.titlebarStyle === "custom") {
 
 window.addEventListener("load", () => {
   setTimeout(() => {
-    if (document.documentElement) document.documentElement.classList.add("sclient-loaded");
+    if (document.documentElement)
+      document.documentElement.classList.add("sclient-loaded");
     setTimeout(() => {
-      if (document.documentElement) document.documentElement.classList.add("sclient-ready");
+      if (document.documentElement)
+        document.documentElement.classList.add("sclient-ready");
     }, 1000);
   }, 500);
 });

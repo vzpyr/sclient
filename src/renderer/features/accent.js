@@ -9,14 +9,19 @@ class AccentFeature extends Feature {
     return "Custom Accent";
   }
   get settingsFields() {
-    return [{ type: "color", key: "features.accent_color", label: "Accent Color" }];
+    return [
+      { type: "color", key: "features.accent_color", label: "Accent Color" },
+    ];
   }
 
   init() {
     if (this.enabled) return;
     super.init();
     if (SCLIENT_CONFIG.customAccent) {
-      document.documentElement.style.setProperty("--sclient-accent", SCLIENT_CONFIG.accentColor);
+      document.documentElement.style.setProperty(
+        "--sclient-accent",
+        SCLIENT_CONFIG.accentColor,
+      );
       this.applyCustomAccentColor(SCLIENT_CONFIG.accentColor);
     }
   }
@@ -35,7 +40,8 @@ class AccentFeature extends Feature {
 
     async function processCss(cssText, originalNode) {
       const selCss = `::selection { background: ${newColor} !important; color: #fff !important; }`;
-      if (typeof injectStyle === "function") injectStyle("sclient-selection-accent", selCss);
+      if (typeof injectStyle === "function")
+        injectStyle("sclient-selection-accent", selCss);
       if (typeof injectToIframes === "function")
         injectToIframes("sclient-selection-accent", selCss);
 
@@ -53,7 +59,10 @@ class AccentFeature extends Feature {
       }
 
       if (/rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi.test(newText)) {
-        newText = newText.replace(/rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi, `rgb(${rgbVal})`);
+        newText = newText.replace(
+          /rgb\(\s*255\s*,\s*85\s*,\s*0\s*\)/gi,
+          `rgb(${rgbVal})`,
+        );
         modified = true;
       }
       if (/255\s*,\s*85\s*,\s*0/gi.test(newText)) {
@@ -74,7 +83,8 @@ class AccentFeature extends Feature {
     }
 
     async function processNode(node) {
-      if (node.hasAttribute("data-sc-custom-accent") || processed.has(node)) return;
+      if (node.hasAttribute("data-sc-custom-accent") || processed.has(node))
+        return;
       processed.add(node);
       try {
         if (
@@ -92,17 +102,23 @@ class AccentFeature extends Feature {
     }
 
     const run = () => {
-      document.querySelectorAll('link[rel="stylesheet"], style').forEach(processNode);
+      document
+        .querySelectorAll('link[rel="stylesheet"], style')
+        .forEach(processNode);
     };
 
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+    if (document.readyState === "loading")
+      document.addEventListener("DOMContentLoaded", run);
     else run();
 
     const observer = new MutationObserver((mutations) => {
       let should = false;
       for (const m of mutations) {
         for (const node of m.addedNodes) {
-          if ((node.tagName === "LINK" && node.rel === "stylesheet") || node.tagName === "STYLE") {
+          if (
+            (node.tagName === "LINK" && node.rel === "stylesheet") ||
+            node.tagName === "STYLE"
+          ) {
             should = true;
           }
         }

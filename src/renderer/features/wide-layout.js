@@ -9,7 +9,9 @@ class WideLayoutFeature extends Feature {
     return "Wide Layout";
   }
   get settingsFields() {
-    return [{ type: "text", key: "features.wide_layout_width", label: "Max Width" }];
+    return [
+      { type: "text", key: "features.wide_layout_width", label: "Max Width" },
+    ];
   }
 
   init() {
@@ -17,7 +19,9 @@ class WideLayoutFeature extends Feature {
     super.init();
     const width = SCLIENT_CONFIG.wideLayoutWidth || "1200";
     const maxWidthRule =
-      width === "unlimited" ? "max-width: none !important;" : `max-width: ${width}px !important;`;
+      width === "unlimited"
+        ? "max-width: none !important;"
+        : `max-width: ${width}px !important;`;
     this.addStyle(
       "sclient-fluid-viewport",
       `
@@ -31,7 +35,7 @@ class WideLayoutFeature extends Feature {
         max-width: none !important;
         padding: 0 24px !important;
       }
-    `
+    `,
     );
   }
 }

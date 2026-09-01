@@ -5,7 +5,11 @@ function sendBridge(cmd, args = {}) {
     const cid = cmd + "_" + ++bridgeIdCounter + "_" + Date.now();
     let timeout;
     const handler = (event) => {
-      if (event.source !== window || !event.data || event.data.source !== "sclient-bridge-reply")
+      if (
+        event.source !== window ||
+        !event.data ||
+        event.data.source !== "sclient-bridge-reply"
+      )
         return;
       if (event.data.callbackId === cid) {
         clearTimeout(timeout);
@@ -27,7 +31,7 @@ function sendBridge(cmd, args = {}) {
         args,
         callbackId: cid,
       },
-      "*"
+      "*",
     );
   });
 }
@@ -83,7 +87,7 @@ async function fetchTrackData(songUrl) {
   if (!clientId) return null;
   try {
     const res = await fetch(
-      `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`
+      `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(songUrl)}&client_id=${clientId}`,
     );
     if (!res.ok) return null;
     const data = await res.json();
@@ -171,15 +175,24 @@ function getActiveMedia() {
   const tracked = (window.__scMedia || []).find((m) => m.duration > 0);
   if (tracked) return tracked;
   const all = Array.from(document.querySelectorAll("audio, video"));
-  return all.find((m) => !m.paused && m.duration > 0) || all.find((m) => m.duration > 0);
+  return (
+    all.find((m) => !m.paused && m.duration > 0) ||
+    all.find((m) => m.duration > 0)
+  );
 }
 
 function playerCommand(action, value) {
-  const cmd = typeof action === "object" && action !== null ? action : { action, value };
+  const cmd =
+    typeof action === "object" && action !== null ? action : { action, value };
   const act = cmd.action;
   if (!act) return;
 
-  if (act === "playpause" || act === "play" || act === "pause" || act === "stop") {
+  if (
+    act === "playpause" ||
+    act === "play" ||
+    act === "pause" ||
+    act === "stop"
+  ) {
     document.querySelector(".playControl")?.click();
   } else if (act === "next") {
     document.querySelector(".skipControl__next")?.click();
@@ -195,7 +208,10 @@ function playerCommand(action, value) {
     const media = getActiveMedia();
     if (media) {
       if (cmd.offsetMicros !== undefined) {
-        media.currentTime = Math.max(0, media.currentTime + cmd.offsetMicros / 1000000);
+        media.currentTime = Math.max(
+          0,
+          media.currentTime + cmd.offsetMicros / 1000000,
+        );
       } else if (cmd.value !== undefined) {
         media.currentTime = Math.max(0, cmd.value);
       }
@@ -213,9 +229,12 @@ function playerCommand(action, value) {
       const sliderProgress = document.querySelector(".volume__sliderProgress");
       const sliderHandle = document.querySelector(".volume__sliderHandle");
       if (volumeEl) volumeEl.setAttribute("data-level", Math.round(vol * 10));
-      if (sliderWrapper) sliderWrapper.setAttribute("aria-valuenow", vol.toFixed(2));
-      if (sliderProgress) sliderProgress.style.height = Math.round(vol * 120) + "px";
-      if (sliderHandle) sliderHandle.style.top = Math.round(120 - vol * 120 + 10) + "px";
+      if (sliderWrapper)
+        sliderWrapper.setAttribute("aria-valuenow", vol.toFixed(2));
+      if (sliderProgress)
+        sliderProgress.style.height = Math.round(vol * 120) + "px";
+      if (sliderHandle)
+        sliderHandle.style.top = Math.round(120 - vol * 120 + 10) + "px";
     }
   }
 

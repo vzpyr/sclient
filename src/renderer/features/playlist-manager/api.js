@@ -67,7 +67,9 @@ const api = {
   },
 
   putTracks(pid, trackIds) {
-    return scReq(`/playlists/${pid}`, "PUT", { playlist: { tracks: trackIds } });
+    return scReq(`/playlists/${pid}`, "PUT", {
+      playlist: { tracks: trackIds },
+    });
   },
 
   putFull(pid, fullObj) {

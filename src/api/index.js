@@ -50,7 +50,10 @@ export default async function handler(req, res) {
   let finalUrl;
   try {
     const tu = new URL(target);
-    if (!tu.hostname.endsWith("soundcloud.com") && !tu.hostname.endsWith("sndcdn.com")) {
+    if (
+      !tu.hostname.endsWith("soundcloud.com") &&
+      !tu.hostname.endsWith("sndcdn.com")
+    ) {
       setCors();
       res.statusCode = 403;
       return res.end("Forbidden");
@@ -85,7 +88,11 @@ export default async function handler(req, res) {
 
     response.headers.forEach((value, key) => {
       const kl = key.toLowerCase();
-      if (kl === "content-encoding" || kl === "transfer-encoding" || kl === "content-length")
+      if (
+        kl === "content-encoding" ||
+        kl === "transfer-encoding" ||
+        kl === "content-length"
+      )
         return;
       res.setHeader(key, value);
     });
