@@ -9,7 +9,13 @@ class ListenbrainzFeature extends Feature {
     return "ListenBrainz Scrobbling";
   }
   get settingsFields() {
-    return [{ type: "password", key: "integrations.listenbrainz.token", label: "Token" }];
+    return [
+      {
+        type: "password",
+        key: "integrations.listenbrainz.token",
+        label: "Token",
+      },
+    ];
   }
   settingsCustom() {
     return `
@@ -47,7 +53,9 @@ class ListenbrainzFeature extends Feature {
       cmd === "nowPlaying"
         ? {
             listen_type: "playing_now",
-            payload: [{ track_metadata: { artist_name: artist, track_name: title } }],
+            payload: [
+              { track_metadata: { artist_name: artist, track_name: title } },
+            ],
           }
         : {
             listen_type: "single",
@@ -92,7 +100,9 @@ class ListenbrainzFeature extends Feature {
       if (evt.type === "track_start") {
         this.hasScrobbled = false;
         this.startTime = Math.floor(evt.timestamp / 1000);
-        this.threshold = evt.trackData ? Math.min(evt.trackData.duration / 1000 / 2, 240) : 0;
+        this.threshold = evt.trackData
+          ? Math.min(evt.trackData.duration / 1000 / 2, 240)
+          : 0;
         if (evt.isPlaying && artist && title) {
           this.broadcast("nowPlaying", artist, title);
           this.updateStatus(this.elId, "Listening...", "#789cff");
@@ -101,12 +111,20 @@ class ListenbrainzFeature extends Feature {
         return;
       }
 
-      if (evt.isPlaying && !this.prevPlaying && !this.hasScrobbled && artist && title) {
+      if (
+        evt.isPlaying &&
+        !this.prevPlaying &&
+        !this.hasScrobbled &&
+        artist &&
+        title
+      ) {
         this.broadcast("nowPlaying", artist, title);
       }
 
       if (evt.trackData && evt.isPlaying) {
-        const elapsed = Math.floor((evt.timestamp - this.startTime * 1000) / 1000);
+        const elapsed = Math.floor(
+          (evt.timestamp - this.startTime * 1000) / 1000,
+        );
         if (!this.hasScrobbled && elapsed >= this.threshold) {
           this.broadcast("scrobble", artist, title, this.startTime);
           this.hasScrobbled = true;

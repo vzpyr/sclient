@@ -24,7 +24,11 @@ let isQuitting = false;
 app.name = "sclient";
 app.on("before-quit", () => {
   isQuitting = true;
-  if (win && !win.isDestroyed() && config.isEnabled("features.load_last_page")) {
+  if (
+    win &&
+    !win.isDestroyed() &&
+    config.isEnabled("features.load_last_page")
+  ) {
     const url = win.webContents.getURL();
     if (url && url.startsWith("http")) config.set("last_page_url", url);
   }
@@ -65,7 +69,9 @@ if (!gotSingleInstanceLock) {
 } else {
   app.on("second-instance", (_event, argv) => {
     const raw = (argv || []).find(
-      (a) => typeof a === "string" && (a.startsWith("sclient://") || a.startsWith("sclient:"))
+      (a) =>
+        typeof a === "string" &&
+        (a.startsWith("sclient://") || a.startsWith("sclient:")),
     );
     if (raw) handleSclientUrl(raw);
   });
@@ -73,7 +79,9 @@ if (!gotSingleInstanceLock) {
 
 (function () {
   const raw = process.argv.find(
-    (a) => typeof a === "string" && (a.startsWith("sclient://") || a.startsWith("sclient:"))
+    (a) =>
+      typeof a === "string" &&
+      (a.startsWith("sclient://") || a.startsWith("sclient:")),
   );
   if (raw) pendingSclientUrl = sanitizeSclientUrl(raw);
 })();
@@ -115,7 +123,9 @@ const CSS_FILES = ["base.css", "titlebar.css", "layout.css", "features.css"];
 
 function luminance(hex) {
   const rgb = hex.replace("#", "");
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(rgb.slice(i, i + 2), 16) / 255);
+  const [r, g, b] = [0, 2, 4].map(
+    (i) => parseInt(rgb.slice(i, i + 2), 16) / 255,
+  );
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
@@ -145,7 +155,9 @@ function createWindow() {
   app.userAgentFallback = cleanUA;
 
   const customBgEnabled = config.isEnabled("features.custom_bg_color");
-  const splashBgColor = customBgEnabled ? config.get("features.bg_color", "#000000") : "#121212";
+  const splashBgColor = customBgEnabled
+    ? config.get("features.bg_color", "#000000")
+    : "#121212";
   const splashTextColor =
     customBgEnabled && luminance(splashBgColor) > 0.45
       ? "rgba(0, 0, 0, 0.4)"
@@ -230,9 +242,9 @@ function createWindow() {
 
   win.webContents.on("dom-ready", () => {
     const rendererDir = path.join(__dirname, "..", "renderer");
-    const injectedJs = JS_FILES.map((f) => fs.readFileSync(path.join(rendererDir, f), "utf8")).join(
-      "\n"
-    );
+    const injectedJs = JS_FILES.map((f) =>
+      fs.readFileSync(path.join(rendererDir, f), "utf8"),
+    ).join("\n");
 
     const chartPath = path.join(
       __dirname,
@@ -241,7 +253,7 @@ function createWindow() {
       "node_modules",
       "chart.js",
       "dist",
-      "chart.umd.js"
+      "chart.umd.js",
     );
     const chartJs = fs.readFileSync(chartPath, "utf8");
 
@@ -249,12 +261,16 @@ function createWindow() {
 
     const stylesDir = path.join(rendererDir, "styles");
     const cssFiles = CSS_FILES.filter(
-      (f) => f !== "titlebar.css" || config.get("features.titlebar_style", "custom") === "custom"
+      (f) =>
+        f !== "titlebar.css" ||
+        config.get("features.titlebar_style", "custom") === "custom",
     );
     Promise.all(
       cssFiles.map((f) =>
-        win.webContents.insertCSS(fs.readFileSync(path.join(stylesDir, f), "utf8"))
-      )
+        win.webContents.insertCSS(
+          fs.readFileSync(path.join(stylesDir, f), "utf8"),
+        ),
+      ),
     ).catch((err) => console.error("[SClient] Couldn't inject styles:", err));
 
     win.webContents
@@ -269,7 +285,7 @@ try {
 } catch (e) {
   console.error("[SClient] Couldn't run injected JS:", e);
 }
-`
+`,
       )
       .catch((err) => console.error("[SClient] Couldn't run scripts:", err));
   });
@@ -315,7 +331,12 @@ app.whenReady().then(async () => {
 
   createWindow();
 
-  require("./features/miniplayer").register({ ipcMain, BrowserWindow, win, app });
+  require("./features/miniplayer").register({
+    ipcMain,
+    BrowserWindow,
+    win,
+    app,
+  });
 
   if (process.platform === "linux" && config.isEnabled("features.mpris")) {
     require("./features/mpris").init({ ipcMain, win });
@@ -343,23 +364,25 @@ app.whenReady().then(async () => {
             label: "Previous",
             click: () =>
               win.webContents.executeJavaScript(
-                "document.querySelector('.skipControl__previous').click()"
+                "document.querySelector('.skipControl__previous').click()",
               ),
           },
           {
             label: "Pause/Resume",
             click: () =>
-              win.webContents.executeJavaScript("document.querySelector('.playControl').click()"),
+              win.webContents.executeJavaScript(
+                "document.querySelector('.playControl').click()",
+              ),
           },
           {
             label: "Next",
             click: () =>
               win.webContents.executeJavaScript(
-                "document.querySelector('.skipControl__next').click()"
+                "document.querySelector('.skipControl__next').click()",
               ),
           },
           { label: "Exit", click: () => app.quit() },
-        ])
+        ]),
       );
       tray.on("click", () => {
         win.show();

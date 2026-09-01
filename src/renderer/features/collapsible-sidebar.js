@@ -29,7 +29,7 @@ class CollapsibleSidebarFeature extends Feature {
       body.sclient-sidebar-open .l-sidebar-right { right: 0 !important; }
       #sclient-sidebar-toggle { display: none !important; top: 60px; right: 15px; }
       body:has(.l-sidebar-right) #sclient-sidebar-toggle { display: flex !important; }
-    `
+    `,
     );
   }
 

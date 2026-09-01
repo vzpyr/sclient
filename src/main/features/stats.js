@@ -25,9 +25,13 @@ function getDb() {
     `);
     const cols = db.pragma("table_info(listens)");
     if (!cols.some((c) => c.name === "source")) {
-      db.exec("ALTER TABLE listens ADD COLUMN source TEXT NOT NULL DEFAULT 'api'");
+      db.exec(
+        "ALTER TABLE listens ADD COLUMN source TEXT NOT NULL DEFAULT 'api'",
+      );
     }
-    db.exec("CREATE INDEX IF NOT EXISTS idx_listens_played_at ON listens(played_at)");
+    db.exec(
+      "CREATE INDEX IF NOT EXISTS idx_listens_played_at ON listens(played_at)",
+    );
     return db;
   } catch (e) {
     console.error("[SClient] Couldn't open stats database:", e);
@@ -36,17 +40,23 @@ function getDb() {
 }
 
 async function syncPlayHistory() {
-  if (!config.statsApiSyncEnabled || !credentials.clientId || !credentials.oauthToken) return;
+  if (
+    !config.statsApiSyncEnabled ||
+    !credentials.clientId ||
+    !credentials.oauthToken
+  )
+    return;
   const database = getDb();
   if (!database || syncing) return;
   syncing = true;
 
   try {
     const insert = database.prepare(
-      "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)"
+      "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)",
     );
     const insertMany = database.transaction((entries) => {
-      for (const e of entries) insert.run(e.played_at, e.track_id, JSON.stringify(e.track), "api");
+      for (const e of entries)
+        insert.run(e.played_at, e.track_id, JSON.stringify(e.track), "api");
     });
 
     let url = `https://api-v2.soundcloud.com/me/play-history/tracks?client_id=${credentials.clientId}&limit=50&linked_partitioning=1&app_version=1782999645&app_locale=en`;
@@ -94,7 +104,7 @@ function recordListen(playedAt, trackId, track) {
   try {
     if (!insertStmt) {
       insertStmt = database.prepare(
-        "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)"
+        "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)",
       );
     }
     insertStmt.run(playedAt, trackId, JSON.stringify(track), "local");
@@ -149,7 +159,7 @@ function exportDb(savePath) {
 
   const rows = currentDb.prepare("SELECT * FROM listens").all();
   const insert = newDb.prepare(
-    "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)"
+    "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)",
   );
   newDb.transaction(() => {
     for (const r of rows) {
@@ -165,7 +175,9 @@ function importDb(openPath, overwrite = false) {
 
   const impDb = new Database(openPath);
   const hasListens = impDb
-    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='listens'")
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='listens'",
+    )
     .get();
   if (!hasListens) {
     impDb.close();
@@ -177,13 +189,17 @@ function importDb(openPath, overwrite = false) {
 
   if (rows.length > 0) {
     const first = rows[0];
-    if (!("played_at" in first && "track_id" in first && "track_json" in first)) {
+    if (!(
+      "played_at" in first &&
+      "track_id" in first &&
+      "track_json" in first
+    )) {
       throw new Error("Invalid stats database: missing required columns");
     }
   }
 
   const insert = currentDb.prepare(
-    "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)"
+    "INSERT OR IGNORE INTO listens (played_at, track_id, track_json, source) VALUES (?, ?, ?, ?)",
   );
   currentDb.transaction(() => {
     if (overwrite) {

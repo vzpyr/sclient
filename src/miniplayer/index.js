@@ -67,7 +67,10 @@ function hslToRgb(h, s, l) {
 
 function rgbToHex(r, g, b) {
   return (
-    "#" + [r, g, b].map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0")).join("")
+    "#" +
+    [r, g, b]
+      .map((v) => Math.max(0, Math.min(255, v)).toString(16).padStart(2, "0"))
+      .join("")
   );
 }
 
@@ -99,7 +102,12 @@ function extractAccentFromArtwork(url) {
         const sWeight = s;
         const weight = Math.max(0, lWeight) * sWeight;
         if (weight <= 0) continue;
-        const key = Math.round(h * 12) + "/" + Math.round(s * 4) + "/" + Math.round(l * 5);
+        const key =
+          Math.round(h * 12) +
+          "/" +
+          Math.round(s * 4) +
+          "/" +
+          Math.round(l * 5);
         const bucket = buckets.get(key);
         if (bucket) {
           bucket.r += r * weight;
@@ -107,7 +115,12 @@ function extractAccentFromArtwork(url) {
           bucket.b += b * weight;
           bucket.weight += weight;
         } else {
-          buckets.set(key, { r: r * weight, g: g * weight, b: b * weight, weight });
+          buckets.set(key, {
+            r: r * weight,
+            g: g * weight,
+            b: b * weight,
+            weight,
+          });
         }
       }
 
@@ -140,12 +153,17 @@ $("btn-close").addEventListener("click", () => ipcRenderer.send("mini_close"));
 
 $("offset-slider").addEventListener("input", (e) => {
   lyricsOffset = parseFloat(e.target.value);
-  $("offset-val").textContent = (lyricsOffset > 0 ? "+" : "") + lyricsOffset.toFixed(1) + "s";
+  $("offset-val").textContent =
+    (lyricsOffset > 0 ? "+" : "") + lyricsOffset.toFixed(1) + "s";
   currentHighlightedIndex = -999;
   updateLyricsUI(currentInterpolatedPos);
 });
-$("btn-minimize").addEventListener("click", () => ipcRenderer.send("mini_minimize"));
-$("btn-fullscreen").addEventListener("click", () => ipcRenderer.send("mini_fullscreen"));
+$("btn-minimize").addEventListener("click", () =>
+  ipcRenderer.send("mini_minimize"),
+);
+$("btn-fullscreen").addEventListener("click", () =>
+  ipcRenderer.send("mini_fullscreen"),
+);
 
 let isPlayingLocal = false;
 let isShuffledLocal = false;
@@ -171,8 +189,12 @@ $("btn-playpause").addEventListener("click", () => {
   suppressPlayStateUntil = Date.now() + 500;
   ipcRenderer.send("mini_action", "playpause");
 });
-$("btn-next").addEventListener("click", () => ipcRenderer.send("mini_action", "next"));
-$("btn-prev").addEventListener("click", () => ipcRenderer.send("mini_action", "prev"));
+$("btn-next").addEventListener("click", () =>
+  ipcRenderer.send("mini_action", "next"),
+);
+$("btn-prev").addEventListener("click", () =>
+  ipcRenderer.send("mini_action", "prev"),
+);
 $("btn-shuffle").addEventListener("click", () => {
   isShuffledLocal = !isShuffledLocal;
   $("btn-shuffle").classList.toggle("active", isShuffledLocal);
@@ -265,7 +287,9 @@ ipcRenderer.on("mini_update", (_e, data) => {
 
     currentTitle = data.trackData.title || "Unknown";
     currentArtist =
-      data.trackData.publisher_metadata?.artist || data.trackData.user?.username || "-";
+      data.trackData.publisher_metadata?.artist ||
+      data.trackData.user?.username ||
+      "-";
 
     $("title").textContent = currentTitle;
     $("artist").textContent = currentArtist;
@@ -277,7 +301,10 @@ ipcRenderer.on("mini_update", (_e, data) => {
       extractAccentFromArtwork(url);
     }
 
-    if (lyricsOpenLocal && (oldTitle !== currentTitle || oldArtist !== currentArtist)) {
+    if (
+      lyricsOpenLocal &&
+      (oldTitle !== currentTitle || oldArtist !== currentArtist)
+    ) {
       fetchLyrics(currentArtist, currentTitle);
     }
   } else {
@@ -433,7 +460,7 @@ function renderLineWords(line) {
     return line.words
       .map(
         (w) =>
-          `<span class="lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`
+          `<span class="lyric-word" data-start="${w.start / 1000}" data-end="${w.end / 1000}">${esc(w.text)}</span>`,
       )
       .join("");
   }
@@ -451,17 +478,19 @@ async function fetchLyrics(artist, title) {
 
   const abortCtrl = new AbortController();
   currentFetchAbort = abortCtrl;
-  document.getElementById("sclient-mini-manual-now").addEventListener("click", () => {
-    abortCtrl.abort();
-    currentFetchAbort = null;
-    $("offset-controls").classList.remove("visible");
-    renderManual(artist, title);
-  });
+  document
+    .getElementById("sclient-mini-manual-now")
+    .addEventListener("click", () => {
+      abortCtrl.abort();
+      currentFetchAbort = null;
+      $("offset-controls").classList.remove("visible");
+      renderManual(artist, title);
+    });
 
   try {
     const res = await fetch(
       `https://api.lrcmux.dev/get?artist=${encodeURIComponent(artist)}&title=${encodeURIComponent(title)}&level=word&format=json`,
-      { signal: abortCtrl.signal }
+      { signal: abortCtrl.signal },
     );
     if (!res.ok) throw new Error("Not found");
     const data = await res.json();
@@ -481,7 +510,12 @@ async function fetchLyrics(artist, title) {
         const start = line.start / 1000;
         const end = line.end / 1000;
         html += `<div class="lyric-line" data-start="${start}" data-end="${end}">${renderLineWords(line)}</div>`;
-        currentSyncedLyrics.push({ start, end, words: line.words || null, element: null });
+        currentSyncedLyrics.push({
+          start,
+          end,
+          words: line.words || null,
+          element: null,
+        });
       }
       content.innerHTML = html + `</div>`;
       $("offset-controls").classList.add("visible");
@@ -527,7 +561,9 @@ function updateLyricsUI(pos) {
   if (!lyricsOpenLocal || !currentSyncedLyrics.length) return;
 
   const effectivePos = pos + lyricsOffset;
-  const activeIdx = currentSyncedLyrics.findLastIndex((l) => effectivePos >= l.start - 0.1);
+  const activeIdx = currentSyncedLyrics.findLastIndex(
+    (l) => effectivePos >= l.start - 0.1,
+  );
   const accent = currentAccent || "#f50";
 
   if (activeIdx !== currentHighlightedIndex) {
@@ -536,7 +572,9 @@ function updateLyricsUI(pos) {
       if (!l.element) return;
       if (i === activeIdx) {
         l.element.className = "lyric-line active";
-        l.element.style.color = l.element.querySelector(".lyric-word") ? "" : accent;
+        l.element.style.color = l.element.querySelector(".lyric-word")
+          ? ""
+          : accent;
         l.element.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         l.element.querySelectorAll(".lyric-word").forEach((w) => {
@@ -615,9 +653,11 @@ function renderLoop() {
   if (currentDuration > 0) {
     if (isPlayingLocal) {
       const estimated =
-        lastKnownPosition + ((Date.now() - lastKnownTime) / 1000) * playbackRateLocal;
+        lastKnownPosition +
+        ((Date.now() - lastKnownTime) / 1000) * playbackRateLocal;
       if (estimated > currentInterpolatedPos) {
-        currentInterpolatedPos = estimated > currentDuration ? currentDuration : estimated;
+        currentInterpolatedPos =
+          estimated > currentDuration ? currentDuration : estimated;
       }
     }
 
@@ -678,7 +718,8 @@ function drawVisualizer() {
 
   const lerpFactor = 0.5;
   for (let i = 0; i < 256; i++) {
-    currentVisualizerData[i] += (targetVisualizerData[i] - currentVisualizerData[i]) * lerpFactor;
+    currentVisualizerData[i] +=
+      (targetVisualizerData[i] - currentVisualizerData[i]) * lerpFactor;
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -713,7 +754,12 @@ function drawVisualizer() {
     const y = height - barHeight;
 
     ctx.beginPath();
-    ctx.roundRect(x, y, barWidth, barHeight, [barWidth / 2, barWidth / 2, 0, 0]);
+    ctx.roundRect(x, y, barWidth, barHeight, [
+      barWidth / 2,
+      barWidth / 2,
+      0,
+      0,
+    ]);
     ctx.fill();
   }
 }

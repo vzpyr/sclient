@@ -41,7 +41,9 @@ async function updateRpc({
     if (rpc && rpc.user) {
       rpc.user
         .clearActivity()
-        .catch((e) => console.error("[SClient] Couldn't clear Discord activity:", e));
+        .catch((e) =>
+          console.error("[SClient] Couldn't clear Discord activity:", e),
+        );
     }
     return;
   }
@@ -64,14 +66,19 @@ async function updateRpc({
 
   if (trackId) {
     activity.buttons = [
-      { label: "Listen on SoundCloud", url: buildRedirectUrl(trackId, artistSlug, trackSlug) },
+      {
+        label: "Listen on SoundCloud",
+        url: buildRedirectUrl(trackId, artistSlug, trackSlug),
+      },
     ];
   }
 
   if (rpc && rpc.user) {
     rpc.user
       .setActivity(activity)
-      .catch((e) => console.error("[SClient] Couldn't update Discord activity:", e));
+      .catch((e) =>
+        console.error("[SClient] Couldn't update Discord activity:", e),
+      );
   }
 }
 

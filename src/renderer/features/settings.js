@@ -13,7 +13,10 @@ const CONFIG_PAYLOAD_KEYS = {
 };
 
 function readConfigValue(key, fallback) {
-  return SCLIENT_CONFIG.get(CONFIG_PAYLOAD_KEYS[key] || key.replace(/^features\./, ""), fallback);
+  return SCLIENT_CONFIG.get(
+    CONFIG_PAYLOAD_KEYS[key] || key.replace(/^features\./, ""),
+    fallback,
+  );
 }
 
 const AUXILIARY = {
@@ -21,12 +24,20 @@ const AUXILIARY = {
     {
       label: "Custom Background",
       toggleKey: "features.custom_bg_color",
-      fields: [{ type: "color", key: "features.bg_color", label: "Background Color" }],
+      fields: [
+        { type: "color", key: "features.bg_color", label: "Background Color" },
+      ],
     },
     {
       label: "Custom Font",
       toggleKey: "features.custom_font",
-      fields: [{ type: "text", key: "features.custom_font_family", label: "Font Family" }],
+      fields: [
+        {
+          type: "text",
+          key: "features.custom_font_family",
+          label: "Font Family",
+        },
+      ],
     },
   ],
   playback: [
@@ -39,15 +50,25 @@ const AUXILIARY = {
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;"><button id="sclient-proxyurl-public-btn" class="sclient-btn" style="flex-shrink:0;white-space:nowrap;padding:4px 8px;font-size:11px;">Use Public</button></div><div style="font-size:10px;color:#f88;margin-top:4px;">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. Opening your profile may temporarily geo-lock songs again.</div>',
     },
   ],
-  stats: [{ label: "History Sync", description: "Every 2h", toggleKey: "stats.api_sync" }],
+  stats: [
+    {
+      label: "History Sync",
+      description: "Every 2h",
+      toggleKey: "stats.api_sync",
+    },
+  ],
 };
 
 function highlight(text, patterns) {
-  let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
   const tokens = [];
   for (const [re, color] of patterns) {
     html = html.replace(re, (m, ...groups) => {
-      const content = groups[0] != null && groups[1] != null ? groups[0] + groups[1] : m;
+      const content =
+        groups[0] != null && groups[1] != null ? groups[0] + groups[1] : m;
       const idx = tokens.length;
       tokens.push(`<span style="color:${color};">${content}</span>`);
       return `__T${idx}__`;
@@ -61,7 +82,10 @@ function highlight(text, patterns) {
 function highlightCss(text) {
   return highlight(text, [
     [/(\/\*[\s\S]*?\*\/)/g, "var(--sclient-syntax-comment, #6a9955)"],
-    [/([.#][a-zA-Z0-9_-]+)(?=[\s{])/g, "var(--sclient-syntax-selector, #d7ba7d)"],
+    [
+      /([.#][a-zA-Z0-9_-]+)(?=[\s{])/g,
+      "var(--sclient-syntax-selector, #d7ba7d)",
+    ],
     [/([a-zA-Z-]+)\s*(?=:)/g, "var(--sclient-syntax-property, #9cdcfe)"],
     [/(:\s*)([^;}]+)(?=;|\})/g, "var(--sclient-syntax-value, #ce9178)"],
   ]);
@@ -108,7 +132,8 @@ function fieldHtml(field) {
 
 function renderFeatureCard(f) {
   const fields = (f.settingsFields || []).map(fieldHtml).join("");
-  const custom = typeof f.settingsCustom === "function" ? f.settingsCustom() : "";
+  const custom =
+    typeof f.settingsCustom === "function" ? f.settingsCustom() : "";
   return `
     <div class="sclient-card">
       <div class="sclient-card-top">
@@ -138,10 +163,11 @@ function auxCard(a) {
 
 function categorySectionHtml(category, title) {
   const features = FEATURES.filter(
-    (f) => f.settingsCategory === category && f !== PLAYLIST_MANAGER_FEATURE
+    (f) => f.settingsCategory === category && f !== PLAYLIST_MANAGER_FEATURE,
   );
   const cards =
-    features.map(renderFeatureCard).join("") + (AUXILIARY[category] || []).map(auxCard).join("");
+    features.map(renderFeatureCard).join("") +
+    (AUXILIARY[category] || []).map(auxCard).join("");
   return `<div class="sclient-section-title">${title}</div>${cards}`;
 }
 
@@ -153,7 +179,9 @@ function setupToggleVisual(input) {
   if (!bg || !slider) return;
   const update = () => {
     bg.style.backgroundColor = input.checked ? getAccent() : "#333";
-    slider.style.transform = input.checked ? "translateX(20px)" : "translateX(0)";
+    slider.style.transform = input.checked
+      ? "translateX(20px)"
+      : "translateX(0)";
   };
   input.addEventListener("change", update);
   update();
@@ -195,8 +223,12 @@ function setupEditors(overlay) {
     show.style.display = "block";
     hide.style.display = "none";
   };
-  tabCss.addEventListener("click", () => switchTab(tabCss, tabJs, cssCon, jsCon));
-  tabJs.addEventListener("click", () => switchTab(tabJs, tabCss, jsCon, cssCon));
+  tabCss.addEventListener("click", () =>
+    switchTab(tabCss, tabJs, cssCon, jsCon),
+  );
+  tabJs.addEventListener("click", () =>
+    switchTab(tabJs, tabCss, jsCon, cssCon),
+  );
 
   cssEd.value = SCLIENT_CONFIG.customCss;
   jsEd.value = SCLIENT_CONFIG.customJs;
@@ -269,9 +301,9 @@ function renderAccounts(overlay) {
                     : "Clear all cookies and browser data for Main profile?";
                 showConfirm(msg).then((ok) => {
                   if (ok)
-                    sendBridge(acc === active ? "clear_data_and_restart" : "clear_data").catch(
-                      () => {}
-                    );
+                    sendBridge(
+                      acc === active ? "clear_data_and_restart" : "clear_data",
+                    ).catch(() => {});
                 });
               };
               btns.appendChild(rst);
@@ -309,16 +341,21 @@ function wireCustomSections(overlay) {
   const connectBtn = overlay.querySelector("#sclient-lastfm-connect-btn");
   if (connectBtn) {
     const status = overlay.querySelector("#sclient-lastfm-status");
-    const disconnectBtn = overlay.querySelector("#sclient-lastfm-disconnect-btn");
+    const disconnectBtn = overlay.querySelector(
+      "#sclient-lastfm-disconnect-btn",
+    );
     const setConnected = (username) => {
-      connectBtn.textContent = username ? "Reconnect" : "Connect Last.fm Account";
+      connectBtn.textContent = username
+        ? "Reconnect"
+        : "Connect Last.fm Account";
       if (disconnectBtn) disconnectBtn.style.display = username ? "" : "none";
       if (status) {
         status.textContent = username ? "Connected: " + username : "Waiting...";
         status.style.color = username ? getAccent() : "#ccc";
       }
     };
-    if (SCLIENT_CONFIG.lastfmUsername) setConnected(SCLIENT_CONFIG.lastfmUsername);
+    if (SCLIENT_CONFIG.lastfmUsername)
+      setConnected(SCLIENT_CONFIG.lastfmUsername);
 
     if (disconnectBtn) {
       disconnectBtn.addEventListener("click", async () => {
@@ -330,8 +367,12 @@ function wireCustomSections(overlay) {
     connectBtn.addEventListener("click", async () => {
       connectBtn.textContent = "Waiting for Last.fm...";
       connectBtn.disabled = true;
-      const keyInput = overlay.querySelector('[data-config-key="integrations.lastfm.api_key"]');
-      const secretInput = overlay.querySelector('[data-config-key="integrations.lastfm.secret"]');
+      const keyInput = overlay.querySelector(
+        '[data-config-key="integrations.lastfm.api_key"]',
+      );
+      const secretInput = overlay.querySelector(
+        '[data-config-key="integrations.lastfm.secret"]',
+      );
       await sendBridge("lastfm_save_credentials", {
         apiKey: (keyInput ? keyInput.value : "").trim(),
         secret: (secretInput ? secretInput.value : "").trim(),
@@ -348,12 +389,15 @@ function wireCustomSections(overlay) {
   }
 
   const statsOpen = overlay.querySelector("#sclient-stats-open-btn");
-  if (statsOpen) statsOpen.addEventListener("click", () => STATS_FEATURE.toggle());
+  if (statsOpen)
+    statsOpen.addEventListener("click", () => STATS_FEATURE.toggle());
 
   const publicBtn = overlay.querySelector("#sclient-proxyurl-public-btn");
   if (publicBtn)
     publicBtn.addEventListener("click", () => {
-      const url = overlay.querySelector('[data-config-key="features.proxy_url"]');
+      const url = overlay.querySelector(
+        '[data-config-key="features.proxy_url"]',
+      );
       if (url) url.value = "https://sc.z-n.cc/";
     });
 
@@ -429,7 +473,8 @@ class SettingsFeature extends Feature {
     btn.id = "sclient-settings-btn";
     btn.href = "#";
     btn.className = "header__moreButton";
-    btn.style.cssText = "display: flex; align-items: center; justify-content: center;";
+    btn.style.cssText =
+      "display: flex; align-items: center; justify-content: center;";
     btn.title = "SClient Settings";
     btn.innerHTML =
       '<div class="header__moreButtonIcon" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></div>';
@@ -600,13 +645,17 @@ class SettingsFeature extends Feature {
       const key = el.dataset.configKey;
       if (el.type === "checkbox") {
         const feature = FEATURES.find((f) => f.featureKey === key);
-        el.checked = feature ? feature.isEnabled() : !!readConfigValue(key, false);
+        el.checked = feature
+          ? feature.isEnabled()
+          : !!readConfigValue(key, false);
       } else {
         el.value = readConfigValue(key, el.type === "color" ? "#000000" : "");
       }
     });
 
-    overlay.querySelectorAll(".sclient-toggle input[type='checkbox']").forEach(setupToggleVisual);
+    overlay
+      .querySelectorAll(".sclient-toggle input[type='checkbox']")
+      .forEach(setupToggleVisual);
 
     overlay.querySelectorAll(".sclient-card").forEach((card) => {
       const toggle = card.querySelector('input[type="checkbox"]');
@@ -624,7 +673,9 @@ class SettingsFeature extends Feature {
     renderAccounts(overlay);
     STATS_FEATURE.refreshStatus();
 
-    overlay.querySelector("#sclient-close-btn").addEventListener("click", () => this.toggle());
+    overlay
+      .querySelector("#sclient-close-btn")
+      .addEventListener("click", () => this.toggle());
     overlay
       .querySelector("#sclient-save-btn")
       .addEventListener("click", () => saveSettings(overlay));

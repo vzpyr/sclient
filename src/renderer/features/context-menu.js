@@ -15,7 +15,9 @@ class ContextMenuFeature extends Feature {
   init() {
     if (this.enabled) return;
     super.init();
-    this.on(document, "contextmenu", (e) => this.handleContextMenu(document, e));
+    this.on(document, "contextmenu", (e) =>
+      this.handleContextMenu(document, e),
+    );
     this.injectIntoIframes();
   }
 
@@ -27,7 +29,9 @@ class ContextMenuFeature extends Feature {
         if (!doc.__sclient_cm) {
           doc.__sclient_cm = true;
           injectIframeStyles(doc);
-          doc.addEventListener("contextmenu", (e) => this.handleContextMenu(doc, e));
+          doc.addEventListener("contextmenu", (e) =>
+            this.handleContextMenu(doc, e),
+          );
           if (!ifr.__sclient_cm_hooked) {
             ifr.__sclient_cm_hooked = true;
             ifr.addEventListener("load", () => {
@@ -163,7 +167,7 @@ class ContextMenuFeature extends Feature {
       items.push(
         buildItem("Copy link address", () => {
           writeClipboard(linkEl.href);
-        })
+        }),
       );
     }
 
@@ -173,7 +177,7 @@ class ContextMenuFeature extends Feature {
         items.push(
           buildItem("View image", () => {
             viewImage(imgUrl);
-          })
+          }),
         );
       }
     }
@@ -186,7 +190,7 @@ class ContextMenuFeature extends Feature {
       items.push(
         buildItem("Cut", () => {
           execEdit(doc, "cut");
-        })
+        }),
       );
     }
 
@@ -194,7 +198,7 @@ class ContextMenuFeature extends Feature {
       items.push(
         buildItem("Copy", () => {
           execEdit(doc, "copy");
-        })
+        }),
       );
     }
 
@@ -206,19 +210,22 @@ class ContextMenuFeature extends Feature {
             return;
           }
           doc.execCommand("paste");
-        })
+        }),
       );
     }
 
     items.push(
       buildItem("Select All", () => {
-        if (editableEl && (editableEl.tagName === "INPUT" || editableEl.tagName === "TEXTAREA")) {
+        if (
+          editableEl &&
+          (editableEl.tagName === "INPUT" || editableEl.tagName === "TEXTAREA")
+        ) {
           editableEl.focus();
           editableEl.select();
         } else {
           execEdit(doc, "selectAll");
         }
-      })
+      }),
     );
 
     items.push(buildSep());
@@ -226,19 +233,19 @@ class ContextMenuFeature extends Feature {
     items.push(
       buildItem("Copy URL", () => {
         writeClipboard(win.location.href);
-      })
+      }),
     );
 
     items.push(
       buildItem("Navigate to URL", () => {
         navigateToUrlModal(doc);
-      })
+      }),
     );
 
     items.push(
       buildItem("Reload", () => {
         win.location.reload();
-      })
+      }),
     );
 
     for (let i = items.length - 1; i >= 0; i--) {
@@ -270,16 +277,18 @@ class ContextMenuFeature extends Feature {
       (ev) => {
         ev.preventDefault();
       },
-      true
+      true,
     );
 
     menu.style.left = Math.min(e.clientX, win.innerWidth - 210) + "px";
-    menu.style.top = Math.min(e.clientY, win.innerHeight - menu.offsetHeight - 5) + "px";
+    menu.style.top =
+      Math.min(e.clientY, win.innerHeight - menu.offsetHeight - 5) + "px";
     doc.body.appendChild(menu);
     menuEl = menu;
 
     requestAnimationFrame(() => {
-      menu.style.top = Math.min(e.clientY, win.innerHeight - menu.offsetHeight - 5) + "px";
+      menu.style.top =
+        Math.min(e.clientY, win.innerHeight - menu.offsetHeight - 5) + "px";
     });
 
     const dismiss = (ev) => {
@@ -356,12 +365,14 @@ function findImageEl(doc, target) {
 
 function imageUrlFrom(el) {
   if (el.tagName === "IMG") return el.currentSrc || el.src;
-  const bg = (el.style && el.style.backgroundImage) || getComputedStyle(el).backgroundImage;
+  const bg =
+    (el.style && el.style.backgroundImage) ||
+    getComputedStyle(el).backgroundImage;
   if (!bg || bg === "none") return null;
   let url = bg.replace(/^url\(['"]?/, "").replace(/['"]?\)$/, "");
   url = url.replace(
     /-(t50x50|badge|large|t120x120|small|t67x67|t300x300|crop|t200x200|original)\.(jpg|png|jpeg|webp)/i,
-    "-t500x500.$2"
+    "-t500x500.$2",
   );
   return url;
 }
@@ -377,7 +388,8 @@ function navigateToUrlModal(doc) {
   const title = doc.createElement("div");
   title.textContent = "Navigate to URL";
   title.className = "sclient-text-body";
-  title.style.cssText = "font-weight:600;margin-bottom:16px;font-size:var(--sclient-text-lg);";
+  title.style.cssText =
+    "font-weight:600;margin-bottom:16px;font-size:var(--sclient-text-lg);";
   modal.appendChild(title);
 
   const input = doc.createElement("input");
@@ -492,9 +504,11 @@ function syncIframeVars(doc) {
   try {
     const varStyle = doc.querySelector("style[data-sclient-vars]");
     if (!varStyle) return;
-    const computed = getComputedStyle(document.body || document.documentElement);
+    const computed = getComputedStyle(
+      document.body || document.documentElement,
+    );
     const decls = SCLIENT_IFRAME_VARS.map(
-      (v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`
+      (v) => `  ${v}: ${computed.getPropertyValue(v).trim()};`,
     ).join("\n");
     varStyle.textContent = ":root {\n" + decls + "\n}";
   } catch (ex) {}
@@ -510,11 +524,13 @@ function viewImage(url) {
   overlay.appendChild(img);
 
   const btnContainer = document.createElement("div");
-  btnContainer.style.cssText = "position:absolute;bottom:20px;right:20px;display:flex;gap:10px;";
+  btnContainer.style.cssText =
+    "position:absolute;bottom:20px;right:20px;display:flex;gap:10px;";
 
   const copyBtn = document.createElement("button");
   copyBtn.className = "sclient-floating-btn";
-  copyBtn.style.cssText = "position:static !important;backdrop-filter:blur(4px);";
+  copyBtn.style.cssText =
+    "position:static !important;backdrop-filter:blur(4px);";
   copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
   copyBtn.onclick = (ev) => {
     ev.stopPropagation();
@@ -542,7 +558,8 @@ function viewImage(url) {
 
   const saveBtn = document.createElement("button");
   saveBtn.className = "sclient-floating-btn";
-  saveBtn.style.cssText = "position:static !important;backdrop-filter:blur(4px);";
+  saveBtn.style.cssText =
+    "position:static !important;backdrop-filter:blur(4px);";
   saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`;
   saveBtn.onclick = (ev) => {
     ev.stopPropagation();
@@ -552,7 +569,8 @@ function viewImage(url) {
         const objUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = objUrl;
-        a.download = url.split("/").pop().split("?")[0] || "soundcloud_image.jpg";
+        a.download =
+          url.split("/").pop().split("?")[0] || "soundcloud_image.jpg";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

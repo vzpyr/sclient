@@ -15,7 +15,11 @@ let kuroshiroInitPromise = null;
 function initKuroshiro() {
   if (kuroshiroInitPromise) return kuroshiroInitPromise;
   kuroshiroInitPromise = (async () => {
-    const dictPath = path.join(path.dirname(require.resolve("kuromoji")), "..", "dict");
+    const dictPath = path.join(
+      path.dirname(require.resolve("kuromoji")),
+      "..",
+      "dict",
+    );
     const tokenizer = await new Promise((resolve, reject) => {
       kuromoji.builder({ dicPath: dictPath }).build((err, t) => {
         if (err) reject(err);
@@ -62,7 +66,10 @@ async function romanizeLine(text) {
     if (kuroshiroReady) {
       try {
         result = normalizeSegment(
-          await kuroshiroInstance.convert(innerText, { to: "romaji", mode: "spaced" })
+          await kuroshiroInstance.convert(innerText, {
+            to: "romaji",
+            mode: "spaced",
+          }),
         );
       } catch (e) {
         result = innerText;
@@ -73,7 +80,7 @@ async function romanizeLine(text) {
       result = normalizeSegment(
         pinyin(innerText, { segment: false, group: true })
           .map((g) => (Array.isArray(g) ? g.join("") : g))
-          .join(" ")
+          .join(" "),
       );
     } catch (e) {
       result = innerText;

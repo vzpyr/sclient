@@ -37,7 +37,10 @@ async function initSecure() {
         stored = await keytar.getPassword(SERVICE, key);
       } catch (e) {
         hasKeyring = false;
-        console.error("[SClient] Couldn't read from keyring, falling back to config.json:", e);
+        console.error(
+          "[SClient] Couldn't read from keyring, falling back to config.json:",
+          e,
+        );
       }
       if (stored !== null) {
         secureCache[key] = stored;
