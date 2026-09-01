@@ -156,7 +156,7 @@ function buildPayload() {
     lazy_scroll: isEnabled("features.lazy_scroll"),
     titlebar_style: get("features.titlebar_style", "custom"),
     custom_accent: isEnabled("features.custom_accent"),
-    accent_color: get("features.accent_color", "#FF0000"),
+    accent_color: get("features.accent_color", "#ff5500"),
     custom_font: isEnabled("features.custom_font"),
     custom_font_family: get("features.custom_font_family", ""),
     wide_layout: isEnabled("features.wide_layout"),
