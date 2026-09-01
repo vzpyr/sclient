@@ -25,7 +25,7 @@ const SCLIENT_CONFIG = {
     return this.get("custom_accent", false);
   },
   get accentColor() {
-    return this.get("accent_color", "#FF0000");
+    return this.get("accent_color", "#ff5500");
   },
   get customFont() {
     return this.get("custom_font", false);
