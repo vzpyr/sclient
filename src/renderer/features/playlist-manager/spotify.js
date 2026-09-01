@@ -18,8 +18,7 @@ function pmScoreMatch(spotifyRow, scTrack) {
 
   const isrcA = spotifyRow.isrc ? spotifyRow.isrc.replace(/[-\s]/g, "").toLowerCase() : "";
   const isrcB = scTrack.publisher_metadata?.isrc?.replace(/[-\s]/g, "").toLowerCase() || "";
-  if (isrcA && isrcB && isrcA === isrcB)
-    return { score: 100, reason: "I" };
+  if (isrcA && isrcB && isrcA === isrcB) return { score: 100, reason: "I" };
 
   const normA = pmNormTitle(spotifyRow.title);
   const normB = pmNormTitle(scTrack.title);
@@ -39,7 +38,13 @@ function pmScoreMatch(spotifyRow, scTrack) {
   }
 
   const splitArtists = (s) =>
-    s ? s.toLowerCase().split(/,|&|\bvs\.?\b|\//).map((x) => x.replace(/[^a-z0-9]/g, "").trim()).filter(Boolean) : [];
+    s
+      ? s
+          .toLowerCase()
+          .split(/,|&|\bvs\.?\b|\//)
+          .map((x) => x.replace(/[^a-z0-9]/g, "").trim())
+          .filter(Boolean)
+      : [];
   const artA = splitArtists(spotifyRow.artists.join(", "));
   const artB = splitArtists(getArtistFromTrack(scTrack));
   if (artA.some((a) => artB.includes(a)) || artB.some((b) => artA.includes(b))) {
@@ -51,8 +56,10 @@ function pmScoreMatch(spotifyRow, scTrack) {
   const dB = scTrack.duration;
   if (dA && dB && dB !== 30000) {
     const delta = Math.abs(dA - dB);
-    if (delta < 2000) { score += 15; tags.push("d"); }
-    else if (delta < 5000) score += 8;
+    if (delta < 2000) {
+      score += 15;
+      tags.push("d");
+    } else if (delta < 5000) score += 8;
   }
 
   return { score, reason: tags.join("+") || "-" };
@@ -67,14 +74,18 @@ function pmParseSpotifyCsv(text) {
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (c === '"') {
-      if (inQ && text[i + 1] === '"') { field += '"'; i++; }
-      else inQ = !inQ;
+      if (inQ && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else inQ = !inQ;
     } else if (c === "," && !inQ) {
-      row.push(field); field = "";
+      row.push(field);
+      field = "";
     } else if ((c === "\n" || c === "\r") && !inQ) {
       row.push(field);
       if (row.some((f) => f)) rows.push(row);
-      row = []; field = "";
+      row = [];
+      field = "";
       if (c === "\r" && text[i + 1] === "\n") i++;
     } else {
       field += c;
@@ -93,7 +104,10 @@ function pmParseSpotifyCsv(text) {
 
   let di = -1;
   for (let i = 0; i < h.length; i++) {
-    if (h[i].includes("duration") && h[i].includes("ms")) { di = i; break; }
+    if (h[i].includes("duration") && h[i].includes("ms")) {
+      di = i;
+      break;
+    }
   }
   const ii = h.findIndex((x) => x.includes("isrc"));
 
@@ -103,7 +117,10 @@ function pmParseSpotifyCsv(text) {
     if (!r[ti] && !r[ai]) continue;
     out.push({
       title: r[ti] || "",
-      artists: (r[ai] || "").split(",").map((a) => a.trim()).filter(Boolean),
+      artists: (r[ai] || "")
+        .split(",")
+        .map((a) => a.trim())
+        .filter(Boolean),
       durationMs: di !== -1 && r[di] ? parseInt(r[di], 10) : 0,
       isrc: ii !== -1 ? (r[ii] || "").trim() : "",
     });
@@ -115,12 +132,14 @@ async function mapLimit(items, limit, fn) {
   const res = [];
   let i = 0;
   await Promise.all(
-    Array(limit).fill(0).map(async () => {
-      while (i < items.length) {
-        const idx = i++;
-        res[idx] = await fn(items[idx], idx);
-      }
-    })
+    Array(limit)
+      .fill(0)
+      .map(async () => {
+        while (i < items.length) {
+          const idx = i++;
+          res[idx] = await fn(items[idx], idx);
+        }
+      })
   );
   return res;
 }
@@ -135,27 +154,41 @@ async function pmSpotifyImport() {
       { id: "resume", text: "Resume", type: "primary" },
     ]);
     if (ok === "resume") {
-      try { pmOpenSpotifyModal(null, JSON.parse(draft)); return; }
-      catch { localStorage.removeItem("sclient_spotify_draft"); }
+      try {
+        pmOpenSpotifyModal(null, JSON.parse(draft));
+        return;
+      } catch {
+        localStorage.removeItem("sclient_spotify_draft");
+      }
     } else {
       localStorage.removeItem("sclient_spotify_draft");
     }
   }
 
   let fileText;
-  try { fileText = await sendBridge("playlist_pick_import_file"); }
-  catch (e) { showToast("Import failed: " + (e.message || e)); return; }
+  try {
+    fileText = await sendBridge("playlist_pick_import_file");
+  } catch (e) {
+    showToast("Import failed: " + (e.message || e));
+    return;
+  }
   if (!fileText) return;
 
   let rows;
-  try { rows = pmParseSpotifyCsv(fileText); }
-  catch (e) { showToast(e.message); return; }
+  try {
+    rows = pmParseSpotifyCsv(fileText);
+  } catch (e) {
+    showToast(e.message);
+    return;
+  }
 
   pmOpenSpotifyModal(rows);
 }
 
 function pmOpenSpotifyModal(spotifyRows, resumed = null) {
-  injectStyle("sclient-pm-spotify", `
+  injectStyle(
+    "sclient-pm-spotify",
+    `
     .spm-row { display:flex; align-items:stretch; padding:8px 12px; gap:12px; font-size:var(--sclient-text-sm); border-bottom:1px solid var(--sclient-border); }
     .spm-row.matched { background:rgba(50,200,50,0.05); }
     .spm-row.skipped { background:rgba(200,50,50,0.05); opacity:0.6; }
@@ -171,14 +204,16 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     .spm-search { display:flex; gap:4px; }
     .spm-search input { flex:1; min-width:0; font-size:var(--sclient-text-xs); }
     .spm-search button { font-size:var(--sclient-text-xs); }
-  `);
+  `
+  );
 
   const back = document.createElement("div");
   back.className = "sclient-modal-backdrop";
 
   const dlg = document.createElement("div");
   dlg.className = "sclient-modal-surface";
-  dlg.style.cssText = "width:90vw;max-width:900px;max-height:85vh;display:flex;flex-direction:column;";
+  dlg.style.cssText =
+    "width:90vw;max-width:900px;max-height:85vh;display:flex;flex-direction:column;";
 
   const total = resumed ? resumed.total : spotifyRows.length;
 
@@ -243,8 +278,11 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
       const name = i === 0 ? title : `${title} (${i + 1})`;
       try {
         const pl = await api.create(name, sharing, chunks[i]);
-        if (pl?.id) { created.push(pl); _pmState.playlists.unshift(pl); ok += chunks[i].length; }
-        else throw new Error("Bad response");
+        if (pl?.id) {
+          created.push(pl);
+          _pmState.playlists.unshift(pl);
+          ok += chunks[i].length;
+        } else throw new Error("Bad response");
       } catch {
         const cont = await showConfirm(`Playlist chunk ${i + 1} failed. Continue?`, [
           { id: "no", text: "Cancel", type: "secondary" },
@@ -265,8 +303,14 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
 
   _pmSpotifyState = resumed || {
     rows: spotifyRows.map((r, i) => ({
-      idx: i, original: r, match: null, candidates: [],
-      score: 0, reason: "", resolved: false, action: "skip",
+      idx: i,
+      original: r,
+      match: null,
+      candidates: [],
+      score: 0,
+      reason: "",
+      resolved: false,
+      action: "skip",
     })),
     total: spotifyRows.length,
   };
@@ -278,9 +322,10 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     const skip = _pmSpotifyState.rows.filter((r) => r.resolved && r.action === "skip").length;
     const ready = done - skip;
     const head = dlg.querySelector("#spm-head");
-    head.textContent = done === _pmSpotifyState.total
-      ? `Spotify Import · ${skip} skipped · ${ready} matched`
-      : `Spotify Import · ${done} / ${_pmSpotifyState.total}`;
+    head.textContent =
+      done === _pmSpotifyState.total
+        ? `Spotify Import · ${skip} skipped · ${ready} matched`
+        : `Spotify Import · ${done} / ${_pmSpotifyState.total}`;
     const btn = dlg.querySelector("#spm-confirm");
     btn.disabled = done < _pmSpotifyState.total;
     btn.textContent = `Import ${ready} tracks`;
@@ -315,7 +360,8 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     if (r.match) {
       matchTitle = `${r.match.title} · ${getArtistFromTrack(r.match)}`;
       const d = r.original.durationMs ? r.match.duration - r.original.durationMs : 0;
-      const dStr = r.match.duration === 30000 ? "GO+" : `${d > 0 ? "+" : ""}${(d / 1000).toFixed(1)}s`;
+      const dStr =
+        r.match.duration === 30000 ? "GO+" : `${d > 0 ? "+" : ""}${(d / 1000).toFixed(1)}s`;
       matchMeta = `${pmFmtDur(r.match.duration)} · ${dStr}`;
       thumb = r.match.artwork_url || "";
     }
@@ -354,7 +400,8 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     sel.onchange = () => {
       const v = sel.value;
       if (v === "skip") {
-        r.action = "skip"; r.match = null;
+        r.action = "skip";
+        r.match = null;
       } else if (v === "manual") {
         const box = document.createElement("div");
         box.className = "spm-search";
@@ -371,14 +418,21 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
             const cands = await api.search(inp.value);
             r.candidates = cands;
             if (cands.length) {
-              r.match = cands[0]; r.action = "accept";
+              r.match = cands[0];
+              r.action = "accept";
               const s = pmScoreMatch(r.original, cands[0]);
-              r.score = s.score; r.reason = "m";
+              r.score = s.score;
+              r.reason = "m";
             } else {
-              r.match = null; r.action = "skip";
+              r.match = null;
+              r.action = "skip";
             }
-            renderRow(r); updateHead();
-          } catch { showToast("Search failed"); go.disabled = false; }
+            renderRow(r);
+            updateHead();
+          } catch {
+            showToast("Search failed");
+            go.disabled = false;
+          }
         };
         act.innerHTML = "";
         act.appendChild(box);
@@ -386,11 +440,14 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
         return;
       } else if (v.startsWith("p_")) {
         const i = +v.slice(2);
-        r.match = r.candidates[i]; r.action = "accept";
+        r.match = r.candidates[i];
+        r.action = "accept";
         const s = pmScoreMatch(r.original, r.match);
-        r.score = s.score; r.reason = s.reason;
+        r.score = s.score;
+        r.reason = s.reason;
       }
-      renderRow(r); updateHead();
+      renderRow(r);
+      updateHead();
     };
 
     act.appendChild(sel);
@@ -402,7 +459,8 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
   const pending = _pmSpotifyState.rows.filter((r) => !r.resolved);
   mapLimit(pending, 5, async (r) => {
     renderRow(r);
-    let retries = 4, backoff = 800;
+    let retries = 4,
+      backoff = 800;
     const q = `${r.original.artists[0] || ""} ${pmNormTitle(r.original.title)}`.trim();
     let res;
     while (retries >= 0) {

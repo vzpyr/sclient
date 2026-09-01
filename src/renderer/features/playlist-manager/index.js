@@ -1274,11 +1274,18 @@ async function pmImport() {
   if (!fileText) return;
 
   const trimmed = fileText.trimStart();
-  if (trimmed.startsWith("Track Name") || trimmed.startsWith("track name") ||
-      (trimmed.includes(",") && /isrc|artist name|track name/i.test(trimmed.split("\n")[0]))) {
+  if (
+    trimmed.startsWith("Track Name") ||
+    trimmed.startsWith("track name") ||
+    (trimmed.includes(",") && /isrc|artist name|track name/i.test(trimmed.split("\n")[0]))
+  ) {
     let rows;
-    try { rows = pmParseSpotifyCsv(fileText); }
-    catch (e) { showToast(e.message); return; }
+    try {
+      rows = pmParseSpotifyCsv(fileText);
+    } catch (e) {
+      showToast(e.message);
+      return;
+    }
     pmOpenSpotifyModal(rows);
     return;
   }
