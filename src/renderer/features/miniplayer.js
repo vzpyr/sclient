@@ -94,6 +94,9 @@ class MiniplayerFeature extends Feature {
     };
     this.liveTimeTimer = setInterval(sendLiveTime, 100);
   }
+  checkInjected() {
+    return !!document.getElementById("sclient-mini-btn");
+  }
 
   injectUI() {
     if (document.getElementById("sclient-mini-btn")) return;
