@@ -11,7 +11,7 @@ function buildRedirectUrl(trackId, artistSlug, trackSlug) {
   if (trackId) p.set("id", trackId);
   if (artistSlug) p.set("artist", artistSlug);
   if (trackSlug) p.set("track", trackSlug);
-  return `https://sc.z-n.cc/redirect?${p.toString()}`;
+  return `https://sclient-app.vercel.app/redirect?${p.toString()}`;
 }
 
 async function updateRpc({

@@ -398,7 +398,7 @@ function wireCustomSections(overlay) {
       const url = overlay.querySelector(
         '[data-config-key="features.proxy_url"]',
       );
-      if (url) url.value = "https://sc.z-n.cc/";
+      if (url) url.value = "https://sclient-app.vercel.app/";
     });
 
   FEATURES.forEach((f) => {
