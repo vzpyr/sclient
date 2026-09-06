@@ -3,7 +3,6 @@ let bridgeIdCounter = 0;
 function sendBridge(cmd, args = {}) {
   return new Promise((resolve, reject) => {
     const cid = cmd + "_" + ++bridgeIdCounter + "_" + Date.now();
-    let timeout;
     const handler = (event) => {
       if (
         event.source !== window ||
@@ -12,17 +11,12 @@ function sendBridge(cmd, args = {}) {
       )
         return;
       if (event.data.callbackId === cid) {
-        clearTimeout(timeout);
         window.removeEventListener("message", handler);
         if (event.data.success) resolve(event.data.result);
         else reject(new Error(event.data.error));
       }
     };
     window.addEventListener("message", handler);
-    timeout = setTimeout(() => {
-      window.removeEventListener("message", handler);
-      reject(new Error("Bridge timeout"));
-    }, 300000);
     window.postMessage(
       {
         source: "sclient-bridge",

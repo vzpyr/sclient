@@ -1,3 +1,75 @@
+async function resolvePlaylistData(url, cid, tok) {
+  if (!cid) return { resolvedUrl: url, playlistTitle: "", tracks: [] };
+  const headers = tok ? { Authorization: `OAuth ${tok}` } : {};
+  try {
+    const res = await fetch(
+      `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(url)}&client_id=${cid}`,
+      { headers },
+    );
+    if (!res.ok) return { resolvedUrl: url, playlistTitle: "", tracks: [] };
+    const data = await res.json();
+    let resolvedUrl = url;
+    if (
+      data.sharing === "private" &&
+      data.secret_token &&
+      !resolvedUrl.includes(data.secret_token)
+    ) {
+      resolvedUrl += "/" + data.secret_token;
+    }
+    const playlistTitle = data.title || "";
+    let tracks = [];
+    if (data.tracks && Array.isArray(data.tracks)) {
+      const stubIds = data.tracks
+        .filter((t) => !t.title && t.id)
+        .map((t) => t.id);
+      if (stubIds.length > 0) {
+        const chunks = [];
+        for (let i = 0; i < stubIds.length; i += 50) {
+          const chunkIds = stubIds.slice(i, i + 50).join(",");
+          chunks.push(
+            fetch(
+              `https://api-v2.soundcloud.com/tracks?ids=${chunkIds}&client_id=${cid}`,
+              { headers },
+            )
+              .then((r) => r.json())
+              .catch(() => []),
+          );
+        }
+        const results = await Promise.all(chunks);
+        const map = new Map();
+        for (const arr of results) {
+          if (Array.isArray(arr)) {
+            for (const t of arr) {
+              if (t && t.id) map.set(t.id, t);
+            }
+          }
+        }
+        data.tracks = data.tracks.map((t) =>
+          !t.title && map.has(t.id) ? map.get(t.id) : t,
+        );
+      }
+      tracks = data.tracks.map((track, i) => {
+        const account = track.user?.username || "";
+        const artist =
+          (track.publisher_metadata && track.publisher_metadata.artist) ||
+          track.artist ||
+          "";
+        return {
+          id: track.id,
+          index: i + 1,
+          url: track.permalink_url || "",
+          account,
+          artist,
+          title: track.title || "",
+        };
+      });
+    }
+    return { resolvedUrl, playlistTitle, tracks };
+  } catch (_) {
+    return { resolvedUrl: url, playlistTitle: "", tracks: [] };
+  }
+}
+
 class DownloaderFeature extends Feature {
   get featureKey() {
     return "features.show_downloader";
@@ -40,6 +112,20 @@ class DownloaderFeature extends Feature {
       const current = getCurrentTrack();
       if (!current || !current.songUrl) return;
       const fullUrl = current.songUrl;
+      const trackData = current.trackData;
+      const singleTrack = trackData
+        ? {
+            id: trackData.id,
+            url: fullUrl,
+            account: trackData.user?.username || "",
+            artist:
+              (trackData.publisher_metadata &&
+                trackData.publisher_metadata.artist) ||
+              trackData.artist ||
+              "",
+            title: trackData.title || "",
+          }
+        : null;
 
       document
         .querySelectorAll(".sclient-download-toast")
@@ -79,6 +165,8 @@ class DownloaderFeature extends Feature {
       });
 
       closeBtn.addEventListener("click", () => {
+        sendBridge("cancel_download", { url: fullUrl });
+        titleText.textContent = "Download cancelled.";
         toast.style.opacity = "0";
         setTimeout(() => toast.remove(), 300);
       });
@@ -98,9 +186,10 @@ class DownloaderFeature extends Feature {
       };
       window.addEventListener("message", progressHandler);
 
-      sendBridge("download_song", { url: fullUrl })
+      sendBridge("download_song", { url: fullUrl, track: singleTrack })
         .then(() => {
           window.removeEventListener("message", progressHandler);
+          if (titleText.textContent === "Download cancelled.") return;
           progressFill.style.width = "100%";
           percentText.textContent = "100%";
           titleText.textContent = "Download finished.";
@@ -187,32 +276,20 @@ class DownloaderFeature extends Feature {
       requestAnimationFrame(() => (toast.style.opacity = "1"));
 
       closeBtn.addEventListener("click", () => {
+        sendBridge("cancel_download", { url: fullUrl });
+        titleText.textContent = "Download cancelled.";
         toast.style.opacity = "0";
         setTimeout(() => toast.remove(), 300);
       });
 
-      try {
-        const cid = extractClientId();
-        const tok = extractOAuthToken();
-        if (cid && tok) {
-          const res = await fetch(
-            `https://api-v2.soundcloud.com/resolve?url=${encodeURIComponent(fullUrl)}&client_id=${cid}`,
-            {
-              headers: { Authorization: `OAuth ${tok}` },
-            },
-          );
-          if (res.ok) {
-            const data = await res.json();
-            if (
-              data.sharing === "private" &&
-              data.secret_token &&
-              !fullUrl.includes(data.secret_token)
-            ) {
-              fullUrl += "/" + data.secret_token;
-            }
-          }
-        }
-      } catch (_) {}
+      const cid = extractClientId();
+      const tok = extractOAuthToken();
+      const { resolvedUrl, playlistTitle, tracks } = await resolvePlaylistData(
+        fullUrl,
+        cid,
+        tok,
+      );
+      fullUrl = resolvedUrl;
 
       const progressHandler = (event) => {
         if (
@@ -229,12 +306,18 @@ class DownloaderFeature extends Feature {
       };
       window.addEventListener("message", progressHandler);
 
-      sendBridge("download_song", { url: fullUrl, isPlaylist: true })
+      sendBridge("download_song", {
+        url: fullUrl,
+        isPlaylist: true,
+        playlistTitle,
+        tracks,
+      })
         .then(() => {
           window.removeEventListener("message", progressHandler);
+          if (titleText.textContent === "Download cancelled.") return;
           progressFill.style.width = "100%";
           percentText.textContent = "100%";
-          titleText.textContent = "Playlist downloaded.";
+          titleText.textContent = "Playlist download finished.";
         })
         .catch((err) => {
           window.removeEventListener("message", progressHandler);

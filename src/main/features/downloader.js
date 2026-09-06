@@ -1,4 +1,7 @@
 const { execSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
+const ytdlexec = require("youtube-dl-exec");
 
 const hasFfmpeg = (() => {
   try {
@@ -9,125 +12,254 @@ const hasFfmpeg = (() => {
   }
 })();
 
-const ytdlexec = require("youtube-dl-exec");
 let ytdlBin = ytdlexec.constants.YOUTUBE_DL_PATH;
 if (ytdlBin.includes("app.asar"))
   ytdlBin = ytdlBin.replace("app.asar", "app.asar.unpacked");
 const ytdl = ytdlexec.create(ytdlBin);
 
-function register({ ipcMain, app }) {
-  ipcMain.handle("download_song", async (_e, args) => {
-    return new Promise((resolve, reject) => {
-      const options = {
-        format: "bestaudio/best",
-        noWarnings: true,
-        paths: app.getPath("downloads"),
-      };
-      if (hasFfmpeg) {
-        options.extractAudio = true;
-        options.audioFormat = "best";
-        options.addMetadata = true;
-        options.embedThumbnail = true;
+const activeDownloads = new Map();
+
+function sanitizeFileName(name) {
+  if (!name) return "";
+  return name.replace(/[/\\?%*:|"<>]/g, "_").trim();
+}
+
+function formatTrackFileName(track, isPlaylist) {
+  const account = sanitizeFileName(track.account || "");
+  const artist = sanitizeFileName(track.artist || "");
+  const title = sanitizeFileName(track.title || "");
+  const hasSeparateArtist =
+    artist.length > 0 && artist.toLowerCase() !== account.toLowerCase();
+  const prefix = isPlaylist && track.index ? `${track.index}. ` : "";
+  if (!account) {
+    return `${prefix}${title}`;
+  }
+  if (hasSeparateArtist) {
+    return `${prefix}${account} - ${artist} - ${title}`;
+  }
+  return `${prefix}${account} - ${title}`;
+}
+
+function parseErrorReason(stderr) {
+  if (!stderr) return null;
+  if (stderr.includes("DRM protected")) {
+    return "This track is DRM protected and cannot be downloaded.";
+  }
+  if (stderr.includes("HTTP Error 403")) {
+    return "HTTP Error 403: Forbidden.";
+  }
+  if (stderr.includes("HTTP Error 429")) {
+    return "Rate limited by SoundCloud. Please wait a few minutes.";
+  }
+  const match = stderr.match(/ERROR:\s*(?:\[[^\]]+\]\s*)?[^:]+:\s*(.+)$/m);
+  if (match && match[1]) {
+    const msg = match[1].trim();
+    return msg.endsWith(".") ? msg : msg + ".";
+  }
+  return null;
+}
+
+function writeSkippedFile(targetDir, skipped) {
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  const skippedPath = path.join(targetDir, "!skipped.json");
+  if (skipped.length > 0) {
+    fs.writeFileSync(skippedPath, JSON.stringify(skipped, null, 2), "utf8");
+  } else if (fs.existsSync(skippedPath)) {
+    try {
+      fs.unlinkSync(skippedPath);
+    } catch (_) {}
+  }
+}
+
+function executeTrackDownload(url, options, downloadItem, onProgress) {
+  return new Promise((resolve, reject) => {
+    const proc = ytdl.exec(url, options);
+    proc.catch(() => {});
+    downloadItem.currentProc = proc;
+
+    let stdoutBuf = "";
+    proc.stdout.on("data", (data) => {
+      stdoutBuf += data.toString();
+      const parts = stdoutBuf.split(/[\r\n]+/);
+      stdoutBuf = parts.pop();
+      for (const part of parts) {
+        const match = part.match(/\[download\]\s+([\d\.]+)%/);
+        if (match && match[1]) {
+          onProgress(parseFloat(match[1]));
+        }
       }
-      if (args.isPlaylist) {
-        options.output =
-          "%(playlist_title)s/%(playlist_index)s. %(artist|uploader)s - %(title)s.%(ext)s";
-        options.ignoreErrors = true;
+      const matchEnd = stdoutBuf.match(/\[download\]\s+([\d\.]+)%/);
+      if (matchEnd && matchEnd[1]) {
+        onProgress(parseFloat(matchEnd[1]));
+      }
+    });
+
+    let stderr = "";
+    proc.stderr.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    proc.on("close", (code) => {
+      downloadItem.currentProc = null;
+      if (downloadItem.cancelled) {
+        resolve();
+      } else if (code === 0) {
+        resolve();
       } else {
-        options.output = "%(artist|uploader)s - %(title)s.%(ext)s";
+        reject(new Error(stderr || "Unknown error."));
       }
-      const proc = ytdl.exec(args.url, options);
-      proc.catch(() => {});
+    });
 
-      let stdoutBuf = "";
-      let currentTrack = 1;
-      let totalTracks = 1;
+    proc.on("error", (err) => {
+      downloadItem.currentProc = null;
+      if (downloadItem.cancelled) {
+        resolve();
+      } else {
+        reject(err);
+      }
+    });
+  });
+}
 
-      proc.stdout.on("data", (data) => {
-        stdoutBuf += data.toString();
-        const parts = stdoutBuf.split(/[\r\n]+/);
-        stdoutBuf = parts.pop();
-        for (const part of parts) {
-          const vmatch = part.match(
-            /\[download\] Downloading (?:video|item) (\d+) of (\d+)/,
-          );
-          if (vmatch) {
-            currentTrack = parseInt(vmatch[1], 10);
-            totalTracks = parseInt(vmatch[2], 10);
-          }
-          const match = part.match(/\[download\]\s+([\d\.]+)%/);
-          if (match && match[1]) {
-            const pct = parseFloat(match[1]);
-            const finalPct =
-              args.isPlaylist && totalTracks
-                ? ((currentTrack - 1) * 100 + pct) / totalTracks
-                : pct;
-            _e.sender.send("download_progress", {
-              url: args.url,
-              percent: finalPct.toFixed(1),
-            });
-          }
+function register({ ipcMain, app }) {
+  ipcMain.handle("cancel_download", (_e, args) => {
+    if (!args || !args.url) return;
+    const item = activeDownloads.get(args.url);
+    if (item) {
+      item.cancelled = true;
+      if (item.currentProc) {
+        try {
+          item.currentProc.kill("SIGTERM");
+        } catch (_) {}
+      }
+    }
+  });
+
+  ipcMain.handle("download_song", async (_e, args) => {
+    const downloadItem = { cancelled: false, currentProc: null };
+    activeDownloads.set(args.url, downloadItem);
+
+    const baseOptions = {
+      format: "bestaudio/best",
+      noWarnings: true,
+    };
+    if (hasFfmpeg) {
+      baseOptions.extractAudio = true;
+      baseOptions.audioFormat = "best";
+      baseOptions.addMetadata = true;
+      baseOptions.embedThumbnail = true;
+    }
+
+    try {
+      if (args.isPlaylist) {
+        const folderName = sanitizeFileName(args.playlistTitle || "Playlist");
+        const playlistDir = path.join(app.getPath("downloads"), folderName);
+        if (!fs.existsSync(playlistDir)) {
+          fs.mkdirSync(playlistDir, { recursive: true });
         }
 
-        const matchEnd = stdoutBuf.match(/\[download\]\s+([\d\.]+)%/);
-        if (matchEnd && matchEnd[1]) {
-          const pct = parseFloat(matchEnd[1]);
-          const finalPct =
-            args.isPlaylist && totalTracks
-              ? ((currentTrack - 1) * 100 + pct) / totalTracks
-              : pct;
+        const tracks = Array.isArray(args.tracks) ? args.tracks : [];
+        if (tracks.length === 0) {
+          throw new Error("Playlist has no tracks.");
+        }
+        const skipped = [];
+
+        for (let i = 0; i < tracks.length; i++) {
+          if (downloadItem.cancelled) return;
+
+          const track = tracks[i];
+          const baseName = formatTrackFileName(track, true);
+          const outputTemplate = path.join(playlistDir, `${baseName}.%(ext)s`);
+
+          const trackOptions = {
+            ...baseOptions,
+            output: outputTemplate,
+          };
+
+          try {
+            await executeTrackDownload(
+              track.url,
+              trackOptions,
+              downloadItem,
+              (pct) => {
+                const overall = tracks.length
+                  ? ((i * 100 + pct) / tracks.length).toFixed(1)
+                  : pct.toFixed(1);
+                _e.sender.send("download_progress", {
+                  url: args.url,
+                  percent: overall,
+                });
+              },
+            );
+          } catch (err) {
+            if (downloadItem.cancelled) return;
+            const reason = parseErrorReason(err.message);
+            const entry = {
+              fileName: `${baseName}.m4a`,
+              url: track.url || "",
+            };
+            if (reason) entry.error = reason;
+            skipped.push(entry);
+          }
+
+          if (downloadItem.cancelled) return;
+
           _e.sender.send("download_progress", {
             url: args.url,
-            percent: finalPct.toFixed(1),
+            percent: tracks.length
+              ? (((i + 1) * 100) / tracks.length).toFixed(1)
+              : "100.0",
           });
         }
-      });
 
-      let stderr = "";
-      proc.stderr.on("data", (data) => {
-        stderr += data.toString();
-      });
+        if (downloadItem.cancelled) return;
 
-      proc.on("close", (code) => {
-        const hasFatalError =
-          stderr.includes("Unable to download JSON metadata") ||
-          stderr.includes("HTTP Error");
-        if (code === 0 || (args.isPlaylist && !hasFatalError)) {
-          resolve();
-        } else {
-          if (stderr.includes("DRM protected")) {
-            reject(
-              new Error(
-                "This track is DRM protected and cannot be downloaded.",
-              ),
-            );
-          } else if (hasFatalError) {
-            reject(
-              new Error(
-                "Rate limited by SoundCloud. Please wait a few minutes.",
-              ),
-            );
-          } else {
-            const lines = stderr
-              .split("\n")
-              .filter((l) => l.includes("ERROR:"));
-            reject(
-              new Error(
-                lines.length > 0
-                  ? lines.join(" | ")
-                  : `Unknown youtube-dl error. (${stderr})`,
-              ),
-            );
-          }
-        }
-      });
-
-      proc.on("error", (err) => {
-        reject(
-          new Error(`Unknown download error: ${err.message || err.toString()}`),
+        writeSkippedFile(playlistDir, skipped);
+      } else {
+        const track = args.track || {
+          url: args.url,
+          title: "Track",
+        };
+        const baseName = formatTrackFileName(track, false);
+        const outputTemplate = path.join(
+          app.getPath("downloads"),
+          `${baseName}.%(ext)s`,
         );
-      });
-    });
+
+        const trackOptions = {
+          ...baseOptions,
+          output: outputTemplate,
+        };
+
+        try {
+          await executeTrackDownload(
+            args.url,
+            trackOptions,
+            downloadItem,
+            (pct) => {
+              _e.sender.send("download_progress", {
+                url: args.url,
+                percent: pct.toFixed(1),
+              });
+            },
+          );
+        } catch (err) {
+          if (downloadItem.cancelled) return;
+          const reason = parseErrorReason(err.message);
+          const entry = {
+            fileName: `${baseName}.m4a`,
+            url: args.url,
+          };
+          if (reason) entry.error = reason;
+          writeSkippedFile(app.getPath("downloads"), [entry]);
+          throw new Error(reason || err.message || "Download failed.");
+        }
+      }
+    } finally {
+      activeDownloads.delete(args.url);
+    }
   });
 }
 
