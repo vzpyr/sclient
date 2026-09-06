@@ -87,7 +87,23 @@ class DownloaderFeature extends Feature {
   }
 
   checkInjected() {
-    return !!document.getElementById("sclient-download-btn");
+    const hasTrackBtn = !!document.getElementById("sclient-download-btn");
+    if (!hasTrackBtn) return false;
+
+    const isPlaylist = !!document.querySelector(".listenDetails__trackList");
+    if (isPlaylist) {
+      const buttonGroup = document.querySelector(
+        ".listenEngagement__footer .sc-button-group",
+      );
+      if (
+        !buttonGroup ||
+        !buttonGroup.querySelector("#sclient-playlist-download-btn")
+      ) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   injectDownloadButton() {
@@ -95,7 +111,6 @@ class DownloaderFeature extends Feature {
 
     const queueBtn = document.querySelector(".playbackSoundBadge__showQueue");
     if (!queueBtn || !queueBtn.parentNode) {
-      this.injected = false;
       return;
     }
 
@@ -210,7 +225,6 @@ class DownloaderFeature extends Feature {
 
   injectPlaylistDownloadButton() {
     if (!document.querySelector(".listenDetails__trackList")) {
-      this.injected = false;
       return;
     }
 
@@ -218,7 +232,6 @@ class DownloaderFeature extends Feature {
       ".listenEngagement__footer .sc-button-group",
     );
     if (!buttonGroup) {
-      this.injected = false;
       return;
     }
 
