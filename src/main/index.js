@@ -89,6 +89,7 @@ app.setAsDefaultProtocolClient("sclient");
 
 const JS_FILES = [
   "utils.js",
+  "icons.js",
   "bridge.js",
   "config.js",
   "features/Feature.js",

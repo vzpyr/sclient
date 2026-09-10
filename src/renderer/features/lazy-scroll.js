@@ -21,8 +21,7 @@ class LazyScrollFeature extends Feature {
     const btn = document.createElement("button");
     btn.id = "sclient-lazy-scroll";
     btn.className = "sclient-floating-btn sclient-btn-above-bar";
-    btn.innerHTML =
-      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m7 6 5 5 5-5"/><path d="m7 13 5 5 5-5"/></svg>';
+    btn.innerHTML = lucideIcon("chevrons-down", 24, 'stroke-width="1.5"');
 
     let scrolling = false;
 

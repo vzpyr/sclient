@@ -284,7 +284,7 @@ class StatsFeature extends Feature {
         this.renderFilterBar() +
         `
       <div class="stats-empty">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="stats-empty-icon lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        ${lucideIcon("chart-column", 24)}
         <div class="stats-empty-title">No listening data yet</div>
         <div class="stats-empty-sub">Play some music and it'll show up here!</div>
       </div>`;
@@ -665,7 +665,7 @@ class StatsFeature extends Feature {
     overlay.innerHTML = `
     <div class="stats-header">
       <h2 class="stats-header-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        ${lucideIcon("chart-column", 24)}
         Listening Analytics
       </h2>
       <div class="stats-header-actions">
@@ -679,12 +679,12 @@ class StatsFeature extends Feature {
           <option value="365">Last year</option>
         </select>
         <button id="sclient-stats-export-btn" class="sclient-btn" title="Export Stats DB">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-down"><path d="m16 19 3 3 3-3"/><path d="M19 16v6"/><path d="M21 12.536V5"/><path d="M3 12A9 3 0 0 0 15.182 14.806"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
+          ${lucideIcon("database-arrow-down")}
         </button>
         <button id="sclient-stats-import-btn" class="sclient-btn" title="Import Stats DB">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-up"><path d="M19 22v-6"/><path d="M21 12.536V5"/><path d="m22 19-3-3-3 3"/><path d="M3 12A9 3 0 0 0 14.457 14.886"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
+          ${lucideIcon("database-arrow-up")}
         </button>
-        <button id="sclient-stats-close-btn" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
+        <button id="sclient-stats-close-btn" class="sclient-btn">${lucideIcon("x")} Close</button>
       </div>
     </div>
     <div id="sclient-stats-content">

@@ -82,9 +82,7 @@ function createDownloadToast(title) {
     <div class="sclient-toast-body">
       <div class="sclient-toast-top">
         <span class="sclient-toast-title">${title}</span>
-        <button class="sclient-toast-close sclient-btn sclient-btn-ghost sclient-btn-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
+        <button class="sclient-toast-close sclient-btn sclient-btn-ghost sclient-btn-icon">${lucideIcon("x")}</button>
       </div>
       <div class="sclient-toast-row">
         <div class="sclient-toast-bar">
@@ -163,7 +161,7 @@ class DownloaderFeature extends Feature {
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
     btn.title = "Download";
     btn.innerHTML =
-      '<div class="sclient-sc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></div>';
+      '<div class="sclient-sc-icon">${lucideIcon("download")}</div>';
 
     this.on(btn, "click", (e) => {
       e.preventDefault();
@@ -254,8 +252,7 @@ class DownloaderFeature extends Feature {
     btn.className =
       "sc-button-secondary sc-button sc-button-medium sc-button-icon sc-button-responsive";
     btn.title = "Download Playlist";
-    btn.innerHTML =
-      '<div><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-folder-down-icon lucide-folder-down"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/><path d="M12 10v6"/><path d="m15 13-3 3-3-3"/></svg></div>';
+    btn.innerHTML = '<div>${lucideIcon("folder-down")}</div>';
 
     this.on(btn, "click", async (e) => {
       e.preventDefault();

@@ -270,7 +270,7 @@ textarea.sclient-input {
   -webkit-appearance: none;
   appearance: none;
   background: var(--sclient-bg-surface)
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>")
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>")
     no-repeat right 6px center / 16px 16px;
   padding: var(--sclient-space-1) var(--sclient-space-7) var(--sclient-space-1)
     var(--sclient-space-3);
@@ -291,7 +291,7 @@ textarea.sclient-input {
   color: var(--sclient-text-main);
 }
 body.theme-light .sclient-select {
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>");
 }
 .sclient-select-sm {
   height: var(--sclient-control-h-sm);

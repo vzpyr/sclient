@@ -51,8 +51,8 @@ function pmRenderSidebar() {
       const total = p.duration || 0;
       const badge =
         p.sharing === "private"
-          ? `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
-          : `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span>`;
+          ? `<span class="pm-badge">${lucideIcon("lock", 14)}</span>`
+          : `<span class="pm-badge">${lucideIcon("globe", 16)}</span>`;
       const subtitle =
         count === 0
           ? "empty"
@@ -123,8 +123,8 @@ function pmRenderDetailHeader() {
     pl.duration || (pl.tracks || []).reduce((s, t) => s + (t.duration || 0), 0);
   const badge =
     pl.sharing === "private"
-      ? `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
-      : `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span>`;
+      ? `<span class="pm-badge">${lucideIcon("lock", 14)}</span>`
+      : `<span class="pm-badge">${lucideIcon("globe", 16)}</span>`;
   const plPermalink =
     pl.user && pl.permalink
       ? `/${pl.user.permalink}/sets/${pl.permalink}`
@@ -155,9 +155,9 @@ function pmRenderDetailHeader() {
             }</span></div>
         </div>
         <div class="pm-d-actions">
-          <button id="pm-edit-btn" class="sclient-btn sclient-btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg> Edit</button>
-          <button id="pm-export-btn" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export</button>
-          <button id="pm-delete-btn" class="sclient-btn sclient-btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</button>
+          <button id="pm-edit-btn" class="sclient-btn sclient-btn-primary">${lucideIcon("pencil")} Edit</button>
+          <button id="pm-export-btn" class="sclient-btn">${lucideIcon("arrow-down")} Export</button>
+          <button id="pm-delete-btn" class="sclient-btn sclient-btn-danger">${lucideIcon("trash-2")} Delete</button>
         </div>
       </div>
       <div class="pm-d-toolbar">
@@ -231,10 +231,10 @@ function pmRenderBulkBar() {
   bar.classList.remove("hidden");
   bar.innerHTML = `
     <span class="pm-bulk-count">${n} selected</span>
-    <button id="pm-bulk-move" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-corner-down-right-icon lucide-corner-down-right"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg> Move to…</button>
-    <button id="pm-bulk-copy" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy to…</button>
-    <button id="pm-bulk-remove" class="sclient-btn sclient-btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove</button>
-    <button id="pm-bulk-export" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export selected</button>
+    <button id="pm-bulk-move" class="sclient-btn">${lucideIcon("corner-down-right")} Move to…</button>
+    <button id="pm-bulk-copy" class="sclient-btn">${lucideIcon("copy")} Copy to…</button>
+    <button id="pm-bulk-remove" class="sclient-btn sclient-btn-danger">${lucideIcon("x")} Remove</button>
+    <button id="pm-bulk-export" class="sclient-btn">${lucideIcon("arrow-down")} Export selected</button>
   `;
   bar
     .querySelector("#pm-bulk-move")
@@ -270,13 +270,13 @@ function pmRenderTracks() {
       const handlePath = `/${(t.user && t.user.permalink) || ""}/${t.permalink || ""}`;
       return `<div class="pm-track${sel ? " pm-track-selected" : ""}" data-id="${t.id}" data-index="${i}" draggable="true">
           <span class="pm-track-idx">${i + 1}</span>
-          <span class="pm-track-art"><img src="${pmTrackArt(t)}" loading="lazy"/><button class="pm-track-play" data-url="${t.permalink_url || ""}" title="Play on SoundCloud (opens in a new tab)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></button></span>
+          <span class="pm-track-art"><img src="${pmTrackArt(t)}" loading="lazy"/><button class="pm-track-play" data-url="${t.permalink_url || ""}" title="Play on SoundCloud (opens in a new tab)">${lucideIcon("play", 14)}</button></span>
           <span class="pm-track-body">
             <span class="pm-track-title">${(t.title || "Unknown").replace(/</g, "&lt;")}</span>
             <span class="pm-track-artist">${(getArtistFromTrack(t) || "").replace(/</g, "&lt;")} · ${handlePath}</span>
           </span>
           <span class="pm-track-dur">${pmFmtDur(t.duration)}</span>
-          <span class="pm-track-handle" title="Drag to reorder"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical-icon lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <span class="pm-track-handle" title="Drag to reorder">${lucideIcon("grip-vertical")}</span>
         </div>`;
     })
     .join("");
@@ -841,12 +841,12 @@ function createPlaylistManagerOverlay() {
   overlay.innerHTML = `
     <div class="pm-head">
       <h2 class="pm-head-title">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music-icon lucide-music"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        ${lucideIcon("music", 24)}
         Playlist Manager
       </h2>
       <div class="pm-d-actions">
-        <button id="pm-refresh-btn" class="sclient-btn" title="Refresh"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw-icon lucide-rotate-cw"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Refresh</button>
-        <button id="pm-close-btn" class="sclient-btn" title="Close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
+        <button id="pm-refresh-btn" class="sclient-btn" title="Refresh">${lucideIcon("rotate-cw")} Refresh</button>
+        <button id="pm-close-btn" class="sclient-btn" title="Close">${lucideIcon("x")} Close</button>
       </div>
     </div>
     <div class="pm-body">
@@ -861,10 +861,10 @@ function createPlaylistManagerOverlay() {
               <option value="modified">Recently modified</option>
               <option value="count">Track count</option>
             </select>
-            <button id="pm-new-btn" class="sclient-btn sclient-btn-primary" title="New playlist"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> New</button>
+            <button id="pm-new-btn" class="sclient-btn sclient-btn-primary" title="New playlist">${lucideIcon("plus")} New</button>
           </div>
           <div class="pm-sidebar-tools-row">
-            <button id="pm-import-btn" class="sclient-btn pm-import-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Import</button>
+            <button id="pm-import-btn" class="sclient-btn pm-import-btn">${lucideIcon("arrow-down")} Import</button>
           </div>
         </div>
         <div id="pm-sidebar-list" class="pm-sidebar-list"></div>
@@ -978,7 +978,7 @@ function pmOpenEditor() {
   dlg.innerHTML = `
     <div class="pm-editor-head">
       <div class="pm-editor-title">Edit playlist details</div>
-      <button id="pm-ed-x" class="sclient-icon-btn visible"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      <button id="pm-ed-x" class="sclient-icon-btn visible">${lucideIcon("x")}</button>
     </div>
     <div class="pm-editor-body">
       <div class="pm-field">
@@ -992,7 +992,8 @@ function pmOpenEditor() {
       </div>
 
       <div id="pm-ed-adv-toggle" class="pm-adv-toggle">
-        <span>▸ Advanced details</span>
+        <span class="pm-adv-caret">${lucideIcon("chevron-down", 14)}</span>
+        <span>Advanced details</span>
       </div>
       <div id="pm-ed-adv" class="pm-adv">
         <div class="pm-field-row">
@@ -1041,7 +1042,7 @@ function pmOpenEditor() {
         <div class="pm-art-actions">
           <span class="pm-art-label">Artwork</span>
           <div class="pm-sidebar-tools-row">
-            <button id="pm-ed-art-clear" class="sclient-btn sclient-btn-danger" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear artwork</button>
+            <button id="pm-ed-art-clear" class="sclient-btn sclient-btn-danger" type="button">${lucideIcon("trash-2")} Clear artwork</button>
           </div>
         </div>
       </div>
@@ -1075,9 +1076,7 @@ function pmOpenEditor() {
   advToggle.addEventListener("click", () => {
     const open = !advWrap.classList.contains("open");
     advWrap.classList.toggle("open", open);
-    const advSpan = advToggle.querySelector("span");
-    if (advSpan)
-      advSpan.textContent = open ? "▾ Advanced details" : "▸ Advanced details";
+    advToggle.classList.toggle("open", open);
   });
 
   let chips = (pl.tag_list || "")
@@ -1090,7 +1089,7 @@ function pmOpenEditor() {
     wrap.innerHTML = chips
       .map(
         (c, i) =>
-          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`,
+          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}">${lucideIcon("x")}</span></span>`,
       )
       .join("");
     wrap.querySelectorAll(".pm-chip-x").forEach((x) => {

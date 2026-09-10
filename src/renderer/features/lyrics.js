@@ -175,14 +175,14 @@ class LyricsFeature extends Feature {
       <h3 class="sclient-lyrics-title">Lyrics</h3>
       <div class="sclient-lyrics-tools">
         <button id="sclient-lyrics-romanize-btn" class="sclient-icon-btn" title="Romanize lyrics">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+          ${lucideIcon("languages", 14)}
         </button>
         <div id="sclient-lyrics-offset-container" class="sclient-lyrics-offset">
            <span id="sclient-lyrics-offset-val" class="sclient-lyrics-offset-val">0.0s</span>
            <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0">
         </div>
         <button id="sclient-lyrics-close-btn" class="sclient-icon-btn visible" title="Close">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          ${lucideIcon("x")}
         </button>
       </div>
     </div>
@@ -482,8 +482,7 @@ class LyricsFeature extends Feature {
     btn.className =
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
     btn.title = "Lyrics";
-    btn.innerHTML =
-      '<div class="sclient-sc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg></div>';
+    btn.innerHTML = `<div class="sclient-sc-icon">${lucideIcon("mic-vocal")}</div>`;
 
     this.on(btn, "click", (e) => {
       e.preventDefault();
