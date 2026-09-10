@@ -9,8 +9,7 @@
     "build:linux": "electron-builder --linux",
     "build:win": "electron-builder --windows",
     "vmp:sign": "python3 -m castlabs_evs.vmp sign-pkg node_modules/electron/dist",
-    "postinstall": "electron-builder install-app-deps",
-    "format": "prettier --write ."
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "files": [
