@@ -32,29 +32,6 @@ class LyricsFeature extends Feature {
   init() {
     if (this.enabled) return;
     super.init();
-    this.addStyle(
-      "sclient-lyrics-style",
-      `
-		.sclient-lyric-line:hover { 
-			opacity: 0.9 !important; 
-			transform: scale(1.05) !important; 
-			filter: blur(0px) !important;
-		}
-		.sclient-lyric-word.sung {
-			color: var(--sclient-accent, #f50) !important;
-		}
-		#sclient-lyrics-romanize-btn {
-			color: rgba(255,255,255,0.5);
-			background: transparent;
-		}
-		#sclient-lyrics-romanize-btn:hover {
-			background: rgba(255,255,255,0.1);
-		}
-		#sclient-lyrics-romanize-btn.active {
-			color: var(--sclient-accent);
-		}
-	`,
-    );
     this.unsubscribePlayback = onPlaybackChange((evt) => {
       this.lastKnownPosition = evt.position;
       this.currentDuration = evt.duration;
@@ -133,14 +110,13 @@ class LyricsFeature extends Feature {
       (l) => effectivePos >= l.start - 0.1,
     );
     const lineEls = document.querySelectorAll(".sclient-lyric-line");
-    const accent = getAccent();
 
     if (activeIdx !== this.currentHighlightedIndex) {
       this.currentHighlightedIndex = activeIdx;
       lineEls.forEach((el, i) => {
+        el.classList.toggle("active", i === activeIdx);
+        el.classList.toggle("past", i < activeIdx);
         if (i === activeIdx) {
-          const hasWords = el.querySelector(".sclient-lyric-word");
-          el.style.cssText = `transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; transform-origin: center; color: ${hasWords ? "var(--sclient-text-main)" : accent}; font-weight: bold; transform: scale(1.1); opacity: 1; filter: blur(0px);`;
           el.scrollIntoView({ behavior: "smooth", block: "center" });
         } else {
           el.querySelectorAll(".sclient-lyric-word").forEach((w) => {
@@ -150,11 +126,6 @@ class LyricsFeature extends Feature {
             w.style.backgroundClip = "";
             w.style.color = "";
           });
-          if (i < activeIdx) {
-            el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sclient-text-muted); font-weight: normal; transform: scale(0.95); opacity: 0.4; filter: blur(2px);`;
-          } else {
-            el.style.cssText = `transition: all 0.4s ease; font-size: 16px; transform-origin: center; color: var(--sclient-text-main); font-weight: normal; transform: scale(0.95); opacity: 1; filter: blur(0px);`;
-          }
         }
       });
     }
@@ -177,7 +148,7 @@ class LyricsFeature extends Feature {
             wEl.classList.remove("sung");
             const wp = Math.min(1, (effectivePos - wStart) / (wEnd - wStart));
             const pct = (wp * 100).toFixed(1);
-            wEl.style.background = `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, var(--sclient-text-main) ${pct}%, var(--sclient-text-main) 100%)`;
+            wEl.style.background = `linear-gradient(to right, var(--sclient-accent) 0%, var(--sclient-accent) ${pct}%, var(--sclient-text-main) ${pct}%, var(--sclient-text-main) 100%)`;
             wEl.style.webkitBackgroundClip = "text";
             wEl.style.backgroundClip = "text";
             wEl.style.color = "transparent";
@@ -198,34 +169,25 @@ class LyricsFeature extends Feature {
 
     const sidebar = document.createElement("div");
     sidebar.id = "sclient-lyrics-sidebar";
-    sidebar.style.cssText = `
-    position: fixed; top: 20px; bottom: 68px; left: -400px; width: 350px;
-    background: var(--sclient-bg-surface); backdrop-filter: blur(10px);
-    border: 1px solid var(--sclient-border); border-radius: 12px;
-    box-shadow: 5px 5px 25px rgba(0,0,0,0.5); z-index: 999999;
-    transition: left 0.3s ease; display: flex; flex-direction: column;
-    color: var(--sclient-text-main); font-family: var(--sclient-font-sans);
-    padding: 20px; box-sizing: border-box;
-  `;
 
     sidebar.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--sclient-border); padding-bottom: 10px;">
-      <h3 style="margin: 0; font-size: var(--sclient-text-xl); font-weight: 600; color: var(--sclient-accent);">Lyrics</h3>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="sclient-lyrics-romanize-btn" title="Romanize lyrics" style="display:none; border: none; border-radius: 50%; width: 28px; height: 28px; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background 0.18s;">
+    <div class="sclient-lyrics-header">
+      <h3 class="sclient-lyrics-title">Lyrics</h3>
+      <div class="sclient-lyrics-tools">
+        <button id="sclient-lyrics-romanize-btn" class="sclient-icon-btn" title="Romanize lyrics">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
         </button>
-        <div id="sclient-lyrics-offset-container" style="display: none; align-items: center; gap: 8px; font-size: var(--sclient-text-sm); color: var(--sclient-text-muted);">
-           <span id="sclient-lyrics-offset-val" style="min-width: 32px; text-align: right;">0.0s</span>
-           <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0" style="width: 70px; accent-color: var(--sclient-accent); cursor: pointer;">
+        <div id="sclient-lyrics-offset-container" class="sclient-lyrics-offset">
+           <span id="sclient-lyrics-offset-val" class="sclient-lyrics-offset-val">0.0s</span>
+           <input type="range" id="sclient-lyrics-offset-slider" min="-2" max="2" step="0.1" value="0">
         </div>
-        <button id="sclient-lyrics-close-btn" class="sclient-btn sclient-btn-ghost" title="Close" style="padding:4px; display:flex; align-items:center; justify-content:center;">
+        <button id="sclient-lyrics-close-btn" class="sclient-icon-btn visible" title="Close">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>
     </div>
-    <div id="sclient-lyrics-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; font-size: var(--sclient-text-base); line-height: 1.6; white-space: pre-wrap; color: var(--sclient-text-main);">
-      <div style="opacity:0.5; text-align:center; margin-top:20px;">Open a song to load lyrics</div>
+    <div id="sclient-lyrics-content">
+      <div class="sclient-lyrics-empty">Open a song to load lyrics</div>
     </div>
   `;
 
@@ -334,13 +296,8 @@ class LyricsFeature extends Feature {
     this.createLyricsSidebar();
     const sidebar = document.getElementById("sclient-lyrics-sidebar");
     this.lyricsOpen = !this.lyricsOpen;
-    if (this.lyricsOpen) {
-      void sidebar.offsetWidth;
-      sidebar.style.left = "20px";
-      this.fetchLyrics();
-    } else {
-      sidebar.style.left = "-400px";
-    }
+    sidebar.classList.toggle("open", this.lyricsOpen);
+    if (this.lyricsOpen) this.fetchLyrics();
   }
 
   renderLineWords(line) {
@@ -363,7 +320,7 @@ class LyricsFeature extends Feature {
 
     const content = document.getElementById("sclient-lyrics-content");
     if (content)
-      content.innerHTML = `<div style="opacity:0.5; text-align:center; margin-top:20px;">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-lyrics-manual-now" class="sclient-btn sclient-btn-primary" style="margin-top:14px;">Enter manually</button></div>`;
+      content.innerHTML = `<div class="sclient-lyrics-empty">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-lyrics-manual-now" class="sclient-btn sclient-btn-primary sclient-lyrics-manual-trigger">Enter manually</button></div>`;
 
     const abortCtrl = new AbortController();
     this.currentFetchAbort = abortCtrl;
@@ -394,20 +351,18 @@ class LyricsFeature extends Feature {
         const hasSync = data.lines?.length > 0 && data.meta?.level !== "none";
 
         if (hasSync) {
-          if (offsetContainer) {
-            offsetContainer.style.display = "flex";
-            document.getElementById("sclient-lyrics-offset-slider").value = 0;
-            document.getElementById("sclient-lyrics-offset-val").innerText =
-              "0.0s";
-          }
+          offsetContainer.classList.add("visible");
+          document.getElementById("sclient-lyrics-offset-slider").value = 0;
+          document.getElementById("sclient-lyrics-offset-val").innerText =
+            "0.0s";
           const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
-          if (rBtn) rBtn.style.display = "flex";
-          let html = `<div id="sclient-lyrics-lines" style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 50vh 15px 50vh 15px;">`;
+          if (rBtn) rBtn.classList.add("visible");
+          let html = `<div id="sclient-lyrics-lines" class="sclient-lyrics-lines">`;
           for (const line of data.lines) {
             if (line.start === undefined || line.end === undefined) continue;
             const start = line.start / 1000;
             const end = line.end / 1000;
-            html += `<div class="sclient-lyric-line" data-start="${start}" data-end="${end}" style="transition: transform 0.4s ease, font-size 0.4s ease, opacity 0.4s ease, filter 0.4s ease; font-size: 16px; color: var(--sclient-text-main); transform: scale(0.95); transform-origin: center; cursor: pointer;">${this.renderLineWords(line)}</div>`;
+            html += `<div class="sclient-lyric-line" data-start="${start}" data-end="${end}">${this.renderLineWords(line)}</div>`;
             this.currentSyncedLyrics.push({
               start,
               end,
@@ -439,20 +394,17 @@ class LyricsFeature extends Feature {
           if (this.romanizeEnabled) this.romanizeAllLines();
         } else if (data.lines && data.lines.length > 0) {
           const linesHtml = data.lines
-            .map(
-              (l) =>
-                `<div style="font-size: 16px; color: var(--sclient-text-main);">${esc((l.text || "").trim() || " ")}</div>`,
-            )
+            .map((l) => `<div>${esc((l.text || "").trim() || " ")}</div>`)
             .join("");
-          content.innerHTML = `<div style="display: flex; flex-direction: column; gap: 16px; text-align: center; padding: 0 15px 20px 15px;">${linesHtml}</div>`;
-          if (offsetContainer) offsetContainer.style.display = "none";
+          content.innerHTML = `<div class="sclient-lyrics-plain">${linesHtml}</div>`;
+          offsetContainer.classList.remove("visible");
           const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
-          if (rBtn) rBtn.style.display = "none";
+          if (rBtn) rBtn.classList.remove("visible");
         } else {
           this.renderManual(artist, title);
-          if (offsetContainer) offsetContainer.style.display = "none";
+          offsetContainer.classList.remove("visible");
           const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
-          if (rBtn) rBtn.style.display = "none";
+          if (rBtn) rBtn.classList.remove("visible");
         }
       }
     } catch (e) {
@@ -461,9 +413,9 @@ class LyricsFeature extends Feature {
         const offsetContainer = document.getElementById(
           "sclient-lyrics-offset-container",
         );
-        if (offsetContainer) offsetContainer.style.display = "none";
+        if (offsetContainer) offsetContainer.classList.remove("visible");
         const rBtn = document.getElementById("sclient-lyrics-romanize-btn");
-        if (rBtn) rBtn.style.display = "none";
+        if (rBtn) rBtn.classList.remove("visible");
         this.renderManual(artist, title);
       }
     }
@@ -474,12 +426,12 @@ class LyricsFeature extends Feature {
     if (!content) return;
 
     content.innerHTML = `
-    <div style="opacity:0.5; text-align:center; margin-top:20px;">No lyrics found for this track.</div>
-    <div style="margin-top: 15px; text-align: center;">
-      <div style="margin-bottom: 8px; font-size: 12px; color: #aaa;">Try manually:</div>
-      <input type="text" id="sclient-lyrics-manual-artist" class="sclient-input" placeholder="Artist" value="${esc(artist)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sclient-text-sm);">
-      <input type="text" id="sclient-lyrics-manual-title" class="sclient-input" placeholder="Title" value="${esc(title)}" style="width: 90%; margin-bottom: 5px; font-size:var(--sclient-text-sm);">
-      <button id="sclient-lyrics-manual-search" class="sclient-btn sclient-btn-primary" style="width: 90%;">Search</button>
+    <div class="sclient-lyrics-empty">No lyrics found for this track.</div>
+    <div class="sclient-lyrics-manual">
+      <div class="sclient-lyrics-manual-label">Try manually:</div>
+      <input type="text" id="sclient-lyrics-manual-artist" class="sclient-input" placeholder="Artist" value="${esc(artist)}">
+      <input type="text" id="sclient-lyrics-manual-title" class="sclient-input" placeholder="Title" value="${esc(title)}">
+      <button id="sclient-lyrics-manual-search" class="sclient-btn sclient-btn-primary">Search</button>
     </div>
   `;
 
@@ -531,7 +483,7 @@ class LyricsFeature extends Feature {
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
     btn.title = "Lyrics";
     btn.innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg></div>';
+      '<div class="sclient-sc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11 7.601-5.994 8.19a1 1 0 0 0 .1 1.298l.817.818a1 1 0 0 0 1.314.087L15.09 12"/><path d="M16.5 21.174C15.5 20.5 14.372 20 13 20c-2.058 0-3.928 2.356-6 2-2.072-.356-2.775-3.369-1.5-4.5"/><circle cx="16" cy="7" r="5"/></svg></div>';
 
     this.on(btn, "click", (e) => {
       e.preventDefault();

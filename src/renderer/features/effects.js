@@ -94,10 +94,6 @@ class EffectsFeature extends Feature {
 
     const btnContainer = document.createElement("div");
     btnContainer.className = "sclient-effects-container";
-    btnContainer.style.position = "relative";
-    btnContainer.style.display = "inline-flex";
-    btnContainer.style.alignItems = "center";
-    btnContainer.style.marginRight = "8px";
 
     const btn = document.createElement("button");
     btn.id = "sclient-effects-btn";
@@ -105,40 +101,24 @@ class EffectsFeature extends Feature {
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive";
     btn.title = "Audio Effects (Speed, Pitch, Reverb)";
     btn.innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge-icon lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg></div>';
+      '<div class="sclient-sc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-gauge-icon lucide-gauge"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg></div>';
 
     const popup = document.createElement("div");
     popup.id = "sclient-effects-popup";
     popup.className = "sc-background-darkgrey";
-    popup.style.cssText = `
-    position: absolute;
-    bottom: 45px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    padding: 16px;
-    border-radius: 8px;
-    display: none;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    border: 1px solid var(--sclient-border);
-    background-color: var(--sclient-bg-surface);
-  `;
 
     popup.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:12px; font-weight:bold; color: var(--sclient-text-base);">Speed</span>
-        <span id="sclient-effects-speed-val" style="font-size:12px; color: var(--sclient-text-base);">1.00x</span>
+    <div class="sclient-effects-row">
+        <span class="sclient-effects-label">Speed</span>
+        <span id="sclient-effects-speed-val" class="sclient-effects-val">1.00x</span>
     </div>
-    <input type="range" id="sclient-effects-speed" min="0.25" max="2" step="0.05" value="1" style="width:100%; accent-color: var(--sclient-accent);" />
+    <input type="range" id="sclient-effects-speed" class="sclient-slider" min="0.25" max="2" step="0.05" value="1" />
     
-    <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; color: var(--sclient-text-base);">
+    <label class="sclient-effects-check">
         <input type="checkbox" id="sclient-effects-pitch" /> Preserve Pitch
     </label>
     
-    <label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer; color: var(--sclient-text-base);">
+    <label class="sclient-effects-check">
         <input type="checkbox" id="sclient-effects-reverb" /> Reverb
     </label>
   `;
@@ -165,11 +145,11 @@ class EffectsFeature extends Feature {
     reverbCheck.checked = window.sclient_effects.reverb;
 
     this.on(btn, "click", () => {
-      popup.style.display = popup.style.display === "none" ? "flex" : "none";
+      popup.classList.toggle("open");
     });
 
     this.on(document, "click", (e) => {
-      if (!btnContainer.contains(e.target)) popup.style.display = "none";
+      if (!btnContainer.contains(e.target)) popup.classList.remove("open");
     });
 
     const updateEffects = () => {

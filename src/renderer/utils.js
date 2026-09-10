@@ -49,22 +49,11 @@ function injectToIframes(id, css) {
 function showToast(message) {
   const toast = document.createElement("div");
   toast.textContent = message;
-  toast.className = "sclient-modal-surface";
-  toast.style.cssText = `
-    position: fixed; bottom: 20px; left: 20px; width: auto; max-width: 360px;
-    border-radius: var(--sclient-radius-xl); min-height: 40px; box-sizing: border-box;
-    display: flex; align-items: center; justify-content: center;
-    padding: 10px 20px; pointer-events: none; z-index: 9999999; opacity: 0; transform: translateY(10px);
-    transition: all 0.3s ease; white-space: pre-line; text-align: center; font-size: var(--sclient-text-base);
-  `;
+  toast.className = "sclient-toast";
   document.body.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.style.opacity = "1";
-    toast.style.transform = "translateY(0)";
-  });
+  requestAnimationFrame(() => toast.classList.add("open"));
   setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform = "translateY(10px)";
+    toast.classList.remove("open");
     setTimeout(() => toast.remove(), 300);
   }, 3500);
 }
@@ -76,17 +65,14 @@ function showConfirm(message, options) {
 
     const modal = document.createElement("div");
     modal.className = "sclient-modal-surface";
-    modal.style.textAlign = "center";
 
     const msg = document.createElement("div");
     msg.textContent = message;
-    msg.className = "sclient-text-body";
-    msg.style.cssText =
-      "font-weight: 500; margin-bottom: 24px; font-size: var(--sclient-text-lg);";
+    msg.className = "sclient-modal-msg";
     modal.appendChild(msg);
 
     const btnRow = document.createElement("div");
-    btnRow.style.cssText = "display: flex; gap: 12px; justify-content: center;";
+    btnRow.className = "sclient-modal-actions";
 
     let buttons = [];
     if (Array.isArray(options)) {
@@ -99,8 +85,7 @@ function showConfirm(message, options) {
     }
 
     const cleanup = (res) => {
-      backdrop.style.opacity = "0";
-      modal.style.transform = "scale(0.95)";
+      backdrop.classList.remove("open");
       setTimeout(() => {
         backdrop.remove();
         resolve(res);
@@ -124,10 +109,7 @@ function showConfirm(message, options) {
     backdrop.appendChild(modal);
     document.body.appendChild(backdrop);
 
-    requestAnimationFrame(() => {
-      backdrop.style.opacity = "1";
-      modal.style.transform = "scale(1)";
-    });
+    requestAnimationFrame(() => backdrop.classList.add("open"));
   });
 }
 
@@ -141,4 +123,14 @@ function esc(str) {
 
 function getAccent() {
   return SCLIENT_CONFIG.customAccent ? SCLIENT_CONFIG.accentColor : "#f50";
+}
+
+function closeSettingsDrawer() {
+  const el = document.getElementById("sclient-settings-overlay");
+  if (el) el.classList.remove("open");
+}
+
+function closeLyricsSidebar() {
+  const el = document.getElementById("sclient-lyrics-sidebar");
+  if (el) el.classList.remove("open");
 }

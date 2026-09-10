@@ -70,6 +70,49 @@ async function resolvePlaylistData(url, cid, tok) {
   }
 }
 
+function createDownloadToast(title) {
+  document
+    .querySelectorAll(".sclient-download-toast")
+    .forEach((t) => t.remove());
+
+  const toast = document.createElement("div");
+  toast.className = "sclient-download-toast";
+  if (SCLIENT_CONFIG.lazyScroll) toast.classList.add("offset");
+  toast.innerHTML = `
+    <div class="sclient-toast-body">
+      <div class="sclient-toast-top">
+        <span class="sclient-toast-title">${title}</span>
+        <button class="sclient-toast-close sclient-btn sclient-btn-ghost sclient-btn-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="sclient-toast-row">
+        <div class="sclient-toast-bar">
+          <div class="sclient-toast-progress"></div>
+        </div>
+        <span class="sclient-toast-percent">0%</span>
+      </div>
+    </div>
+  `;
+
+  const refs = {
+    toast,
+    progressFill: toast.querySelector(".sclient-toast-progress"),
+    percentText: toast.querySelector(".sclient-toast-percent"),
+    titleText: toast.querySelector(".sclient-toast-title"),
+    closeBtn: toast.querySelector(".sclient-toast-close"),
+  };
+
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add("open"));
+  return refs;
+}
+
+function setDownloadFailed(refs, err) {
+  refs.titleText.textContent = "Failed: " + (err.message || err);
+  refs.titleText.classList.add("failed");
+}
+
 class DownloaderFeature extends Feature {
   get featureKey() {
     return "features.show_downloader";
@@ -120,7 +163,7 @@ class DownloaderFeature extends Feature {
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
     btn.title = "Download";
     btn.innerHTML =
-      '<div style="display:flex;align-items:center;justify-content:center;height:100%;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></div>';
+      '<div class="sclient-sc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg></div>';
 
     this.on(btn, "click", (e) => {
       e.preventDefault();
@@ -142,47 +185,13 @@ class DownloaderFeature extends Feature {
           }
         : null;
 
-      document
-        .querySelectorAll(".sclient-download-toast")
-        .forEach((t) => t.remove());
-
-      const toast = document.createElement("div");
-      toast.className = "sclient-download-toast";
-      toast.innerHTML = `
-			<div style="display:flex; flex-direction:column; width:200px;">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<span class="sclient-toast-title" style="font-weight:600; font-size:var(--sclient-text-base);">Downloading...</span>
-					<button class="sclient-toast-close sclient-btn sclient-btn-ghost" style="padding:2px 4px;">
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-					</button>
-				</div>
-				<div style="display:flex; align-items:center; gap:8px;">
-					<div style="flex-grow:1; height:6px; background-color:var(--sclient-border); border-radius:10px; overflow:hidden; display:flex;">
-						<div class="sclient-toast-progress" style="width: 0%; background-color: var(--sclient-accent); transition: width 0.2s;"></div>
-					</div>
-					<span class="sclient-toast-percent" style="font-size:var(--sclient-text-sm); min-width:32px; text-align:right; color:var(--sclient-text-muted);">0%</span>
-				</div>
-			</div>
-		`;
-      toast.style.right = SCLIENT_CONFIG.lazyScroll ? "70px" : "20px";
-      toast.style.padding = "6px 10px";
-      toast.style.textAlign = "left";
-      toast.style.pointerEvents = "auto";
-
-      const progressFill = toast.querySelector(".sclient-toast-progress");
-      const percentText = toast.querySelector(".sclient-toast-percent");
-      const titleText = toast.querySelector(".sclient-toast-title");
-      const closeBtn = toast.querySelector(".sclient-toast-close");
-
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => {
-        toast.style.opacity = "1";
-      });
+      const refs = createDownloadToast("Downloading...");
+      const { toast, progressFill, percentText, titleText, closeBtn } = refs;
 
       closeBtn.addEventListener("click", () => {
         sendBridge("cancel_download", { url: fullUrl });
         titleText.textContent = "Download cancelled.";
-        toast.style.opacity = "0";
+        toast.classList.remove("open");
         setTimeout(() => toast.remove(), 300);
       });
 
@@ -211,8 +220,7 @@ class DownloaderFeature extends Feature {
         })
         .catch((err) => {
           window.removeEventListener("message", progressHandler);
-          titleText.textContent = "Failed: " + (err.message || err);
-          titleText.style.color = "var(--sclient-danger)";
+          setDownloadFailed(refs, err);
         });
     });
 
@@ -253,45 +261,13 @@ class DownloaderFeature extends Feature {
       e.preventDefault();
       let fullUrl = window.location.href.split("?")[0];
 
-      document
-        .querySelectorAll(".sclient-download-toast")
-        .forEach((t) => t.remove());
-
-      const toast = document.createElement("div");
-      toast.className = "sclient-download-toast";
-      toast.innerHTML = `
-			<div style="display:flex; flex-direction:column; width:200px;">
-				<div style="display:flex; justify-content:space-between; align-items:center;">
-					<span class="sclient-toast-title" style="font-weight:600; font-size:var(--sclient-text-base);">Downloading Playlist...</span>
-					<button class="sclient-toast-close sclient-btn sclient-btn-ghost" style="padding:2px 4px;">
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-					</button>
-				</div>
-				<div style="display:flex; align-items:center; gap:8px;">
-					<div style="flex-grow:1; height:6px; background-color:var(--sclient-border); border-radius:10px; overflow:hidden; display:flex;">
-						<div class="sclient-toast-progress" style="width: 0%; background-color: var(--sclient-accent); transition: width 0.2s;"></div>
-					</div>
-					<span class="sclient-toast-percent" style="font-size:var(--sclient-text-sm); min-width:32px; text-align:right; color:var(--sclient-text-muted);">0%</span>
-				</div>
-			</div>
-		`;
-      toast.style.right = SCLIENT_CONFIG.lazyScroll ? "70px" : "20px";
-      toast.style.padding = "6px 10px";
-      toast.style.textAlign = "left";
-      toast.style.pointerEvents = "auto";
-
-      const progressFill = toast.querySelector(".sclient-toast-progress");
-      const percentText = toast.querySelector(".sclient-toast-percent");
-      const titleText = toast.querySelector(".sclient-toast-title");
-      const closeBtn = toast.querySelector(".sclient-toast-close");
-
-      document.body.appendChild(toast);
-      requestAnimationFrame(() => (toast.style.opacity = "1"));
+      const refs = createDownloadToast("Downloading Playlist...");
+      const { toast, progressFill, percentText, titleText, closeBtn } = refs;
 
       closeBtn.addEventListener("click", () => {
         sendBridge("cancel_download", { url: fullUrl });
         titleText.textContent = "Download cancelled.";
-        toast.style.opacity = "0";
+        toast.classList.remove("open");
         setTimeout(() => toast.remove(), 300);
       });
 
@@ -334,8 +310,7 @@ class DownloaderFeature extends Feature {
         })
         .catch((err) => {
           window.removeEventListener("message", progressHandler);
-          titleText.textContent = "Failed: " + (err.message || err);
-          titleText.style.color = "var(--sclient-danger)";
+          setDownloadFailed(refs, err);
         });
     });
     buttonGroup.appendChild(btn);

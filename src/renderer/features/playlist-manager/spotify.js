@@ -196,53 +196,30 @@ async function pmSpotifyImport() {
 }
 
 function pmOpenSpotifyModal(spotifyRows, resumed = null) {
-  injectStyle(
-    "sclient-pm-spotify",
-    `
-    .spm-row { display:flex; align-items:stretch; padding:8px 12px; gap:12px; font-size:var(--sclient-text-sm); border-bottom:1px solid var(--sclient-border); }
-    .spm-row.matched { background:rgba(50,200,50,0.05); }
-    .spm-row.skipped { background:rgba(200,50,50,0.05); opacity:0.6; }
-    .spm-left, .spm-right { flex:1; min-width:0; }
-    .spm-score { width:50px; flex-shrink:0; text-align:right; font-weight:600; }
-    .spm-actions { width:200px; flex-shrink:0; }
-    .spm-title { font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .spm-meta { color:var(--sclient-text-muted); margin-top:4px; }
-    .spm-thumb { width:32px; height:32px; border-radius:var(--sclient-radius-sm); flex-shrink:0; }
-    .spm-header { padding:16px 20px; border-bottom:1px solid var(--sclient-border); display:flex; justify-content:space-between; align-items:center; gap:16px; }
-    .spm-cols { padding:8px 12px; display:flex; font-size:var(--sclient-text-xs); color:var(--sclient-text-muted); border-bottom:1px solid var(--sclient-border); }
-    .spm-footer { padding:14px 20px; border-top:1px solid var(--sclient-border); display:flex; justify-content:flex-end; gap:10px; }
-    .spm-search { display:flex; gap:4px; }
-    .spm-search input { flex:1; min-width:0; font-size:var(--sclient-text-xs); }
-    .spm-search button { font-size:var(--sclient-text-xs); }
-  `,
-  );
-
   const back = document.createElement("div");
   back.className = "sclient-modal-backdrop";
 
   const dlg = document.createElement("div");
-  dlg.className = "sclient-modal-surface";
-  dlg.style.cssText =
-    "width:90vw;max-width:900px;max-height:85vh;display:flex;flex-direction:column;";
+  dlg.className = "sclient-modal-surface spm-dialog";
 
   const total = resumed ? resumed.total : spotifyRows.length;
 
   dlg.innerHTML = `
     <div class="spm-header">
-      <div id="spm-head" class="sclient-text-h2" style="flex:1">Spotify Import · 0 / ${total}</div>
-      <input id="spm-title" class="sclient-input" value="Spotify Import" style="width:200px" />
-      <select id="spm-sharing" class="sclient-select" style="width:100px">
+      <div id="spm-head" class="sclient-text-h2 spm-header-title">Spotify Import · 0 / ${total}</div>
+      <input id="spm-title" class="sclient-input spm-title-input" value="Spotify Import" />
+      <select id="spm-sharing" class="sclient-select spm-sharing-select">
         <option value="private">Private</option>
         <option value="public">Public</option>
       </select>
     </div>
     <div class="spm-cols">
-      <div style="flex:1">Spotify</div>
-      <div style="flex:1">SoundCloud</div>
-      <div style="width:50px;text-align:right">Score</div>
-      <div style="width:200px;padding-left:12px">Match</div>
+      <div class="spm-col-soundcloud">Spotify</div>
+      <div class="spm-col-soundcloud">SoundCloud</div>
+      <div class="spm-col-score">Score</div>
+      <div class="spm-col-match">Match</div>
     </div>
-    <div id="spm-list" style="flex:1;overflow-y:auto;min-height:0"></div>
+    <div id="spm-list" class="spm-list"></div>
     <div class="spm-footer">
       <button id="spm-cancel" class="sclient-btn">Cancel</button>
       <button id="spm-confirm" class="sclient-btn sclient-btn-primary" disabled>Import 0 tracks</button>
@@ -251,16 +228,14 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
   back.appendChild(dlg);
   document.body.appendChild(back);
 
-  requestAnimationFrame(() => {
-    back.style.opacity = "1";
-    dlg.style.transform = "scale(1)";
-  });
+  requestAnimationFrame(() => back.classList.add("open"));
 
-  dlg.querySelector("#spm-cancel").onclick = () => {
-    back.style.opacity = "0";
-    dlg.style.transform = "scale(0.95)";
+  const closeModal = () => {
+    back.classList.remove("open");
     setTimeout(() => back.remove(), 200);
   };
+
+  dlg.querySelector("#spm-cancel").onclick = closeModal;
   dlg.querySelector("#spm-confirm").onclick = async () => {
     const btn = dlg.querySelector("#spm-confirm");
     btn.disabled = true;
@@ -272,9 +247,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     const ids = valid.map((r) => r.match.id);
     if (!ids.length) {
       showToast("No tracks to import.");
-      back.style.opacity = "0";
-      dlg.style.transform = "scale(0.95)";
-      setTimeout(() => back.remove(), 200);
+      closeModal();
       return;
     }
 
@@ -315,9 +288,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     ).length;
     showToast(`Imported ${ok} tracks (${skipped} skipped)`);
     localStorage.removeItem("sclient_spotify_draft");
-    back.style.opacity = "0";
-    dlg.style.transform = "scale(0.95)";
-    setTimeout(() => back.remove(), 200);
+    closeModal();
   };
 
   _pmSpotifyState = resumed || {
@@ -370,7 +341,7 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
 
     if (!r.resolved) {
       el.className = "spm-row";
-      el.innerHTML = `<div style="opacity:0.5;padding:10px">Searching "${r.original.title}"...</div>`;
+      el.innerHTML = `<div class="spm-pending">Searching "${r.original.title}"...</div>`;
       return;
     }
 
@@ -401,9 +372,9 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
         <div class="spm-title" title="${orig}">${orig.replace(/</g, "&lt;")}</div>
         <div class="spm-meta">${origMeta}</div>
       </div>
-      <div class="spm-right" style="display:flex;gap:10px">
+      <div class="spm-right">
         ${thumb ? `<img src="${thumb}" class="spm-thumb">` : ""}
-        <div style="min-width:0">
+        <div class="spm-match-body">
           <div class="spm-title">${matchTitle.replace(/</g, "&lt;")}</div>
           <div class="spm-meta">${matchMeta}</div>
         </div>
@@ -418,7 +389,6 @@ function pmOpenSpotifyModal(spotifyRows, resumed = null) {
     const act = el.querySelector(".spm-actions");
     const sel = document.createElement("select");
     sel.className = "sclient-select";
-    sel.style.cssText = "width:100%;font-size:var(--sclient-text-xs)";
 
     r.candidates.forEach((c, i) => {
       const sel2 = r.match && c.id === r.match.id ? "selected" : "";

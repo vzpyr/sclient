@@ -1,11 +1,15 @@
+:root {
+  --sclient-titlebar-h: 32px;
+}
+
 #sclient-titlebar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 32px;
+  height: var(--sclient-titlebar-h);
   background: var(--sclient-bg-surface, #121212);
-  z-index: 9999999;
+  z-index: var(--sclient-z-modal);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -13,7 +17,7 @@
   -webkit-app-region: drag;
   border-bottom: 1px solid var(--sclient-border, rgba(255, 255, 255, 0.05));
   box-sizing: border-box;
-  padding: 0 10px;
+  padding: 0 var(--sclient-space-3);
 }
 
 #sclient-titlebar .nav-area {
@@ -25,12 +29,12 @@
 #sclient-titlebar .title-area {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
+  gap: var(--sclient-space-2);
+  font-size: var(--sclient-text-sm);
   font-weight: 600;
   color: var(--sclient-text-main, #fff);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--sclient-dur) ease;
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -49,13 +53,13 @@
   background: transparent;
   border: none;
   color: var(--sclient-text-muted, rgba(255, 255, 255, 0.65));
-  width: 32px;
-  height: 32px;
+  width: var(--sclient-titlebar-h);
+  height: var(--sclient-titlebar-h);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: color var(--sclient-dur-fast) ease;
   padding: 0;
   margin: 0;
 }
@@ -65,22 +69,22 @@
 header,
 .header,
 .header__wrapper {
-  top: 32px !important;
+  top: var(--sclient-titlebar-h) !important;
 }
 #content,
 .l-main {
-  padding-top: 32px !important;
+  padding-top: var(--sclient-titlebar-h) !important;
 }
 .l-sidebar-right,
 .sclient-floating-btn,
 #sclient-sidebar-toggle,
 #sclient-lyrics-sidebar {
-  margin-top: 32px !important;
+  margin-top: var(--sclient-titlebar-h) !important;
 }
 #sclient-settings-overlay,
 #sclient-stats-overlay,
 #sclient-playlists-overlay,
 iframe.webiIframe {
-  top: 32px !important;
-  height: calc(100% - 32px) !important;
+  top: var(--sclient-titlebar-h) !important;
+  height: calc(100% - var(--sclient-titlebar-h)) !important;
 }

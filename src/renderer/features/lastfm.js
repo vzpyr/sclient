@@ -16,10 +16,10 @@ class LastfmFeature extends Feature {
   }
   settingsCustom() {
     return `
-      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+      <div class="sclient-card-custom-row">
         <button id="sclient-lastfm-connect-btn" class="sclient-btn sclient-btn-primary">Connect Last.fm Account</button>
-        <button id="sclient-lastfm-disconnect-btn" class="sclient-btn sclient-btn-danger" style="display:none;">Disconnect</button>
-        <span id="sclient-lastfm-status" style="font-size:11px;font-weight:bold;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.1);color:#ccc;">Waiting...</span>
+        <button id="sclient-lastfm-disconnect-btn" class="sclient-btn sclient-btn-danger hidden">Disconnect</button>
+        <span id="sclient-lastfm-status" class="sclient-status-pill" data-tone="idle">Waiting...</span>
       </div>
     `;
   }
@@ -39,11 +39,11 @@ class LastfmFeature extends Feature {
     return !!SCLIENT_CONFIG.lastfmEnabled;
   }
 
-  updateStatus(elId, text, color) {
+  updateStatus(elId, text, tone) {
     const el = document.getElementById(elId);
     if (el) {
       el.textContent = text;
-      el.style.color = color || "#ccc";
+      el.dataset.tone = tone || "idle";
     }
   }
 
@@ -55,7 +55,7 @@ class LastfmFeature extends Feature {
     p.then((result) => {
       if (!result || !result.ok) {
         if (result && this.authCodes.has(result.code)) {
-          this.updateStatus(this.elId, "Auth Error", "#f55");
+          this.updateStatus(this.elId, "Auth Error", "error");
         }
       }
     }).catch(() => {});
@@ -69,10 +69,10 @@ class LastfmFeature extends Feature {
     this.startTime = 0;
     this.threshold = 0;
     this.prevPlaying = false;
-    this.updateStatus(this.elId, "Waiting...", "#ccc");
+    this.updateStatus(this.elId, "Waiting...", "idle");
     this.unsubscribePlayback = onPlaybackChange((evt) => {
       if (evt.type === "none") {
-        this.updateStatus(this.elId, "Waiting...", "#ccc");
+        this.updateStatus(this.elId, "Waiting...", "idle");
         this.prevPlaying = false;
         return;
       }
@@ -88,7 +88,7 @@ class LastfmFeature extends Feature {
           : 0;
         if (evt.isPlaying && artist && title) {
           this.broadcast("nowPlaying", artist, title);
-          this.updateStatus(this.elId, "Listening...", "#789cff");
+          this.updateStatus(this.elId, "Listening...", "listening");
         }
         this.prevPlaying = evt.isPlaying;
         return;
@@ -111,14 +111,14 @@ class LastfmFeature extends Feature {
         if (!this.hasScrobbled && elapsed >= this.threshold) {
           this.broadcast("scrobble", artist, title, this.startTime);
           this.hasScrobbled = true;
-          this.updateStatus(this.elId, "Scrobbled!", "#5f5");
+          this.updateStatus(this.elId, "Scrobbled!", "recorded");
         } else if (!this.hasScrobbled) {
-          this.updateStatus(this.elId, "Listening...", "#789cff");
+          this.updateStatus(this.elId, "Listening...", "listening");
         }
       } else if (!evt.isPlaying && evt.trackData) {
         const status = this.hasScrobbled ? "Scrobbled!" : "Paused";
-        const color = this.hasScrobbled ? "#5f5" : "#f9a826";
-        this.updateStatus(this.elId, status, color);
+        const tone = this.hasScrobbled ? "recorded" : "paused";
+        this.updateStatus(this.elId, status, tone);
       }
 
       this.prevPlaying = evt.isPlaying;

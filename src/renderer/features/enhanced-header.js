@@ -34,15 +34,9 @@ class EnhancedHeaderFeature extends Feature {
 
   safeReplaceSvg(container, svgHtml) {
     if (!container || container.querySelector(".sclient-svg-container")) return;
-    container.querySelectorAll("svg").forEach((s) => {
-      s.style.display = "none";
-    });
-    container.style.cssText =
-      "font-size: 0; line-height: 0; display: flex; align-items: center; justify-content: center;";
+    container.classList.add("sclient-svg-host");
     const icon = document.createElement("div");
     icon.className = "sclient-svg-container";
-    icon.style.cssText =
-      "display: flex; align-items: center; justify-content: center;";
     icon.innerHTML = svgHtml;
     container.appendChild(icon);
   }
@@ -141,11 +135,10 @@ class EnhancedHeaderFeature extends Feature {
       const li = document.createElement("li");
       const a = document.createElement("a");
       a.id = id;
-      a.className = "header__navMenuItem";
+      a.className = "header__navMenuItem sclient-svg-host";
       if (id === "sclient-nav-back-btn") a.classList.add("sc-mr-1x");
       a.title = title;
-      a.style.cssText = `font-size: 0px; line-height: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; height: 46px; width: 30px; padding: 0; ${mr ? "margin-right: 10px;" : ""}`;
-      a.innerHTML = `<div class="sclient-svg-container" style="display: flex; align-items: center; justify-content: center; height: 100%; width: 100%;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></div>`;
+      a.innerHTML = `<div class="sclient-svg-container"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${path}"/></svg></div>`;
       a.addEventListener("click", (e) => {
         e.preventDefault();
         handler();

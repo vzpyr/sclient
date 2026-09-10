@@ -47,7 +47,7 @@ const AUXILIARY = {
       toggleKey: "features.region_bypass",
       fields: [{ type: "text", key: "features.proxy_url", label: "Proxy URL" }],
       custom:
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:8px;"><button id="sclient-proxyurl-public-btn" class="sclient-btn" style="flex-shrink:0;white-space:nowrap;padding:4px 8px;font-size:11px;">Use Public</button></div><div style="font-size:10px;color:#f88;margin-top:4px;">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. Opening your profile may temporarily geo-lock songs again.</div>',
+        '<div class="sclient-field-action"><button id="sclient-proxyurl-public-btn" class="sclient-btn sclient-btn-sm">Use Public</button></div><div class="sclient-field-note">Disclaimer: Whoever runs the proxy server can (in theory) steal your credentials by intercepting your traffic. Opening your profile may temporarily geo-lock songs again.</div>',
     },
   ],
   stats: [
@@ -81,32 +81,29 @@ function highlight(text, patterns) {
 
 function highlightCss(text) {
   return highlight(text, [
-    [/(\/\*[\s\S]*?\*\/)/g, "var(--sclient-syntax-comment, #6a9955)"],
-    [
-      /([.#][a-zA-Z0-9_-]+)(?=[\s{])/g,
-      "var(--sclient-syntax-selector, #d7ba7d)",
-    ],
-    [/([a-zA-Z-]+)\s*(?=:)/g, "var(--sclient-syntax-property, #9cdcfe)"],
-    [/(:\s*)([^;}]+)(?=;|\})/g, "var(--sclient-syntax-value, #ce9178)"],
+    [/(\/\*[\s\S]*?\*\/)/g, "var(--sclient-syntax-comment)"],
+    [/([.#][a-zA-Z0-9_-]+)(?=[\s{])/g, "var(--sclient-syntax-selector)"],
+    [/([a-zA-Z-]+)\s*(?=:)/g, "var(--sclient-syntax-property)"],
+    [/(:\s*)([^;}]+)(?=;|\})/g, "var(--sclient-syntax-value)"],
   ]);
 }
 
 function highlightJs(text) {
   return highlight(text, [
-    [/(\/\/.*)/g, "var(--sclient-syntax-comment, #6a9955)"],
-    [/('.*?'|".*?"|`[\s\S]*?`)/g, "var(--sclient-syntax-string, #ce9178)"],
+    [/(\/\/.*)/g, "var(--sclient-syntax-comment)"],
+    [/('.*?'|".*?"|`[\s\S]*?`)/g, "var(--sclient-syntax-string)"],
     [
       /\b(const|let|var|function|return|if|else|for|while|try|catch|async|await|class|new|this|import|export|from|true|false|null|undefined)\b/g,
-      "var(--sclient-syntax-keyword, #569cd6)",
+      "var(--sclient-syntax-keyword)",
     ],
-    [/\b([a-zA-Z0-9_]+)(?=\s*\()/g, "var(--sclient-syntax-function, #dcdcaa)"],
+    [/\b([a-zA-Z0-9_]+)(?=\s*\()/g, "var(--sclient-syntax-function)"],
   ]);
 }
 
 function toggleSwitchHtml(configKey) {
-  return `<label class="sclient-toggle">
+  return `<label class="sclient-switch">
     <input type="checkbox" data-config-key="${configKey}">
-    <span class="sclient-toggle-bg"><span class="sclient-toggle-slider"></span></span>
+    <span class="sclient-switch-bg"></span>
   </label>`;
 }
 
@@ -171,22 +168,6 @@ function categorySectionHtml(category, title) {
   return `<div class="sclient-section-title">${title}</div>${cards}`;
 }
 
-function setupToggleVisual(input) {
-  const label = input.closest("label");
-  if (!label) return;
-  const bg = label.querySelector(".sclient-toggle-bg");
-  const slider = label.querySelector(".sclient-toggle-slider");
-  if (!bg || !slider) return;
-  const update = () => {
-    bg.style.backgroundColor = input.checked ? getAccent() : "#333";
-    slider.style.transform = input.checked
-      ? "translateX(20px)"
-      : "translateX(0)";
-  };
-  input.addEventListener("change", update);
-  update();
-}
-
 function setupEditors(overlay) {
   const $ = (id) => overlay.querySelector(id);
   const cssEd = $("#sclient-css-editor"),
@@ -216,12 +197,10 @@ function setupEditors(overlay) {
   });
 
   const switchTab = (active, inactive, show, hide) => {
-    active.style.background = getAccent();
-    active.style.color = "white";
-    inactive.style.background = "#333";
-    inactive.style.color = "#ccc";
-    show.style.display = "block";
-    hide.style.display = "none";
+    active.classList.add("active");
+    inactive.classList.remove("active");
+    show.classList.remove("hidden");
+    hide.classList.add("hidden");
   };
   tabCss.addEventListener("click", () =>
     switchTab(tabCss, tabJs, cssCon, jsCon),
@@ -244,25 +223,24 @@ function renderAccounts(overlay) {
           const list = overlay.querySelector("#sclient-accounts-list");
           list.replaceChildren();
           for (const acc of accounts) {
-            const div = document.createElement("div");
-            div.style.cssText =
-              "display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,0.05);border-radius:4px;";
+            const row = document.createElement("div");
+            row.className = "sclient-account-row";
 
             const name = document.createElement("span");
+            name.className = "sclient-account-name";
             name.textContent = acc === "main" ? "Main" : acc;
             if (acc === active) {
-              name.style.cssText = `color:${getAccent()};font-weight:bold;`;
+              name.classList.add("active");
               name.textContent += " (Active)";
             }
 
             const btns = document.createElement("div");
-            btns.style.cssText = "display:flex;gap:5px;";
+            btns.className = "sclient-account-actions";
 
             if (acc !== active) {
               const sw = document.createElement("button");
               sw.textContent = "Switch";
-              sw.className = "sclient-btn";
-              sw.style.padding = "4px 8px";
+              sw.className = "sclient-btn sclient-btn-sm";
               sw.onclick = () =>
                 sendBridge("set_active_account", { name: acc })
                   .then(() => sendBridge("restart_app"))
@@ -275,8 +253,7 @@ function renderAccounts(overlay) {
             if (acc !== "main" && acc !== active) {
               const del = document.createElement("button");
               del.textContent = "Delete";
-              del.className = "sclient-btn sclient-btn-danger";
-              del.style.padding = "4px 8px";
+              del.className = "sclient-btn sclient-btn-danger sclient-btn-sm";
               del.onclick = () =>
                 showConfirm("Delete account " + acc + "?").then((ok) => {
                   if (ok)
@@ -292,8 +269,7 @@ function renderAccounts(overlay) {
             if (acc === "main") {
               const rst = document.createElement("button");
               rst.textContent = "Reset";
-              rst.className = "sclient-btn sclient-btn-danger";
-              rst.style.padding = "4px 8px";
+              rst.className = "sclient-btn sclient-btn-danger sclient-btn-sm";
               rst.onclick = () => {
                 const msg =
                   acc === active
@@ -309,9 +285,9 @@ function renderAccounts(overlay) {
               btns.appendChild(rst);
             }
 
-            div.appendChild(name);
-            div.appendChild(btns);
-            list.appendChild(div);
+            row.appendChild(name);
+            row.appendChild(btns);
+            list.appendChild(row);
           }
         })
         .catch((e) => {
@@ -348,10 +324,10 @@ function wireCustomSections(overlay) {
       connectBtn.textContent = username
         ? "Reconnect"
         : "Connect Last.fm Account";
-      if (disconnectBtn) disconnectBtn.style.display = username ? "" : "none";
+      if (disconnectBtn) disconnectBtn.classList.toggle("hidden", !username);
       if (status) {
         status.textContent = username ? "Connected: " + username : "Waiting...";
-        status.style.color = username ? getAccent() : "#ccc";
+        status.dataset.tone = username ? "recorded" : "idle";
       }
     };
     if (SCLIENT_CONFIG.lastfmUsername)
@@ -466,18 +442,16 @@ class SettingsFeature extends Feature {
 
     const ul = document.createElement("ul");
     ul.className = "header__navMenu sc-clearfix sc-list-nostyle left";
-    ul.style.marginRight = "10px";
+    ul.classList.add("sclient-settings-menu");
 
     const li = document.createElement("li");
     const btn = document.createElement("a");
     btn.id = "sclient-settings-btn";
     btn.href = "#";
-    btn.className = "header__moreButton";
-    btn.style.cssText =
-      "display: flex; align-items: center; justify-content: center;";
+    btn.className = "header__moreButton sclient-settings-trigger";
     btn.title = "SClient Settings";
     btn.innerHTML =
-      '<div class="header__moreButtonIcon" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></div>';
+      '<div class="header__moreButtonIcon"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg></div>';
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -492,22 +466,22 @@ class SettingsFeature extends Feature {
   toggle() {
     this.createOverlay();
     const overlay = document.getElementById("sclient-settings-overlay");
-    if (overlay.style.right === "0px") {
-      overlay.style.right = "-450px";
-    } else {
-      const ce = document.getElementById("sclient-css-editor");
-      const je = document.getElementById("sclient-js-editor");
-      if (ce) {
-        ce.value = SCLIENT_CONFIG.customCss;
-        ce.dispatchEvent(new Event("input"));
-      }
-      if (je) {
-        je.value = SCLIENT_CONFIG.customJs;
-        je.dispatchEvent(new Event("input"));
-      }
-      void overlay.offsetWidth;
-      overlay.style.right = "0px";
+    if (overlay.classList.contains("open")) {
+      overlay.classList.remove("open");
+      return;
     }
+    const ce = document.getElementById("sclient-css-editor");
+    const je = document.getElementById("sclient-js-editor");
+    if (ce) {
+      ce.value = SCLIENT_CONFIG.customCss;
+      ce.dispatchEvent(new Event("input"));
+    }
+    if (je) {
+      je.value = SCLIENT_CONFIG.customJs;
+      je.dispatchEvent(new Event("input"));
+    }
+    void overlay.offsetWidth;
+    overlay.classList.add("open");
   }
 
   createOverlay() {
@@ -515,15 +489,6 @@ class SettingsFeature extends Feature {
 
     const overlay = document.createElement("div");
     overlay.id = "sclient-settings-overlay";
-    overlay.style.cssText = `
-    position:fixed;top:0;right:-450px;width:400px;height:100%;
-    background:var(--sclient-bg-surface);backdrop-filter:blur(10px);
-    border-left:1px solid var(--sclient-border);
-    box-shadow:-5px 0 25px rgba(0,0,0,0.5);z-index:999999;
-    transition:right 0.3s ease;display:flex;flex-direction:column;
-    color:var(--sclient-text-main);font-family:var(--sclient-font-sans);
-    padding:20px;box-sizing:border-box;
-  `;
 
     const generalHtml = `
       <div class="sclient-section-title">General</div>
@@ -552,72 +517,42 @@ class SettingsFeature extends Feature {
     `;
 
     const editorsHtml = `
-      <div style="display:flex;gap:10px;margin-bottom:15px;">
-        <button id="tab-css" class="sclient-btn sclient-btn-primary" style="flex:1;">Custom CSS</button>
-        <button id="tab-js" class="sclient-btn" style="flex:1;">Custom JS</button>
+      <div class="sclient-editor-tabs">
+        <button id="tab-css" class="sclient-btn sclient-editor-tab active">Custom CSS</button>
+        <button id="tab-js" class="sclient-btn sclient-editor-tab">Custom JS</button>
       </div>
-      <div class="sclient-editor-box" style="flex:1 0 400px;min-height:400px;display:flex;flex-direction:column;margin-bottom:20px;position:relative;border:1px solid var(--sclient-border);border-radius:var(--sclient-radius-md);background:var(--sclient-editor-bg);transition:border-color 0.2s ease;">
-        <div id="sclient-css-container" style="flex:1;position:relative;overflow:hidden;display:block;">
-          <pre id="sclient-css-highlight" aria-hidden="true" style="margin:0;position:absolute;top:0;left:0;width:100%;height:100%;padding:10px;box-sizing:border-box;font-family:'Fira Code',Consolas,monospace;font-size:13px;line-height:1.5;color:#ccc;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;"></pre>
-          <textarea id="sclient-css-editor" spellcheck="false" style="margin:0;position:absolute;top:0;left:0;width:100%;height:100%;background:transparent;color:transparent;caret-color:#fff;border:none;font-family:'Fira Code',Consolas,monospace;font-size:13px;line-height:1.5;padding:10px;resize:none;box-sizing:border-box;outline:none;white-space:pre-wrap;word-wrap:break-word;" placeholder="/* Add your custom CSS here */"></textarea>
+      <div class="sclient-editor">
+        <div id="sclient-css-container" class="sclient-editor-pane">
+          <pre id="sclient-css-highlight" aria-hidden="true" class="sclient-editor-highlight"></pre>
+          <textarea id="sclient-css-editor" spellcheck="false" class="sclient-editor-input" placeholder="/* Add your custom CSS here */"></textarea>
         </div>
-        <div id="sclient-js-container" style="flex:1;position:relative;overflow:hidden;display:none;">
-          <pre id="sclient-js-highlight" aria-hidden="true" style="margin:0;position:absolute;top:0;left:0;width:100%;height:100%;padding:10px;box-sizing:border-box;font-family:'Fira Code',Consolas,monospace;font-size:13px;line-height:1.5;color:#ccc;pointer-events:none;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;"></pre>
-          <textarea id="sclient-js-editor" spellcheck="false" style="margin:0;position:absolute;top:0;left:0;width:100%;height:100%;background:transparent;color:transparent;caret-color:#fff;border:none;font-family:'Fira Code',Consolas,monospace;font-size:13px;line-height:1.5;padding:10px;resize:none;box-sizing:border-box;outline:none;white-space:pre-wrap;word-wrap:break-word;" placeholder="// Add your custom JS here"></textarea>
+        <div id="sclient-js-container" class="sclient-editor-pane hidden">
+          <pre id="sclient-js-highlight" aria-hidden="true" class="sclient-editor-highlight"></pre>
+          <textarea id="sclient-js-editor" spellcheck="false" class="sclient-editor-input" placeholder="// Add your custom JS here"></textarea>
         </div>
       </div>
     `;
 
     const accountsHtml = `
-      <div id="sclient-accounts-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:15px;"></div>
-      <div style="display:flex;gap:8px;">
-        <input type="text" id="sclient-new-account-name" class="sclient-input" placeholder="New Profile Name" style="flex:1;height:auto;padding:8px 10px;font-family:monospace;">
+      <div id="sclient-accounts-list" class="sclient-accounts-list"></div>
+      <div class="sclient-sidebar-row">
+        <input type="text" id="sclient-new-account-name" class="sclient-input" placeholder="New Profile Name">
         <button id="sclient-add-account-btn" class="sclient-btn sclient-btn-primary">+ Add Account</button>
       </div>
     `;
 
     overlay.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid var(--sclient-border);padding-bottom:10px;">
-        <h3 style="margin:0;font-size:var(--sclient-text-xl);font-weight:600;color:var(--sclient-accent);display:flex;align-items:center;gap:8px;">
+      <div class="sclient-drawer-header">
+        <h3 class="sclient-drawer-title">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings-icon lucide-settings"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg>
           SClient Settings
         </h3>
-        <button id="sclient-close-btn" class="sclient-btn sclient-btn-ghost" title="Close" style="padding:4px;display:flex;align-items:center;justify-content:center;">
+        <button id="sclient-close-btn" class="sclient-icon-btn visible" title="Close">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         </button>
       </div>
 
-      <style>
-        #sclient-settings-scroll::-webkit-scrollbar { width:8px; }
-        #sclient-settings-scroll::-webkit-scrollbar-track { background:rgba(0,0,0,0.2);border-radius:4px; }
-        #sclient-settings-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2);border-radius:4px; }
-        #sclient-settings-scroll::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.3); }
-        #sclient-settings-scroll label { flex-shrink:0; }
-        .sclient-section-title { font-size:var(--sclient-text-sm);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--sclient-accent);margin:20px 0 10px; }
-        .sclient-section-title:first-child { margin-top:0; }
-        .sclient-card { display:block;margin-bottom:15px;padding:12px;background:var(--sclient-btn-bg);border-radius:var(--sclient-radius-lg);border:1px solid var(--sclient-border);transition:background 0.2s ease,border-color 0.2s ease,transform 0.15s ease; }
-        .sclient-card:hover { background:var(--sclient-btn-bg-hover);border-color:var(--sclient-border-hover); }
-        .sclient-card-top { display:flex;justify-content:space-between;align-items:center;gap:10px; }
-        .sclient-card-label { font-size:var(--sclient-text-base);font-weight:500;color:var(--sclient-text-main); }
-        .sclient-card-desc { font-size:var(--sclient-text-sm);color:var(--sclient-text-muted);margin-top:4px; }
-        .sclient-card-fields { display:flex;flex-direction:column;gap:8px;margin-top:10px; }
-        .sclient-card-custom { margin-top:10px; }
-        .sclient-field-row { display:flex;justify-content:space-between;align-items:center;gap:10px; }
-        .sclient-field-label { font-size:var(--sclient-text-sm);color:var(--sclient-text-muted);white-space:nowrap; }
-        .sclient-field-input { width:160px;flex-shrink:0; }
-        .sclient-color-input { width:32px;height:26px;padding:0;border:1px solid var(--sclient-border);border-radius:var(--sclient-radius-sm);cursor:pointer;background:transparent;flex-shrink:0; }
-        .sclient-editor-box:focus-within { border-color: var(--sclient-accent); }
-        .sclient-toggle { position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0; }
-        .sclient-toggle input { opacity:0;width:0;height:0; }
-        .sclient-toggle-bg { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#333;transition:.3s;border-radius:24px; }
-        .sclient-toggle-slider { position:absolute;height:18px;width:18px;left:3px;bottom:3px;background-color:white;transition:.3s;border-radius:50%; }
-        .sclient-select { -webkit-appearance:none;appearance:none;background:var(--sclient-bg-surface) url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23ccc%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m6 9 6 6 6-6%22/></svg>') no-repeat right 6px center / 16px 16px;padding:6px 28px 6px 10px;border:1px solid var(--sclient-border);color:var(--sclient-text-main);border-radius:var(--sclient-radius-md);font-family:var(--sclient-font-sans);font-size:var(--sclient-text-sm);outline:none;cursor:pointer;transition:border-color 0.2s;flex-shrink:0; }
-        .sclient-select option { background:#121212;color:white; }
-        body.theme-light .sclient-select { background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2224%22 height=%2224%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><path d=%22m6 9 6 6 6-6%22/></svg>'); }
-        body.theme-light .sclient-select option { background:#ffffff;color:#111111; }
-      </style>
-
-      <div id="sclient-settings-scroll" style="flex:1;overflow-y:auto;overflow-x:hidden;padding-right:8px;display:flex;flex-direction:column;min-height:0;margin-bottom:15px;">
+      <div id="sclient-settings-scroll" class="sclient-drawer-scroll">
         ${generalHtml}
         ${categorySectionHtml("appearance", "Appearance")}
         ${categorySectionHtml("playback", "Playback")}
@@ -631,11 +566,11 @@ class SettingsFeature extends Feature {
         ${accountsHtml}
       </div>
 
-      <div style="display:flex;gap:10px;margin-bottom:10px;">
-        <button id="sclient-save-btn" class="sclient-btn sclient-btn-primary" style="flex:1;padding:12px;font-weight:bold;">Save &amp; Apply</button>
+      <div class="sclient-drawer-footer">
+        <button id="sclient-save-btn" class="sclient-btn sclient-btn-primary sclient-save-btn">Save &amp; Apply</button>
       </div>
-      <div style="margin-top:10px;text-align:center;font-size:11px;color:#666;">
-        Press <kbd style="background:#333;padding:2px 5px;border-radius:3px;color:#ccc;">Ctrl + I</kbd> to toggle this menu
+      <div class="sclient-drawer-hint">
+        Press <kbd class="sclient-kbd">Ctrl + I</kbd> to toggle this menu
       </div>
     `;
 
@@ -651,21 +586,6 @@ class SettingsFeature extends Feature {
       } else {
         el.value = readConfigValue(key, el.type === "color" ? "#000000" : "");
       }
-    });
-
-    overlay
-      .querySelectorAll(".sclient-toggle input[type='checkbox']")
-      .forEach(setupToggleVisual);
-
-    overlay.querySelectorAll(".sclient-card").forEach((card) => {
-      const toggle = card.querySelector('input[type="checkbox"]');
-      const fields = card.querySelector(".sclient-card-fields");
-      if (!toggle || !fields) return;
-      const sync = () => {
-        fields.style.opacity = toggle.checked ? "1" : "0.5";
-      };
-      toggle.addEventListener("change", sync);
-      sync();
     });
 
     setupEditors(overlay);

@@ -50,9 +50,9 @@ class StatsFeature extends Feature {
   }
   settingsCustom() {
     return `
-      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+      <div class="sclient-card-custom-row">
         <button id="sclient-stats-open-btn" class="sclient-btn sclient-btn-primary">Open Stats</button>
-        <span id="sclient-stats-status" style="font-size:10px;font-weight:bold;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,0.1);color:#666;">--</span>
+        <span id="sclient-stats-status" class="sclient-status-pill" data-tone="idle">--</span>
       </div>
     `;
   }
@@ -71,7 +71,7 @@ class StatsFeature extends Feature {
     this.startTime = 0;
     this.threshold = 0;
     this.lastText = "Waiting...";
-    this.lastColor = "#ccc";
+    this.lastTone = "idle";
   }
 
   isEnabled() {
@@ -87,18 +87,18 @@ class StatsFeature extends Feature {
     this.activeCharts = [];
   }
 
-  setStatus(text, color) {
+  setStatus(text, tone) {
     this.lastText = text;
-    this.lastColor = color || "#ccc";
+    this.lastTone = tone || "idle";
     const el = document.getElementById("sclient-stats-status");
     if (el) {
       el.textContent = text;
-      el.style.color = this.lastColor;
+      el.dataset.tone = this.lastTone;
     }
   }
 
   refreshStatus() {
-    this.setStatus(this.lastText, this.lastColor);
+    this.setStatus(this.lastText, this.lastTone);
   }
 
   init() {
@@ -125,11 +125,11 @@ class StatsFeature extends Feature {
       this.startTime = 0;
       this.threshold = 0;
       this.lastText = "Waiting...";
-      this.lastColor = "#ccc";
+      this.lastTone = "idle";
 
       this.unsubscribePlayback = onPlaybackChange((evt) => {
         if (evt.type === "none") {
-          this.setStatus("Waiting...", "#ccc");
+          this.setStatus("Waiting...", "idle");
           return;
         }
 
@@ -140,7 +140,7 @@ class StatsFeature extends Feature {
           if (evt.trackData) {
             this.threshold =
               Math.min(evt.trackData.duration / 1000 / 2, 240) * 1000;
-            if (evt.isPlaying) this.setStatus("Listening...", "#789cff");
+            if (evt.isPlaying) this.setStatus("Listening...", "listening");
           } else {
             this.trackData = null;
           }
@@ -155,12 +155,12 @@ class StatsFeature extends Feature {
             this.record(this.trackData, Date.now());
             this.hasRecorded = true;
           } else if (!this.hasRecorded) {
-            this.setStatus("Listening...", "#789cff");
+            this.setStatus("Listening...", "listening");
           }
         } else if (!evt.isPlaying && this.trackData) {
           this.setStatus(
             this.hasRecorded ? "Recorded!" : "Paused",
-            this.hasRecorded ? "#5f5" : "#f9a826",
+            this.hasRecorded ? "recorded" : "paused",
           );
         }
       });
@@ -217,10 +217,10 @@ class StatsFeature extends Feature {
           publisher: publisher,
         },
       });
-      this.setStatus("Recorded!", "#5f5");
+      this.setStatus("Recorded!", "recorded");
     } catch (e) {
       console.error("[SClient] Couldn't record stats:", e);
-      this.setStatus("Error", "#f55");
+      this.setStatus("Error", "error");
     }
   }
 
@@ -229,7 +229,7 @@ class StatsFeature extends Feature {
       const active = this.currentSource === source;
       return `<button class="sclient-btn ${active ? "sclient-btn-primary" : ""}" data-source="${source}">${label}</button>`;
     };
-    return `<div style="display: flex; gap: 8px; margin-bottom: 20px;">${btn("All", "")}${btn("History", "api")}${btn("Local", "local")}</div>`;
+    return `<div class="stats-filters">${btn("All", "")}${btn("History", "api")}${btn("Local", "local")}</div>`;
   }
 
   wireFilters() {
@@ -274,7 +274,7 @@ class StatsFeature extends Feature {
     } catch (e) {
       content.innerHTML =
         this.renderFilterBar() +
-        `<div style="text-align:center; margin-top:60px; opacity:0.6;">Failed to load stats: ${e.message}</div>`;
+        `<div class="stats-error">Failed to load stats: ${e.message}</div>`;
       this.wireFilters();
       return;
     }
@@ -283,10 +283,10 @@ class StatsFeature extends Feature {
       content.innerHTML =
         this.renderFilterBar() +
         `
-      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; margin-top:80px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column" style="opacity:0.3; margin-bottom:16px;"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-        <div style="font-size:18px; font-weight:600; margin-bottom:8px; opacity:0.7;">No listening data yet</div>
-        <div style="font-size:13px; opacity:0.4;">Play some music and it'll show up here!</div>
+      <div class="stats-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="stats-empty-icon lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        <div class="stats-empty-title">No listening data yet</div>
+        <div class="stats-empty-sub">Play some music and it'll show up here!</div>
       </div>`;
       this.wireFilters();
       return;
@@ -314,9 +314,9 @@ class StatsFeature extends Feature {
       content.innerHTML =
         this.renderFilterBar() +
         `
-      <div style="text-align:center; margin-top:80px;">
-        <div style="font-size:18px; font-weight:600; margin-bottom:8px; opacity:0.7;">No data in selected time range</div>
-        <div style="font-size:13px; opacity:0.4;">Try a wider time range</div>
+      <div class="stats-empty compact">
+        <div class="stats-empty-title">No data in selected time range</div>
+        <div class="stats-empty-sub">Try a wider time range</div>
       </div>`;
       this.wireFilters();
       return;
@@ -384,48 +384,33 @@ class StatsFeature extends Feature {
     const colors = [accent, ...CHART_COLORS];
 
     const html = `
-    <style>
-      #sclient-stats-content { scrollbar-width: thin; scrollbar-color: var(--sclient-border) transparent; }
-      #sclient-stats-content::-webkit-scrollbar { width: 6px; }
-      #sclient-stats-content::-webkit-scrollbar-track { background: transparent; }
-      #sclient-stats-content::-webkit-scrollbar-thumb { background: var(--sclient-border); border-radius: 3px; }
-      .stats-card { background: var(--sclient-btn-bg); border: 1px solid var(--sclient-border); border-radius: var(--sclient-radius-xl); padding: 18px 20px; }
-      .stats-card-value { font-size: 28px; font-weight: 700; color: var(--sclient-accent); font-family: var(--sclient-font-sans); }
-      .stats-card-label { font-size: var(--sclient-text-xs); color: var(--sclient-text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--sclient-font-sans); }
-      .stats-chart-box { background: var(--sclient-btn-bg); border: 1px solid var(--sclient-border); border-radius: var(--sclient-radius-xl); padding: 20px; }
-      .stats-chart-title { font-size: var(--sclient-text-base); font-weight: 600; color: var(--sclient-text-main); margin-bottom: 14px; font-family: var(--sclient-font-sans); }
-      .stats-table { width: 100%; border-collapse: collapse; font-size: var(--sclient-text-base); font-family: var(--sclient-font-sans); }
-      .stats-table th { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--sclient-border); color: var(--sclient-text-muted); font-weight: 600; font-size: var(--sclient-text-xs); text-transform: uppercase; letter-spacing: 0.5px; }
-      .stats-table td { padding: 8px 12px; border-bottom: 1px solid var(--sclient-border); }
-      .stats-table tr:hover td { background: var(--sclient-btn-bg-hover); }
-    </style>
     ${this.renderFilterBar()}
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;">
+    <div class="stats-grid">
       <div class="stats-card"><div class="stats-card-value">${fmtCount(totalPlays)}</div><div class="stats-card-label">Total Plays</div></div>
       <div class="stats-card"><div class="stats-card-value">${fmtDuration(totalDuration)}</div><div class="stats-card-label">Listening Time</div></div>
       <div class="stats-card"><div class="stats-card-value">${fmtCount(uniqueArtists)}</div><div class="stats-card-label">Unique Artists</div></div>
       <div class="stats-card"><div class="stats-card-value">${fmtCount(uniqueTracks)}</div><div class="stats-card-label">Unique Tracks</div></div>
     </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
-      <div class="stats-chart-box"><div class="stats-chart-title">Top Artists</div><div style="height: 350px;"><canvas id="sclient-chart-artists"></canvas></div></div>
-      <div class="stats-chart-box"><div class="stats-chart-title">Top Tracks</div><div style="height: 350px;"><canvas id="sclient-chart-tracks"></canvas></div></div>
+    <div class="stats-grid half">
+      <div class="stats-chart-box"><div class="stats-chart-title">Top Artists</div><div class="stats-chart-lg"><canvas id="sclient-chart-artists"></canvas></div></div>
+      <div class="stats-chart-box"><div class="stats-chart-title">Top Tracks</div><div class="stats-chart-lg"><canvas id="sclient-chart-tracks"></canvas></div></div>
     </div>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
-      <div class="stats-chart-box"><div class="stats-chart-title">Top Genres</div><div style="height: 300px; display: flex; align-items: center; justify-content: center;"><canvas id="sclient-chart-genres" style="max-width: 300px; max-height: 300px;"></canvas></div></div>
-      <div class="stats-chart-box"><div class="stats-chart-title">Listening by Hour</div><div style="height: 300px;"><canvas id="sclient-chart-hours"></canvas></div></div>
+    <div class="stats-grid half">
+      <div class="stats-chart-box"><div class="stats-chart-title">Top Genres</div><div class="stats-chart-md centered"><canvas id="sclient-chart-genres" class="stats-chart-canvas"></canvas></div></div>
+      <div class="stats-chart-box"><div class="stats-chart-title">Listening by Hour</div><div class="stats-chart-md"><canvas id="sclient-chart-hours"></canvas></div></div>
     </div>
-    <div class="stats-chart-box" style="margin-bottom: 24px;"><div class="stats-chart-title">Listening by Day</div><div style="height: 200px;"><canvas id="sclient-chart-days"></canvas></div></div>
+    <div class="stats-chart-box"><div class="stats-chart-title">Listening by Day</div><div class="stats-chart-sm"><canvas id="sclient-chart-days"></canvas></div></div>
     <div class="stats-chart-box">
-      <div class="stats-chart-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="stats-chart-title">
         <span>Recent Plays</span>
-        <select id="sclient-stats-limit-select" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #aaa; border-radius: 4px; padding: 3px 8px; font-size: 11px; font-family: Inter, sans-serif; cursor: pointer; outline: none;">
+        <select id="sclient-stats-limit-select" class="sclient-select sclient-select-sm">
           <option value="20" ${this.currentLimit === 20 ? "selected" : ""}>20</option>
           <option value="50" ${this.currentLimit === 50 ? "selected" : ""}>50</option>
           <option value="100" ${this.currentLimit === 100 ? "selected" : ""}>100</option>
           <option value="all" ${this.currentLimit === "all" ? "selected" : ""}>All</option>
         </select>
       </div>
-      <div style="overflow-x: auto;">
+      <div class="stats-table-wrap">
         <table class="stats-table">
           <thead><tr><th>Time</th><th>Track</th><th>Artist</th><th>Genre</th><th>Duration</th></tr></thead>
           <tbody>
@@ -433,11 +418,11 @@ class StatsFeature extends Feature {
               .map(
                 (e) => `
               <tr>
-                <td style="white-space: nowrap; color: #888;">${new Date(e.played_at).toLocaleString()}</td>
-                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${e.track.title || "Unknown"}</td>
-                <td style="color: #aaa;">${getArtistFromTrack(e.track)}</td>
-                <td style="color: #888;">${getGenre(e.track)}</td>
-                <td style="color: #888;">${fmtDuration(e.track.duration || 0)}</td>
+                <td class="nowrap">${new Date(e.played_at).toLocaleString()}</td>
+                <td class="track">${e.track.title || "Unknown"}</td>
+                <td>${getArtistFromTrack(e.track)}</td>
+                <td>${getGenre(e.track)}</td>
+                <td class="nowrap">${fmtDuration(e.track.duration || 0)}</td>
               </tr>`,
               )
               .join("")}
@@ -462,13 +447,14 @@ class StatsFeature extends Feature {
 
     if (typeof Chart === "undefined") return;
 
-    const isLight = document.body.classList.contains("theme-light");
-    Chart.defaults.color = isLight ? "#444" : "#888";
-    Chart.defaults.borderColor = isLight
-      ? "rgba(0,0,0,0.1)"
-      : "rgba(255,255,255,0.06)";
-    Chart.defaults.font.family =
-      "'Inter', system-ui, -apple-system, sans-serif";
+    const css = getComputedStyle(document.documentElement);
+    Chart.defaults.color = css.getPropertyValue("--sclient-chart-text").trim();
+    Chart.defaults.borderColor = css
+      .getPropertyValue("--sclient-chart-grid")
+      .trim();
+    Chart.defaults.font.family = css
+      .getPropertyValue("--sclient-font-sans")
+      .trim();
 
     this.upsertChart("sclient-chart-artists", 0, {
       type: "bar",
@@ -494,7 +480,9 @@ class StatsFeature extends Feature {
         plugins: { legend: { display: false } },
         scales: {
           x: {
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: {
+              color: css.getPropertyValue("--sclient-chart-grid").trim(),
+            },
             ticks: { precision: 0 },
           },
           y: { grid: { display: false }, ticks: { font: { size: 11 } } },
@@ -528,7 +516,9 @@ class StatsFeature extends Feature {
         plugins: { legend: { display: false } },
         scales: {
           x: {
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: {
+              color: css.getPropertyValue("--sclient-chart-grid").trim(),
+            },
             ticks: { precision: 0 },
           },
           y: { grid: { display: false }, ticks: { font: { size: 11 } } },
@@ -554,7 +544,7 @@ class StatsFeature extends Feature {
             backgroundColor: genreLabels.map(
               (_, i) => colors[i % colors.length] + "CC",
             ),
-            borderColor: "rgba(10,10,10,0.5)",
+            borderColor: css.getPropertyValue("--sclient-chart-border").trim(),
             borderWidth: 2,
           },
         ],
@@ -601,7 +591,9 @@ class StatsFeature extends Feature {
             ticks: { font: { size: 10 }, maxTicksLimit: 12 },
           },
           y: {
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: {
+              color: css.getPropertyValue("--sclient-chart-grid").trim(),
+            },
             ticks: { precision: 0 },
           },
         },
@@ -632,7 +624,9 @@ class StatsFeature extends Feature {
         scales: {
           x: { grid: { display: false } },
           y: {
-            grid: { color: "rgba(255,255,255,0.04)" },
+            grid: {
+              color: css.getPropertyValue("--sclient-chart-grid").trim(),
+            },
             ticks: { precision: 0 },
           },
         },
@@ -641,25 +635,23 @@ class StatsFeature extends Feature {
   }
 
   toggle() {
-    const settings = document.getElementById("sclient-settings-overlay");
-    if (settings) settings.style.right = "-450px";
-
-    const lyrics = document.getElementById("sclient-lyrics-sidebar");
-    if (lyrics) lyrics.style.left = "-400px";
+    closeSettingsDrawer();
+    closeLyricsSidebar();
 
     const overlay = document.getElementById("sclient-stats-overlay");
     if (overlay) {
-      overlay.style.display =
-        overlay.style.display === "flex" ? "none" : "flex";
-      if (overlay.style.display === "flex") {
+      overlay.classList.toggle("open");
+      if (overlay.classList.contains("open")) {
         this.currentSource = "";
         this.renderAnalytics();
+      } else {
+        this.destroyCharts();
       }
       return;
     }
 
     this.createAnalyticsOverlay();
-    document.getElementById("sclient-stats-overlay").style.display = "flex";
+    document.getElementById("sclient-stats-overlay").classList.add("open");
     this.currentSource = "";
     this.renderAnalytics();
   }
@@ -667,23 +659,16 @@ class StatsFeature extends Feature {
   createAnalyticsOverlay() {
     if (document.getElementById("sclient-stats-overlay")) return;
 
-    const accent = getAccent();
     const overlay = document.createElement("div");
     overlay.id = "sclient-stats-overlay";
-    overlay.style.cssText = `
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: var(--sclient-bg-surface); backdrop-filter: blur(15px);
-    z-index: 9999998; display: none; flex-direction: column;
-    color: var(--sclient-text-main); font-family: var(--sclient-font-sans);
-  `;
 
     overlay.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;">
-      <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: ${accent}; display: flex; align-items: center; gap: 10px;">
+    <div class="stats-header">
+      <h2 class="stats-header-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column-icon lucide-chart-column"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
         Listening Analytics
       </h2>
-      <div style="display: flex; align-items: center; gap: 12px;">
+      <div class="stats-header-actions">
         <select id="sclient-stats-days-select" class="sclient-select">
           <option value="">All time</option>
           <option value="1">Last 24h</option>
@@ -699,11 +684,11 @@ class StatsFeature extends Feature {
         <button id="sclient-stats-import-btn" class="sclient-btn" title="Import Stats DB">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-database-arrow-up"><path d="M19 22v-6"/><path d="M21 12.536V5"/><path d="m22 19-3-3-3 3"/><path d="M3 12A9 3 0 0 0 14.457 14.886"/><path d="M3 5V19A9 3 0 0 0 13.318 21.968"/><ellipse cx="12" cy="5" rx="9" ry="3"/></svg>
         </button>
-        <button id="sclient-stats-close-btn" class="sclient-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
+        <button id="sclient-stats-close-btn" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
       </div>
     </div>
-    <div id="sclient-stats-content" style="flex: 1; overflow-y: auto; padding: 20px 30px 30px;">
-      <div style="display: flex; align-items: center; justify-content: center; height: 100%; opacity: 0.5; font-size: 16px;">Loading data...</div>
+    <div id="sclient-stats-content">
+      <div class="stats-loading">Loading data...</div>
     </div>
   `;
 
@@ -715,7 +700,7 @@ class StatsFeature extends Feature {
     this.on(document, "keydown", onEsc);
 
     const close = () => {
-      overlay.style.display = "none";
+      overlay.classList.remove("open");
       this.destroyCharts();
       document.removeEventListener("keydown", onEsc);
     };

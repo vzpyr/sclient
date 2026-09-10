@@ -33,17 +33,14 @@ function pmSortedFiltered() {
 function pmRenderSidebar() {
   const list = document.getElementById("pm-sidebar-list");
   if (!list) return;
-  const accent = getAccent();
   const items = pmSortedFiltered();
 
   if (_pmState.playlists.length === 0) {
-    list.innerHTML = `<div style="padding:24px 16px;text-align:center;opacity:0.6;line-height:1.6;">
-      You have no playlists yet. Create one with the <b>New</b> button above.
-    </div>`;
+    list.innerHTML = `<div class="pm-empty-note">You have no playlists yet. Create one with the <b>New</b> button above.</div>`;
     return;
   }
   if (items.length === 0) {
-    list.innerHTML = `<div style="padding:24px 16px;text-align:center;opacity:0.5;">No playlists match "${_pmState.filterText.replace(/</g, "&lt;")}".</div>`;
+    list.innerHTML = `<div class="pm-empty-note">No playlists match "${_pmState.filterText.replace(/</g, "&lt;")}".</div>`;
     return;
   }
 
@@ -54,26 +51,19 @@ function pmRenderSidebar() {
       const total = p.duration || 0;
       const badge =
         p.sharing === "private"
-          ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
-          : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+          ? `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
+          : `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span>`;
       const subtitle =
         count === 0
           ? "empty"
           : `${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}`;
       return `<div class="pm-pl${active ? " pm-pl-active" : ""}" data-pid="${p.id}" data-title="${(
         p.title || ""
-      ).replace(
-        /"/g,
-        "&quot;",
-      )}" tabindex="0" style="display:flex;gap:10px;align-items:center;padding:10px;border-radius:8px;cursor:pointer;transition:background .15s;${
-        active
-          ? `background:${accent}22;box-shadow:inset 2px 0 0 ${accent};`
-          : ""
-      }">
-        <div style="width:40px;height:40px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#222;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/></div>
-        <div style="min-width:0;flex:1;">
-          <div style="font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${badge}${(p.title || "Untitled").replace(/</g, "&lt;")}</div>
-          <div style="font-size:11px;opacity:0.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${subtitle}</div>
+      ).replace(/"/g, "&quot;")}" tabindex="0">
+        <div class="pm-pl-art"><img src="${pmPlaylistArt(p)}" loading="lazy"/></div>
+        <div class="pm-pl-body">
+          <div class="pm-pl-name">${badge}${(p.title || "Untitled").replace(/</g, "&lt;")}</div>
+          <div class="pm-pl-sub">${subtitle}</div>
         </div>
       </div>`;
     })
@@ -116,90 +106,25 @@ function pmRenderDetail() {
   if (!pane) return;
   const pl = pmCurrent();
   if (!pl) {
-    pane.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;opacity:0.4;font-size:15px;">Select a playlist on the left.</div>`;
+    pane.innerHTML = `<div class="pm-placeholder">Select a playlist on the left.</div>`;
     return;
   }
   pmRenderDetailHeader();
   pmRenderTracks();
 }
 
-function _pmEnsureDetailStyle() {
-  const accent = getAccent();
-  injectStyle(
-    "sclient-playlists-detail-style",
-    `
-    .pm-d-header { display:flex; gap:18px; align-items:center; padding:20px 26px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0; }
-    .pm-d-art { width:96px; height:96px; flex-shrink:0; border-radius:10px; overflow:hidden; background:#222; }
-    .pm-d-art img { width:100%; height:100%; object-fit:cover; }
-    .pm-d-title { font-size:20px; font-weight:700; display:flex; align-items:center; gap:8px; }
-    .pm-d-meta { font-size:12px; opacity:0.6; margin-top:4px; }
-    .pm-d-meta a { color:${accent}; text-decoration:none; }
-    .pm-d-meta a:hover { text-decoration:underline; }
-    .pm-d-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .pm-d-toolbar { display:flex; gap:10px; align-items:center; padding:14px 26px 10px; flex-wrap:wrap; border-bottom:1px solid rgba(255,255,255,0.05); }
-
-    .pm-d-bulk { position:absolute; left:26px; right:26px; bottom:16px; z-index:20; display:flex; gap:8px; align-items:center; padding:10px 14px; background:rgba(28,28,28,0.92); border:1px solid rgba(255,255,255,0.14); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,0.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); animation:pm-bulk-in .12s ease-out; }
-    @keyframes pm-bulk-in { from { transform:translateY(8px); opacity:0; } to { transform:translateY(0); opacity:1; } }
-    #pm-track-scroll { flex:1; overflow-y:auto; min-height:0; padding:8px 26px 80px; }
-    .pm-track { display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:8px; cursor:default; user-select:none; border:1px solid transparent; border-top:2px solid transparent; border-bottom:2px solid transparent; transition:background .12s; }
-    .pm-track:hover { background:rgba(255,255,255,0.05); }
-    .pm-track.pm-track-selected { background:${accent}1f; }
-    .pm-track.pm-track-selected:hover { background:${accent}2a; }
-    .pm-track.pm-drop-before { border-top-color:${accent}; }
-    .pm-track.pm-drop-after { border-bottom-color:${accent}; }
-    .pm-track-idx { width:28px; text-align:right; color:#888; font-size:12px; font-variant-numeric:tabular-nums; flex-shrink:0; }
-    .pm-track-art { width:36px; height:36px; flex-shrink:0; border-radius:5px; overflow:hidden; background:#222; position:relative; }
-    .pm-track-art img { width:100%; height:100%; object-fit:cover; }
-
-    .pm-track-play { position:absolute; inset:0; margin:0; padding:0; border:0; background:rgba(0,0,0,0.55); color:#fff; font-size:15px; cursor:pointer; opacity:0; transition:opacity .12s; display:flex; align-items:center; justify-content:center; line-height:1; }
-    .pm-track:hover .pm-track-play { opacity:1; }
-    .pm-track-play:hover { background:rgba(0,0,0,0.7); transform:scale(1.08); }
-    .pm-track-body { min-width:0; flex:1; }
-    .pm-track-title { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pm-track-artist { font-size:11px; opacity:0.6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pm-track-dur { font-size:12px; color:#aaa; font-variant-numeric:tabular-nums; flex-shrink:0; }
-    .pm-track-handle { color:#666; flex-shrink:0; cursor:grab; font-size:14px; }
-    .pm-track-handle:active { cursor:grabbing; }
-    .pm-empty-tracks { text-align:center; padding:50px 20px; opacity:0.5; line-height:1.7; }
-
-    .pm-ctx { position:fixed; z-index:9999999; min-width:200px; background:#121212; border:1px solid rgba(255,255,255,0.14); border-radius:8px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,0.6); font-family:Inter,sans-serif; font-size:13px; }
-    .pm-ctx-item { padding:8px 12px; border-radius:5px; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:14px; }
-    .pm-ctx-item:hover { background:${accent}33; color:#fff; }
-    .pm-ctx-item.pm-ctx-danger { color:#f88; }
-    .pm-ctx-item.pm-ctx-danger:hover { background:#3a1515; color:#fcc; }
-    .pm-ctx-item.pm-ctx-disabled { opacity:0.4; cursor:default; }
-    .pm-ctx-item.pm-ctx-disabled:hover { background:transparent; color:inherit; }
-    .pm-ctx-sep { height:1px; background:rgba(255,255,255,0.1); margin:4px 0; }
-
-    .pm-picker-back { position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999999; display:flex; align-items:center; justify-content:center; }
-    .pm-picker { background:#1e1e1e; border:1px solid rgba(255,255,255,0.14); border-radius:12px; width:360px; max-height:70vh; display:flex; flex-direction:column; }
-    .pm-picker-head { padding:16px 18px; border-bottom:1px solid rgba(255,255,255,0.1); font-weight:600; }
-    .pm-picker-list { overflow-y:auto; padding:8px; }
-    .pm-picker-item { padding:10px; border-radius:8px; cursor:pointer; display:flex; gap:10px; align-items:center; }
-    .pm-picker-item:hover { background:rgba(255,255,255,0.08); }
-    .pm-picker-foot { padding:12px 18px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:flex-end; gap:8px; }
-    .pm-tag-chips { display:flex; flex-wrap:wrap; gap:6px; padding:6px 4px 2px; min-height:34px; border:1px solid #333; border-radius:6px; background:rgba(0,0,0,0.4); }
-    .pm-chip { display:inline-flex; align-items:center; gap:4px; background:${accent}33; color:#fff; padding:2px 8px; border-radius:12px; font-size:12px; }
-    .pm-chip-x { cursor:pointer; opacity:0.7; }
-    .pm-chip-x:hover { opacity:1; }
-    `,
-  );
-}
-
 function pmRenderDetailHeader() {
-  _pmEnsureDetailStyle();
   const pane = document.getElementById("pm-detail");
   if (!pane) return;
   const pl = pmCurrent();
   if (!pl) return;
-  const accent = getAccent();
   const count = pmTrackCount(pl);
   const total =
     pl.duration || (pl.tracks || []).reduce((s, t) => s + (t.duration || 0), 0);
   const badge =
     pl.sharing === "private"
-      ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock" style="display:inline-block;vertical-align:middle;margin-right:4px;"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`
-      : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe" style="display:inline-block;vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`;
+      ? `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>`
+      : `<span class="pm-badge"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span>`;
   const plPermalink =
     pl.user && pl.permalink
       ? `/${pl.user.permalink}/sets/${pl.permalink}`
@@ -212,17 +137,17 @@ function pmRenderDetailHeader() {
       : null;
 
   const html = `
-    <div id="pm-detail-content" style="display:flex;flex-direction:column;height:100%;position:relative;">
+    <div id="pm-detail-content" class="pm-detail-content">
       <div class="pm-d-header">
         <div class="pm-d-art"><img src="${pmPlaylistArt(pl)}"/></div>
-        <div style="min-width:0;flex:1;">
+        <div class="pm-d-body">
           <div class="pm-d-title">${badge}${(pl.title || "Untitled").replace(/</g, "&lt;")}</div>
           <div class="pm-d-meta">${count} track${count === 1 ? "" : "s"} · ${pmFmtTotal(total)}${
             secretLink
-              ? ` · <span id="pm-secret-link-btn" style="opacity:.85;cursor:pointer;text-decoration:underline;" title="Copy to clipboard">secret link</span>`
+              ? ` · <span id="pm-secret-link-btn" class="pm-secret-link" title="Copy to clipboard">secret link</span>`
               : ""
           }</div>
-          <div class="pm-d-meta" style="margin-top:8px;display:flex;gap:10px;align-items:center;"><span>
+          <div class="pm-d-meta pm-d-meta-row"><span>
             ${
               plPermalink
                 ? `permalink: <a href="${pl.permalink_url || "#"}" target="_blank">${plPermalink.replace(/</g, "&lt;")}</a>`
@@ -230,18 +155,18 @@ function pmRenderDetailHeader() {
             }</span></div>
         </div>
         <div class="pm-d-actions">
-          <button id="pm-edit-btn" class="sclient-btn sclient-btn-primary" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg> Edit</button>
-          <button id="pm-export-btn" class="sclient-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export</button>
-          <button id="pm-delete-btn" class="sclient-btn sclient-btn-danger" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</button>
+          <button id="pm-edit-btn" class="sclient-btn sclient-btn-primary"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg> Edit</button>
+          <button id="pm-export-btn" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export</button>
+          <button id="pm-delete-btn" class="sclient-btn sclient-btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete</button>
         </div>
       </div>
       <div class="pm-d-toolbar">
-        <input id="pm-track-filter" class="sclient-input" style="max-width:260px;" type="text" placeholder="Filter tracks by title or artist…" value="${_pmState.trackFilterText.replace(/"/g, "&quot;")}">
-        <div style="flex:1;"></div>
+        <input id="pm-track-filter" class="sclient-input pm-track-filter" type="text" placeholder="Filter tracks by title or artist…" value="${_pmState.trackFilterText.replace(/"/g, "&quot;")}">
+        <div class="pm-d-spacer"></div>
         <button id="pm-select-all" class="sclient-btn">Select all</button>
         <button id="pm-clear-sel" class="sclient-btn">Clear</button>
       </div>
-      <div id="pm-d-bulk" class="pm-d-bulk" style="display:none;"></div>
+      <div id="pm-d-bulk" class="pm-d-bulk hidden"></div>
       <div id="pm-track-scroll"></div>
     </div>
   `;
@@ -300,16 +225,16 @@ function pmRenderBulkBar() {
   if (!bar) return;
   const n = _pmState.selection.size;
   if (n === 0) {
-    bar.style.display = "none";
+    bar.classList.add("hidden");
     return;
   }
-  bar.style.display = "";
+  bar.classList.remove("hidden");
   bar.innerHTML = `
-    <span style="font-size:12px;opacity:0.7;margin-right:auto;">${n} selected</span>
-    <button id="pm-bulk-move" class="sclient-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-corner-down-right-icon lucide-corner-down-right"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg> Move to…</button>
-    <button id="pm-bulk-copy" class="sclient-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy to…</button>
-    <button id="pm-bulk-remove" class="sclient-btn sclient-btn-danger" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove</button>
-    <button id="pm-bulk-export" class="sclient-btn" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export selected</button>
+    <span class="pm-bulk-count">${n} selected</span>
+    <button id="pm-bulk-move" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-corner-down-right-icon lucide-corner-down-right"><path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/></svg> Move to…</button>
+    <button id="pm-bulk-copy" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-icon lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> Copy to…</button>
+    <button id="pm-bulk-remove" class="sclient-btn sclient-btn-danger"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Remove</button>
+    <button id="pm-bulk-export" class="sclient-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Export selected</button>
   `;
   bar
     .querySelector("#pm-bulk-move")
@@ -351,7 +276,7 @@ function pmRenderTracks() {
             <span class="pm-track-artist">${(getArtistFromTrack(t) || "").replace(/</g, "&lt;")} · ${handlePath}</span>
           </span>
           <span class="pm-track-dur">${pmFmtDur(t.duration)}</span>
-          <span class="pm-track-handle" title="Drag to reorder" style="display:flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical-icon lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
+          <span class="pm-track-handle" title="Drag to reorder"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grip-vertical-icon lucide-grip-vertical"><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></svg></span>
         </div>`;
     })
     .join("");
@@ -684,8 +609,7 @@ async function pmMoveTo(targetPl, ids) {
 function pmOpenContextMenu(x, y) {
   pmCloseContextMenu();
   const menu = document.createElement("div");
-  menu.className = "pm-ctx";
-  const accent = getAccent();
+  menu.className = "sclient-cm";
   const n = _pmState.selection.size;
   const items = [
     {
@@ -706,15 +630,15 @@ function pmOpenContextMenu(x, y) {
   for (const it of items) {
     if (it.sep) {
       const s = document.createElement("div");
-      s.className = "pm-ctx-sep";
+      s.className = "sclient-cm-sep";
       menu.appendChild(s);
       continue;
     }
     const el = document.createElement("div");
     el.className =
-      "pm-ctx-item" +
-      (it.danger ? " pm-ctx-danger" : "") +
-      (it.disabled ? " pm-ctx-disabled" : "");
+      "sclient-cm-item" +
+      (it.danger ? " danger" : "") +
+      (it.disabled ? " disabled" : "");
     el.textContent = it.label;
     if (!it.disabled)
       el.addEventListener("click", () => {
@@ -758,14 +682,15 @@ function pmPickPlaylist(title, excludePid) {
     `;
     back.appendChild(dlg);
     document.body.appendChild(back);
+    requestAnimationFrame(() => back.classList.add("open"));
     const listEl = dlg.querySelector(".pm-picker-list");
     if (list.length === 0) {
-      listEl.innerHTML = `<div style="padding:20px;text-align:center;opacity:0.5;">No other playlists.</div>`;
+      listEl.innerHTML = `<div class="pm-picker-empty">No other playlists.</div>`;
     }
     list.forEach((p) => {
       const it = document.createElement("div");
       it.className = "pm-picker-item";
-      it.innerHTML = `<span style="width:30px;height:30px;border-radius:5px;overflow:hidden;background:#222;flex-shrink:0;"><img src="${pmPlaylistArt(p)}" style="width:100%;height:100%;object-fit:cover;"/></span><span style="min-width:0;"><span style="font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${(p.title || "Untitled").replace(/</g, "&lt;")}</span><span style="font-size:11px;opacity:0.6;">${(p.tracks || []).length} tracks</span></span>`;
+      it.innerHTML = `<span class="pm-picker-art"><img src="${pmPlaylistArt(p)}"/></span><span class="pm-picker-body"><span class="pm-picker-name">${(p.title || "Untitled").replace(/</g, "&lt;")}</span><span class="pm-picker-sub">${(p.tracks || []).length} tracks</span></span>`;
       it.addEventListener("click", () => {
         back.remove();
         resolve(p.id);
@@ -813,7 +738,7 @@ function pmOpenTrack(id) {
   if (!t || !t.permalink_url) return;
   if (_pmState.contextMenu) pmCloseContextMenu();
   const overlay = document.getElementById("sclient-playlists-overlay");
-  if (overlay) overlay.style.display = "none";
+  if (overlay) overlay.classList.remove("open");
   window.location.href = t.permalink_url;
 }
 
@@ -878,8 +803,7 @@ async function pmExportJSON(defaultName, obj) {
 
 async function pmRefresh() {
   const sidebar = document.getElementById("pm-sidebar-list");
-  if (sidebar)
-    sidebar.innerHTML = `<div style="padding:20px;text-align:center;opacity:0.5;">Loading…</div>`;
+  if (sidebar) sidebar.innerHTML = `<div class="pm-empty-note">Loading…</div>`;
   try {
     if (!_pmState.userId) {
       const me = await api.me();
@@ -901,7 +825,7 @@ async function pmRefresh() {
     pmRenderDetail();
   } catch (e) {
     if (sidebar)
-      sidebar.innerHTML = `<div style="padding:20px;text-align:center;color:#f88;"></div>`;
+      sidebar.innerHTML = `<div class="pm-empty-note pm-empty-error"></div>`;
     showToast("Error: " + (e.message || e));
     _pmState.playlists = [];
     pmRenderSidebar();
@@ -911,58 +835,36 @@ async function pmRefresh() {
 function createPlaylistManagerOverlay() {
   if (document.getElementById("sclient-playlists-overlay")) return;
 
-  const accent = getAccent();
-
-  injectStyle(
-    "sclient-playlists-style",
-    `
-    #sclient-playlists-overlay { position:fixed; inset:0; background:var(--sclient-bg-surface); backdrop-filter:blur(15px); z-index:9999998; display:none; flex-direction:column; color:var(--sclient-text-main); font-family:var(--sclient-font-sans); }
-    #sclient-playlists-overlay * { box-sizing:border-box; }
-    .pm-head { display:flex; justify-content:space-between; align-items:center; padding:18px 28px; border-bottom:1px solid var(--sclient-border); flex-shrink:0; background:var(--sclient-bg-surface); }
-    .pm-body { flex:1; display:flex; min-height:0; background:var(--sclient-bg-surface); }
-    .pm-sidebar { width:300px; flex-shrink:0; border-right:1px solid var(--sclient-border); display:flex; flex-direction:column; min-height:0; background:var(--sclient-bg-surface); }
-    .pm-sidebar-tools { padding:14px; border-bottom:1px solid var(--sclient-border); display:flex; flex-direction:column; gap:10px; }
-    .pm-sidebar-list { flex:1; overflow-y:auto; padding:8px; }
-    .pm-pl { transition:background 0.2s ease, border-color 0.2s ease, transform 0.15s ease !important; }
-    .pm-pl:hover { background:var(--sclient-btn-bg-hover) !important; transform:translateX(3px); }
-    .pm-pl.pm-pl-active:hover { background:${accent}22 !important; }
-    .pm-pl.pm-droptarget { box-shadow:inset 0 0 0 2px ${accent} !important; background:${accent}18 !important; }
-    .pm-detail { flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; background:var(--sclient-bg-surface); }
-.sclient-select { -webkit-appearance:none; appearance:none; background:var(--sclient-bg-surface) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>") no-repeat right 10px center / 16px 16px; border:1px solid var(--sclient-border); color:var(--sclient-text-main); border-radius:var(--sclient-radius-md); padding:8px 32px 8px 12px; font-family:var(--sclient-font-sans); font-size:var(--sclient-text-base); height:37px; box-sizing:border-box; outline:none; cursor:pointer; }
-body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='lucide lucide-chevron-down-icon lucide-chevron-down'><path d='m6 9 6 6 6-6'/></svg>"); }
-    `,
-  );
-
   const overlay = document.createElement("div");
   overlay.id = "sclient-playlists-overlay";
 
   overlay.innerHTML = `
     <div class="pm-head">
-      <h2 style="margin:0;font-size:22px;font-weight:700;color:var(--sclient-accent);display:flex;align-items:center;gap:10px;">
+      <h2 class="pm-head-title">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music-icon lucide-music"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
         Playlist Manager
       </h2>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <button id="pm-refresh-btn" class="sclient-btn" title="Refresh" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw-icon lucide-rotate-cw"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Refresh</button>
-        <button id="pm-close-btn" class="sclient-btn" title="Close" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
+      <div class="pm-d-actions">
+        <button id="pm-refresh-btn" class="sclient-btn" title="Refresh"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-cw-icon lucide-rotate-cw"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Refresh</button>
+        <button id="pm-close-btn" class="sclient-btn" title="Close"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg> Close</button>
       </div>
     </div>
     <div class="pm-body">
       <aside class="pm-sidebar">
         <div class="pm-sidebar-tools">
-          <div style="display:flex;gap:8px;">
+          <div class="pm-sidebar-tools-row">
             <input id="pm-filter" class="sclient-input" placeholder="Filter playlists…" type="text">
           </div>
-          <div style="display:flex;gap:8px;">
-            <select id="pm-sort" class="sclient-select" style="flex:1;">
+          <div class="pm-sidebar-tools-row">
+            <select id="pm-sort" class="sclient-select">
               <option value="name">Name A–Z</option>
               <option value="modified">Recently modified</option>
               <option value="count">Track count</option>
             </select>
-            <button id="pm-new-btn" class="sclient-btn sclient-btn-primary" title="New playlist" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> New</button>
+            <button id="pm-new-btn" class="sclient-btn sclient-btn-primary" title="New playlist"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg> New</button>
           </div>
-          <div style="display:flex;gap:8px;">
-            <button id="pm-import-btn" class="sclient-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Import</button>
+          <div class="pm-sidebar-tools-row">
+            <button id="pm-import-btn" class="sclient-btn pm-import-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg> Import</button>
           </div>
         </div>
         <div id="pm-sidebar-list" class="pm-sidebar-list"></div>
@@ -974,7 +876,7 @@ body.theme-light .sclient-select { background-image:url("data:image/svg+xml;utf8
   document.body.appendChild(overlay);
 
   const close = () => {
-    overlay.style.display = "none";
+    overlay.classList.remove("open");
     pmCloseContextMenu();
     pmCloseEditor();
     document.removeEventListener("keydown", _pmEsc);
@@ -1065,97 +967,100 @@ function pmOpenEditor() {
   if (!pl) return;
   pmCloseEditor();
   pmCloseContextMenu();
-  _pmEnsureDetailStyle();
-  const accent = getAccent();
   const back = document.createElement("div");
   back.className = "pm-picker-back";
-  back.style.zIndex = "9999999";
   const dlg = document.createElement("div");
-  dlg.style.cssText = `background:var(--sclient-bg-elevated);border:1px solid var(--sclient-border);border-radius:12px;width:480px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.7);`;
+  dlg.className = "pm-editor";
 
   const releaseDate = pl.release_date
     ? String(pl.release_date).slice(0, 10)
     : "";
   dlg.innerHTML = `
-    <div style="padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
-      <div style="font-size:16px;font-weight:600;">Edit playlist details</div>
-      <button id="pm-ed-x" class="sclient-btn sclient-btn-ghost" style="padding:4px 10px;display:flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    <div class="pm-editor-head">
+      <div class="pm-editor-title">Edit playlist details</div>
+      <button id="pm-ed-x" class="sclient-icon-btn visible"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
     </div>
-    <div style="padding:20px;overflow-y:auto;">
-      <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Title</label>
-      <input id="pm-ed-title" class="sclient-input" type="text" style="margin-bottom:14px;" value="${(pl.title || "").replace(/"/g, "&quot;")}">
+    <div class="pm-editor-body">
+      <div class="pm-field">
+        <label class="pm-field-label">Title</label>
+        <input id="pm-ed-title" class="sclient-input" type="text" value="${(pl.title || "").replace(/"/g, "&quot;")}">
+      </div>
 
-      <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Description</label>
-      <textarea id="pm-ed-description" class="sclient-input" style="margin-bottom:14px;min-height:70px;resize:vertical;font-family:Inter,sans-serif;" placeholder="Add a description…">${(pl.description || "").replace(/</g, "&lt;")}</textarea>
+      <div class="pm-field">
+        <label class="pm-field-label">Description</label>
+        <textarea id="pm-ed-description" class="sclient-input" placeholder="Add a description…">${(pl.description || "").replace(/</g, "&lt;")}</textarea>
+      </div>
 
-      <div id="pm-ed-adv-toggle" style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer;color:${accent};font-size:13px;font-weight:600;border-top:1px solid rgba(255,255,255,0.08);border-bottom:1px solid rgba(255,255,255,0.08);">
+      <div id="pm-ed-adv-toggle" class="pm-adv-toggle">
         <span>▸ Advanced details</span>
       </div>
-      <div id="pm-ed-adv" style="display:none;padding-top:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <label style="font-size:12px;opacity:0.7;">Sharing</label>
+      <div id="pm-ed-adv" class="pm-adv">
+        <div class="pm-field-row">
+          <label class="pm-field-label">Sharing</label>
           <select id="pm-ed-sharing" class="sclient-select">
             <option value="public" ${pl.sharing === "public" ? "selected" : ""}>Public</option>
             <option value="private" ${pl.sharing === "private" ? "selected" : ""}>Private</option>
           </select>
         </div>
-        <div style="margin-bottom:14px;">
-          <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Tags (press Enter/space/comma to add)</label>
+        <div class="pm-field">
+          <label class="pm-field-label">Tags (press Enter/space/comma to add)</label>
           <div id="pm-ed-tags" class="pm-tag-chips"></div>
-          <input id="pm-ed-tag-input" class="sclient-input" style="margin-top:6px;" type="text" placeholder="tag">
+          <input id="pm-ed-tag-input" class="sclient-input pm-tag-input" type="text" placeholder="tag">
         </div>
-        <div style="margin-bottom:14px;">
-          <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Genre</label>
+        <div class="pm-field">
+          <label class="pm-field-label">Genre</label>
           <input id="pm-ed-genre" class="sclient-input" type="text" value="${(pl.genre || "").replace(/"/g, "&quot;")}">
         </div>
-        <div style="margin-bottom:14px;">
-          <label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Label name</label>
+        <div class="pm-field">
+          <label class="pm-field-label">Label name</label>
           <input id="pm-ed-label" class="sclient-input" type="text" value="${(pl.label_name || "").replace(/"/g, "&quot;")}">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-          <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">License</label>
-            <select id="pm-ed-license" class="sclient-select" style="width:100%;">${PM_LICENSES.map((l) => `<option value="${l}" ${pl.license === l ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-          <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Set type</label>
-            <select id="pm-ed-settype" class="sclient-select" style="width:100%;">${PM_SET_TYPES.map((s) => `<option value="${s}" ${pl.set_type === s ? "selected" : ""}>${s || "(none)"}</option>`).join("")}</select></div>
+        <div class="pm-field-grid">
+          <div><label class="pm-field-label">License</label>
+            <select id="pm-ed-license" class="sclient-select pm-field-full">${PM_LICENSES.map((l) => `<option value="${l}" ${pl.license === l ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+          <div><label class="pm-field-label">Set type</label>
+            <select id="pm-ed-settype" class="sclient-select pm-field-full">${PM_SET_TYPES.map((s) => `<option value="${s}" ${pl.set_type === s ? "selected" : ""}>${s || "(none)"}</option>`).join("")}</select></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-          <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Release date</label>
+        <div class="pm-field-grid">
+          <div><label class="pm-field-label">Release date</label>
             <input id="pm-ed-release" class="sclient-input" type="date" value="${releaseDate}"></div>
-          <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Embeddable by</label>
-            <select id="pm-ed-embed" class="sclient-select" style="width:100%;">${PM_EMBEDDABLE.map((e) => `<option value="${e}" ${pl.embeddable_by === e ? "selected" : ""}>${e}</option>`).join("")}</select></div>
+          <div><label class="pm-field-label">Embeddable by</label>
+            <select id="pm-ed-embed" class="sclient-select pm-field-full">${PM_EMBEDDABLE.map((e) => `<option value="${e}" ${pl.embeddable_by === e ? "selected" : ""}>${e}</option>`).join("")}</select></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
-          <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase URL</label>
+        <div class="pm-field-grid">
+          <div><label class="pm-field-label">Purchase URL</label>
             <input id="pm-ed-purl" class="sclient-input" type="text" value="${(pl.purchase_url || "").replace(/"/g, "&quot;")}"></div>
-          <div><label style="font-size:12px;opacity:0.7;display:block;margin-bottom:6px;">Purchase title</label>
+          <div><label class="pm-field-label">Purchase title</label>
             <input id="pm-ed-ptitle" class="sclient-input" type="text" value="${(pl.purchase_title || "").replace(/"/g, "&quot;")}"></div>
         </div>
-      <div style="display:flex;gap:14px;align-items:flex-start;">
-        <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#222;flex-shrink:0;">
-          <img id="pm-ed-art-preview" src="${pmPlaylistArt(pl)}" style="width:100%;height:100%;object-fit:cover;"/>
+      </div>
+      <div class="pm-art-row">
+        <div class="pm-art-preview">
+          <img id="pm-ed-art-preview" src="${pmPlaylistArt(pl)}"/>
         </div>
-        <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-          <span style="font-size:12px;font-weight:600;color:#aaa;">Artwork</span>
-          <div style="display:flex;gap:8px;margin-top:2px;">
-            <button id="pm-ed-art-clear" class="sclient-btn sclient-btn-danger" type="button" style="display:flex;align-items:center;gap:6px;"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear artwork</button>
+        <div class="pm-art-actions">
+          <span class="pm-art-label">Artwork</span>
+          <div class="pm-sidebar-tools-row">
+            <button id="pm-ed-art-clear" class="sclient-btn sclient-btn-danger" type="button"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Clear artwork</button>
           </div>
         </div>
       </div>
-      <div id="pm-ed-secret-box" style="display:none;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 12px;font-size:12px;">
-        <span style="color:#aaa;">Secret Token:</span> <code id="pm-ed-secret-val" style="color:var(--sclient-accent);">${pl.secret_token || ""}</code>
-        <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
-          <input id="pm-ed-secret-url" class="sclient-input" type="text" readonly style="font-size:11px;">
+      <div id="pm-ed-secret-box" class="pm-secret-box">
+        <span class="sclient-text-sub">Secret Token:</span> <code id="pm-ed-secret-val" class="pm-secret-token">${pl.secret_token || ""}</code>
+        <div class="pm-secret-row">
+          <input id="pm-ed-secret-url" class="sclient-input" type="text" readonly>
           <button id="pm-ed-secret-copy" class="sclient-btn" type="button">Copy</button>
         </div>
       </div>
     </div>
-    <div style="padding:14px 22px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:flex-end;gap:8px;">
+    <div class="pm-editor-foot">
       <button id="pm-ed-cancel" class="sclient-btn" type="button">Cancel</button>
       <button id="pm-ed-save" class="sclient-btn sclient-btn-primary" type="button">Save</button>
     </div>
   `;
   back.appendChild(dlg);
   document.body.appendChild(back);
+  requestAnimationFrame(() => back.classList.add("open"));
   _pmState.editor = back;
 
   const close = () => pmCloseEditor();
@@ -1168,11 +1073,11 @@ function pmOpenEditor() {
   const advWrap = dlg.querySelector("#pm-ed-adv");
   const advToggle = dlg.querySelector("#pm-ed-adv-toggle");
   advToggle.addEventListener("click", () => {
-    const open = advWrap.style.display !== "none";
-    advWrap.style.display = open ? "none" : "block";
+    const open = !advWrap.classList.contains("open");
+    advWrap.classList.toggle("open", open);
     const advSpan = advToggle.querySelector("span");
     if (advSpan)
-      advSpan.textContent = open ? "▸ Advanced details" : "▾ Advanced details";
+      advSpan.textContent = open ? "▾ Advanced details" : "▸ Advanced details";
   });
 
   let chips = (pl.tag_list || "")
@@ -1185,7 +1090,7 @@ function pmOpenEditor() {
     wrap.innerHTML = chips
       .map(
         (c, i) =>
-          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}" style="display:inline-flex;align-items:center;"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`,
+          `<span class="pm-chip">#${c}<span class="pm-chip-x" data-i="${i}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></span></span>`,
       )
       .join("");
     wrap.querySelectorAll(".pm-chip-x").forEach((x) => {
@@ -1234,11 +1139,11 @@ function pmOpenEditor() {
   };
   const refreshSecret = () => {
     if (sharingSel.value === "private") {
-      secretWrap.style.display = "";
+      secretWrap.classList.add("open");
       const link = currentSecretLink();
       secretInput.value = link || "(available after saving as private)";
     } else {
-      secretWrap.style.display = "none";
+      secretWrap.classList.remove("open");
     }
   };
   refreshSecret();
@@ -1533,7 +1438,7 @@ class PlaylistManagerFeature extends Feature {
   }
   settingsCustom() {
     return `
-      <div style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+      <div class="sclient-card-custom-row">
         <button id="sclient-playlists-open-btn" class="sclient-btn sclient-btn-primary">Open Playlist Manager</button>
       </div>
     `;
@@ -1549,7 +1454,7 @@ class PlaylistManagerFeature extends Feature {
     this.on(document, "keydown", (e) => {
       if (e.key !== "Delete") return;
       const overlay = document.getElementById("sclient-playlists-overlay");
-      if (!overlay || overlay.style.display !== "flex") return;
+      if (!overlay || !overlay.classList.contains("open")) return;
       const tag =
         (document.activeElement && document.activeElement.tagName) || "";
       if (["INPUT", "TEXTAREA", "SELECT"].includes(tag)) return;
@@ -1562,24 +1467,18 @@ class PlaylistManagerFeature extends Feature {
   }
 
   toggle() {
-    const settings = document.getElementById("sclient-settings-overlay");
-    if (settings) settings.style.right = "-450px";
-    const lyrics = document.getElementById("sclient-lyrics-sidebar");
-    if (lyrics) lyrics.style.left = "-400px";
+    closeSettingsDrawer();
+    closeLyricsSidebar();
 
     const existing = document.getElementById("sclient-playlists-overlay");
     if (existing) {
-      if (existing.style.display === "flex") {
-        existing.style.display = "none";
-      } else {
-        existing.style.display = "flex";
-        pmRefresh();
-      }
+      existing.classList.toggle("open");
+      if (existing.classList.contains("open")) pmRefresh();
       return;
     }
 
     createPlaylistManagerOverlay();
-    document.getElementById("sclient-playlists-overlay").style.display = "flex";
+    document.getElementById("sclient-playlists-overlay").classList.add("open");
     pmRefresh();
   }
 }

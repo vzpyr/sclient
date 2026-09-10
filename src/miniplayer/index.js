@@ -440,12 +440,12 @@ function esc(str) {
 function renderManual(artist, title) {
   const content = document.getElementById("lyrics-content");
   content.innerHTML = `
-		<div style="opacity:0.5; margin-top:40px;">No lyrics found.</div>
-		<div style="margin-top: 15px;">
-			<div style="margin-bottom: 8px; font-size: 12px; color: #aaa;">Try manually:</div>
-			<input type="text" id="manual-artist" placeholder="Artist" value="${esc(artist)}" style="width: 80%; margin-bottom: 8px; padding: 6px; background: rgba(0,0,0,0.4); border: 1px solid #555; color: #fff; border-radius: 4px;">
-			<input type="text" id="manual-title" placeholder="Title" value="${esc(title)}" style="width: 80%; margin-bottom: 12px; padding: 6px; background: rgba(0,0,0,0.4); border: 1px solid #555; color: #fff; border-radius: 4px;">
-			<br><button id="manual-search" style="padding: 6px 16px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Search</button>
+		<div class="mini-empty">No lyrics found.</div>
+		<div class="mini-manual">
+			<div class="mini-manual-label">Try manually:</div>
+			<input type="text" id="manual-artist" class="mini-input" placeholder="Artist" value="${esc(artist)}">
+			<input type="text" id="manual-title" class="mini-input" placeholder="Title" value="${esc(title)}">
+			<button id="manual-search" class="mini-btn">Search</button>
 		</div>
 	`;
   document.getElementById("manual-search").addEventListener("click", () => {
@@ -473,7 +473,7 @@ async function fetchLyrics(artist, title) {
   const safe = esc(title);
   const safeArtist = esc(artist);
   const content = document.getElementById("lyrics-content");
-  content.innerHTML = `<div style="opacity:0.5; margin-top:40px;">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-mini-manual-now" style="margin-top:14px; padding:6px 16px; background:#333; color:#fff; border:1px solid #555; border-radius:4px; cursor:pointer;">Enter manually</button></div>`;
+  content.innerHTML = `<div class="mini-empty">Fetching lyrics for<br><b>${safeArtist} - ${safe}</b>...<br><button id="sclient-mini-manual-now" class="mini-btn mini-btn-trigger">Enter manually</button></div>`;
   currentSyncedLyrics = [];
 
   const abortCtrl = new AbortController();
@@ -504,7 +504,7 @@ async function fetchLyrics(artist, title) {
     const hasSync = data.lines?.length > 0 && data.meta?.level !== "none";
 
     if (hasSync) {
-      let html = `<div id="lyrics-lines" style="display:flex; flex-direction:column; gap:12px; padding: 50vh 10px 50vh 10px;">`;
+      let html = `<div id="lyrics-lines" class="mini-lyrics-lines">`;
       for (const line of data.lines) {
         if (line.start === undefined || line.end === undefined) continue;
         const start = line.start / 1000;
@@ -539,9 +539,9 @@ async function fetchLyrics(artist, title) {
 
       if (romanizeEnabled) romanizeAllLines();
     } else if (data.lines && data.lines.length > 0) {
-      let html = `<div style="display:flex; flex-direction:column; gap:12px; padding: 0 10px 20vh 10px;">`;
+      let html = `<div class="mini-lyrics-plain">`;
       for (const line of data.lines)
-        html += `<div style="font-size: 15px; margin-bottom: 12px;">${esc((line.text || "").trim() || " ")}</div>`;
+        html += `<div>${esc((line.text || "").trim() || " ")}</div>`;
       content.innerHTML = html + `</div>`;
       $("offset-controls").classList.remove("visible");
     } else {
@@ -564,7 +564,6 @@ function updateLyricsUI(pos) {
   const activeIdx = currentSyncedLyrics.findLastIndex(
     (l) => effectivePos >= l.start - 0.1,
   );
-  const accent = currentAccent || "#f50";
 
   if (activeIdx !== currentHighlightedIndex) {
     currentHighlightedIndex = activeIdx;
@@ -572,9 +571,6 @@ function updateLyricsUI(pos) {
       if (!l.element) return;
       if (i === activeIdx) {
         l.element.className = "lyric-line active";
-        l.element.style.color = l.element.querySelector(".lyric-word")
-          ? ""
-          : accent;
         l.element.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         l.element.querySelectorAll(".lyric-word").forEach((w) => {
@@ -608,7 +604,7 @@ function updateLyricsUI(pos) {
           wEl.classList.remove("sung");
           const wp = Math.min(1, (effectivePos - wStart) / (wEnd - wStart));
           const pct = (wp * 100).toFixed(1);
-          wEl.style.background = `linear-gradient(to right, ${accent} 0%, ${accent} ${pct}%, #fff ${pct}%, #fff 100%)`;
+          wEl.style.background = `linear-gradient(to right, var(--accent) 0%, var(--accent) ${pct}%, var(--sclient-text-main) ${pct}%, var(--sclient-text-main) 100%)`;
           wEl.style.webkitBackgroundClip = "text";
           wEl.style.backgroundClip = "text";
           wEl.style.color = "transparent";

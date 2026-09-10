@@ -122,42 +122,8 @@ class ContextMenuFeature extends Feature {
     const sel = win.getSelection().toString().trim();
     const hasSel = sel.length > 0;
 
-    let accent = "#f50";
-    try {
-      accent = typeof getAccent === "function" ? getAccent() : accent;
-    } catch (ex) {}
-    if (typeof getAccent !== "function") {
-      const ca = getComputedStyle(document.documentElement)
-        .getPropertyValue("--sclient-accent")
-        .trim();
-      if (ca) accent = ca;
-    }
-
     const menu = doc.createElement("div");
     menu.className = "sclient-cm";
-
-    const style = doc.createElement("style");
-    style.textContent = [
-      ".sclient-cm {",
-      "  position:fixed; z-index:9999999; min-width:200px;",
-      "  background:var(--sclient-bg-elevated);",
-      "  border:1px solid var(--sclient-border);",
-      "  border-radius:var(--sclient-radius-lg);",
-      "  padding:6px;",
-      "  box-shadow:0 10px 30px rgba(0,0,0,0.5);",
-      "  font-family:var(--sclient-font-sans);",
-      "  font-size:var(--sclient-text-base);",
-      "  color:var(--sclient-text-main);",
-      "  -webkit-user-select:none; user-select:none;",
-      "}",
-      ".sclient-cm-item {",
-      "  padding:8px 12px; border-radius:5px; cursor:pointer;",
-      "  display:flex; justify-content:space-between; align-items:center; gap:14px;",
-      "}",
-      ".sclient-cm-item:hover { background:" + accent + "; color:#fff; }",
-      ".sclient-cm-sep { height:1px; background:var(--sclient-border); margin:4px 0; }",
-    ].join("\n");
-    menu.appendChild(style);
 
     const items = [];
 
@@ -382,28 +348,24 @@ function navigateToUrlModal(doc) {
   overlay.className = "sclient-modal-backdrop";
 
   const modal = doc.createElement("div");
-  modal.className = "sclient-modal-surface";
-  modal.style.cssText = "text-align:center;max-width:440px;";
+  modal.className = "sclient-modal-surface sclient-url-modal";
 
   const title = doc.createElement("div");
   title.textContent = "Navigate to URL";
-  title.className = "sclient-text-body";
-  title.style.cssText =
-    "font-weight:600;margin-bottom:16px;font-size:var(--sclient-text-lg);";
+  title.className = "sclient-modal-msg";
   modal.appendChild(title);
 
   const input = doc.createElement("input");
   input.type = "text";
   input.placeholder = "Enter URL...";
-  input.style.cssText =
-    "width:100%;padding:10px 14px;border:1px solid var(--sclient-border);border-radius:var(--sclient-radius-lg);background:var(--sclient-bg-surface);color:var(--sclient-text-main);font-size:var(--sclient-text-base);font-family:var(--sclient-font-sans);outline:none;box-sizing:border-box;margin-bottom:16px;";
+  input.className = "sclient-input sclient-url-input";
   input.addEventListener("keydown", (ev) => {
     if (ev.key === "Enter") go();
   });
   modal.appendChild(input);
 
   const btnRow = doc.createElement("div");
-  btnRow.style.cssText = "display:flex;gap:10px;justify-content:center;";
+  btnRow.className = "sclient-modal-actions";
 
   const cancelBtn = doc.createElement("button");
   cancelBtn.textContent = "Cancel";
@@ -430,8 +392,7 @@ function navigateToUrlModal(doc) {
   }
 
   function close() {
-    overlay.style.opacity = "0";
-    modal.style.transform = "scale(0.95)";
+    overlay.classList.remove("open");
     setTimeout(() => {
       overlay.remove();
     }, 200);
@@ -444,8 +405,7 @@ function navigateToUrlModal(doc) {
   });
 
   requestAnimationFrame(() => {
-    overlay.style.opacity = "1";
-    modal.style.transform = "scale(1)";
+    overlay.classList.add("open");
     input.focus();
   });
 }
@@ -457,10 +417,12 @@ const SCLIENT_IFRAME_VARS = [
   "--sclient-bg-elevated",
   "--sclient-text-main",
   "--sclient-text-muted",
+  "--sclient-text-dim",
   "--sclient-border",
   "--sclient-border-hover",
   "--sclient-btn-bg",
   "--sclient-btn-bg-hover",
+  "--sclient-danger",
   "--sclient-font-sans",
   "--sclient-text-xs",
   "--sclient-text-sm",
@@ -470,6 +432,9 @@ const SCLIENT_IFRAME_VARS = [
   "--sclient-radius-md",
   "--sclient-radius-lg",
   "--sclient-radius-xl",
+  "--sclient-shadow-sm",
+  "--sclient-shadow-md",
+  "--sclient-z-modal",
 ];
 
 function injectIframeStyles(doc) {
@@ -484,16 +449,17 @@ function injectIframeStyles(doc) {
     ".sclient-modal-backdrop {",
     "  position:fixed; top:0; left:0; width:100vw; height:100vh;",
     "  background:var(--sclient-bg-overlay);",
-    "  z-index:9999999;",
+    "  z-index:var(--sclient-z-modal);",
     "  display:flex; align-items:center; justify-content:center;",
     "  backdrop-filter:blur(4px);",
     "  opacity:0; transition:opacity 0.2s ease;",
     "}",
+    ".sclient-modal-backdrop.open { opacity:1; }",
     ".sclient-floating-btn {",
     "  background:var(--sclient-bg-elevated); color:var(--sclient-text-main);",
     "  border:1px solid var(--sclient-border); border-radius:50%;",
     "  width:40px; height:40px; display:flex; align-items:center; justify-content:center;",
-    "  cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2); padding:0; outline:none;",
+    "  cursor:pointer; box-shadow:var(--sclient-shadow-sm); padding:0; outline:none;",
     "}",
     ".sclient-floating-btn:hover { filter:brightness(1.25); }",
   ].join("\n");
@@ -519,18 +485,14 @@ function viewImage(url) {
   overlay.className = "sclient-modal-backdrop";
   const img = document.createElement("img");
   img.src = url;
-  img.style.cssText =
-    "max-width:90vw;max-height:90vh;border-radius:var(--sclient-radius-lg);box-shadow:0 10px 40px rgba(0,0,0,0.5);object-fit:contain;transform:scale(0.95);transition:transform 0.2s ease;";
+  img.className = "sclient-viewer-img";
   overlay.appendChild(img);
 
   const btnContainer = document.createElement("div");
-  btnContainer.style.cssText =
-    "position:absolute;bottom:20px;right:20px;display:flex;gap:10px;";
+  btnContainer.className = "sclient-viewer-actions";
 
   const copyBtn = document.createElement("button");
-  copyBtn.className = "sclient-floating-btn";
-  copyBtn.style.cssText =
-    "position:static !important;backdrop-filter:blur(4px);";
+  copyBtn.className = "sclient-floating-btn inline";
   copyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
   copyBtn.onclick = (ev) => {
     ev.stopPropagation();
@@ -557,9 +519,7 @@ function viewImage(url) {
   };
 
   const saveBtn = document.createElement("button");
-  saveBtn.className = "sclient-floating-btn";
-  saveBtn.style.cssText =
-    "position:static !important;backdrop-filter:blur(4px);";
+  saveBtn.className = "sclient-floating-btn inline";
   saveBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>`;
   saveBtn.onclick = (ev) => {
     ev.stopPropagation();
@@ -585,12 +545,10 @@ function viewImage(url) {
 
   document.body.appendChild(overlay);
   requestAnimationFrame(() => {
-    overlay.style.opacity = "1";
-    img.style.transform = "scale(1)";
+    overlay.classList.add("open");
   });
   overlay.addEventListener("click", () => {
-    overlay.style.opacity = "0";
-    img.style.transform = "scale(0.95)";
+    overlay.classList.remove("open");
     setTimeout(() => overlay.remove(), 200);
   });
 }
