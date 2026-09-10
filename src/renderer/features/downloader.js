@@ -160,8 +160,7 @@ class DownloaderFeature extends Feature {
     btn.className =
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
     btn.title = "Download";
-    btn.innerHTML =
-      '<div class="sclient-sc-icon">${lucideIcon("download")}</div>';
+    btn.innerHTML = `<div class="sclient-sc-icon">${lucideIcon("download")}</div>`;
 
     this.on(btn, "click", (e) => {
       e.preventDefault();
@@ -252,7 +251,7 @@ class DownloaderFeature extends Feature {
     btn.className =
       "sc-button-secondary sc-button sc-button-medium sc-button-icon sc-button-responsive";
     btn.title = "Download Playlist";
-    btn.innerHTML = '<div>${lucideIcon("folder-down")}</div>';
+    btn.innerHTML = `<div>${lucideIcon("folder-down")}</div>`;
 
     this.on(btn, "click", async (e) => {
       e.preventDefault();

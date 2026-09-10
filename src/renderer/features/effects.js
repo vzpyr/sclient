@@ -100,7 +100,7 @@ class EffectsFeature extends Feature {
     btn.className =
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive";
     btn.title = "Audio Effects (Speed, Pitch, Reverb)";
-    btn.innerHTML = '<div class="sclient-sc-icon">${lucideIcon("gauge")}</div>';
+    btn.innerHTML = `<div class="sclient-sc-icon">${lucideIcon("gauge")}</div>`;
 
     const popup = document.createElement("div");
     popup.id = "sclient-effects-popup";

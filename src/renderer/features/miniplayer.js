@@ -112,8 +112,7 @@ class MiniplayerFeature extends Feature {
     btn.className =
       "sc-button sc-button-secondary sc-button-small sc-button-icon sc-button-responsive sc-mr-1x";
     btn.title = "Mini Player";
-    btn.innerHTML =
-      '<div class="sclient-sc-icon">${lucideIcon("turntable")}</div>';
+    btn.innerHTML = `<div class="sclient-sc-icon">${lucideIcon("turntable")}</div>`;
 
     btn.addEventListener("click", (e) => {
       e.preventDefault();

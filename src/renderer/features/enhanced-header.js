@@ -43,9 +43,9 @@ class EnhancedHeaderFeature extends Feature {
 
   replaceNavIcons() {
     const navIcons = {
-      home: lucideIcon("home"),
-      stream: lucideIcon("rss"),
-      library: lucideIcon("library"),
+      home: lucideIcon("home", 22),
+      stream: lucideIcon("rss", 22),
+      library: lucideIcon("library", 22),
     };
 
     for (const [name, svg] of Object.entries(navIcons)) {
@@ -57,7 +57,7 @@ class EnhancedHeaderFeature extends Feature {
       ".header__userNavActivitiesButton .notificationIcon > div:first-child",
     );
     if (notif) {
-      this.safeReplaceSvg(notif, lucideIcon("bell"));
+      this.safeReplaceSvg(notif, lucideIcon("bell", 22));
       notif.title = "Notifications";
     }
 
@@ -65,7 +65,7 @@ class EnhancedHeaderFeature extends Feature {
       ".header__userNavMessagesButton .notificationIcon > div:first-child",
     );
     if (msg) {
-      this.safeReplaceSvg(msg, lucideIcon("mail"));
+      this.safeReplaceSvg(msg, lucideIcon("mail", 22));
       msg.title = "Messages";
     }
 
@@ -77,18 +77,18 @@ class EnhancedHeaderFeature extends Feature {
     const more = document.querySelector(
       "a.header__moreButton:not(#sclient-settings-btn) .header__moreButtonIcon > div:first-child",
     );
-    if (more) this.safeReplaceSvg(more, lucideIcon("ellipsis"));
+    if (more) this.safeReplaceSvg(more, lucideIcon("ellipsis", 22));
 
     const upload = document.querySelector(".uploadButton__title");
     if (upload) {
-      this.safeReplaceSvg(upload, lucideIcon("upload"));
+      this.safeReplaceSvg(upload, lucideIcon("upload", 22));
       const upBtn = document.querySelector(".uploadButton");
       if (upBtn) upBtn.title = "Upload";
     }
 
     const artist = document.querySelector(".header__forArtistsButton");
     if (artist) {
-      this.safeReplaceSvg(artist, lucideIcon("keyboard-music"));
+      this.safeReplaceSvg(artist, lucideIcon("keyboard-music", 22));
       artist.title = "Artist Studio";
     }
 
