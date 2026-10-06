@@ -14,67 +14,51 @@ Customizable cross-platform desktop client for SoundCloud
 
 ## Features
 
-- **Zero Telemetry & Adblocker:** Collects no data; blocks ads, trackers, and telemetry natively (via Ghostery)
-- **DRM Support:** DRM-protected tracks work out of the box using proper Widevine DRM (Castlabs Electron on Linux and Windows)
-- **Region Bypass:** Built-in proxy support to bypass geographic track restrictions (use the public proxy in-app or self-host `src/api/index.js`)
-- **Audio & Playback:** Real-time playback speed, pitch shifting, and reverb effects; true shuffle (pre-loads playlist / API-level shuffle)
-- **Integrations:** Synced romanized lyrics (via `lrcmux.dev`), Last.fm and ListenBrainz scrobbling (encrypted via Electron `safeStorage`), Discord Rich Presence, and track/playlist downloader via `youtube-dl`
-- **Customization & UI:** Compact mini-player with lyrics and audio visualizer, live custom CSS/JS editor, layout/theme customization, multi-account profile manager, and system tray background support
-- **Playlist Manager & Stats:** Dedicated overlay to import, export (Exportify `.csv` support), and re-order playlists; local listening history and stats analytics
+- Zero data/telemetry collection (from SClient itself) + Native Adblocker (Ghostery)
+- Support for DRM-protected tracks using proper Widevine DRM (Castlabs Electron)
+- Built-in proxy support for bypassing geoblocking (public proxy in-app via Vercel, or self-host `src/api/index.js`)
+- Real-time speed/pitch shifting and reverb, as well as true shuffle (kinda broken honestly)
+- Synced romanized lyrics (lrcmux.dev) and a floating mini-player with audio visualizer
+- Last.fm/ListenBrainz scrobbling (with encrypted storage for keys)
+- Discord Rich Presence
+- Track/playlist downloader (youtube-dl)
+- Custom CSS/JS editor, layout/theme customization, multi-account manager, and tray support
+- Playlist manager overlay for imports/exports/etc. (also supports `.csv`'s from Exportify with fuzzy matching)
+- Local listening history and analytics
 
 ## Installation
 
-Download the latest release for your OS from the [Releases](https://github.com/vzpyr/sclient/releases) page:
+You can download SClient for Linux and Windows from the [Releases](https://github.com/vzpyr/sclient/releases).
 
-- **Linux:** `.deb`, `.rpm`, `.AppImage`, `.flatpak`
-- **Windows:** `.exe` (Setup), `.exe` (Portable)
+## Build
 
-## Building from Source
-
-### Prerequisites
-
-- Node.js 18+ and npm
-
-### Desktop (Linux, Windows)
+You need Node.js.
 
 ```bash
 git clone https://github.com/vzpyr/sclient.git
 cd sclient
 npm install
-```
-
-Linux:
-
-```bash
 npm run build:linux
+# or npm run build:win
 ```
 
-Windows:
+Binaries will afterwards land in `dist/`.
 
-```bash
-npm run build:win
-```
+### DRM on Windows
 
-Compiled binaries land in `dist/`
-
-### Windows DRM (Widevine VMP)
-
-Windows enforces VMP (Verified Media Path) for Widevine DRM, which requires a signature on the executable. This is handled automatically during `npm run build:win` via the `afterSign` hook.
-
-One-time setup:
+For DRM handling to work on Windows, SClient requires a certain signature on the executable. Before building, setup an Castlabs EVS account.
 
 ```bash
 python3 -m pip install castlabs-evs
 python3 -m castlabs_evs.account signup
 npm run vmp:sign
+# re-run the sign command if you ever update electron)
 ```
-
-_(Re-run `npm run vmp:sign` if `npm install` updates the Electron binary)_
 
 ## Usage
 
-- Press `Ctrl + I` or click the gear icon in the header to open settings
+Press `Ctrl + I` or click the gear icon in the header to open settings
 
 ## License
 
-MIT
+[MIT](LICENSE)
