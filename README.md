@@ -52,7 +52,7 @@ For DRM handling to work on Windows, SClient requires a certain signature on the
 python3 -m pip install castlabs-evs
 python3 -m castlabs_evs.account signup
 npm run vmp:sign
-# re-run the sign command if you ever update electron)
+# re-run the sign command if you ever update electron
 ```
 
 ## Usage
