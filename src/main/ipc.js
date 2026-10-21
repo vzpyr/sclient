@@ -1,8 +1,9 @@
 const path = require("path");
 const fs = require("fs");
-const { BrowserWindow, clipboard } = require("electron");
+const { BrowserWindow, clipboard, shell } = require("electron");
 const config = require("./config");
 const romanize = require("./romanize");
+const localAudio = require("./features/local-audio");
 
 const SECURE_KEYS = [
   "integrations.listenbrainz.token",
@@ -21,6 +22,12 @@ function register({ ipcMain, session, app }) {
       enabled: config.isEnabled("features.region_bypass"),
       url: config.get("features.proxy_url"),
     };
+  });
+
+  ipcMain.handle("open_local_tracks_folder", () => {
+    const dir = localAudio.getLocalTracksDir();
+    shell.openPath(dir);
+    return dir;
   });
 
   ipcMain.on("get-ui-config", (event) => {

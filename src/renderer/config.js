@@ -120,6 +120,15 @@ const SCLIENT_CONFIG = {
   get mpris() {
     return this.get("mpris", false);
   },
+  get localAudioRouting() {
+    return this.get("local_audio_routing", false);
+  },
+  get localAudioPort() {
+    return this.get("local_audio_port", 0);
+  },
+  get localAudioTrackIds() {
+    return this.get("local_audio_track_ids", []);
+  },
   get statsApiSync() {
     return this.get("stats_api_sync", false);
   },

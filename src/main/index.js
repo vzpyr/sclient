@@ -12,6 +12,7 @@ const path = require("path");
 const fs = require("fs");
 const { ElectronBlocker } = require("@ghostery/adblocker-electron");
 const config = require("./config");
+const localAudio = require("./features/local-audio");
 
 if (process.platform === "linux" && config.isEnabled("features.mpris")) {
   app.commandLine.appendSwitch("disable-features", "MediaSessionService");
@@ -21,7 +22,6 @@ let tray = null;
 let win = null;
 let isQuitting = false;
 
-app.name = "sclient";
 app.on("before-quit", () => {
   isQuitting = true;
   if (
@@ -101,6 +101,7 @@ const JS_FILES = [
   "features/accent.js",
   "features/adblock.js",
   "features/artwork-viewer.js",
+  "features/local-audio.js",
   "features/context-menu.js",
   "features/shuffle.js",
   "features/effects.js",
@@ -154,6 +155,186 @@ function createWindow() {
     .replace(/SClient\/\S+\s?/, "");
   ses.setUserAgent(cleanUA);
   app.userAgentFallback = cleanUA;
+
+  function cleanTrack(track, localTrackIds) {
+    if (!track || typeof track !== "object") return false;
+    if (!localTrackIds.has(String(track.id))) return false;
+
+    let changed = false;
+    if (track.policy !== "ALLOW") {
+      track.policy = "ALLOW";
+      changed = true;
+    }
+    if (track.monetization_model !== "NOT_APPLICABLE") {
+      track.monetization_model = "NOT_APPLICABLE";
+      changed = true;
+    }
+    if (track.blocked !== false) {
+      track.blocked = false;
+      changed = true;
+    }
+    if (track.snipped !== false) {
+      track.snipped = false;
+      changed = true;
+    }
+    if (
+      track.full_duration &&
+      track.full_duration !== track.duration &&
+      track.duration === 30000
+    ) {
+      track.duration = track.full_duration;
+      changed = true;
+    }
+
+    if (Array.isArray(track.media?.transcodings)) {
+      for (const transcoding of track.media.transcodings) {
+        if (transcoding.snipped !== false) {
+          transcoding.snipped = false;
+          changed = true;
+        }
+        if (transcoding.duration !== track.duration) {
+          transcoding.duration = track.duration;
+          changed = true;
+        }
+        if (transcoding.url && transcoding.url.includes("/preview/")) {
+          transcoding.url = transcoding.url.replace(/\/preview\//g, "/stream/");
+          changed = true;
+        }
+      }
+    }
+
+    return changed;
+  }
+
+  function cleanPayload(data, localTrackIds, seen = new WeakSet()) {
+    if (!data || typeof data !== "object" || seen.has(data)) return false;
+    seen.add(data);
+
+    if (Array.isArray(data)) {
+      let changed = false;
+      for (const item of data) {
+        changed = cleanPayload(item, localTrackIds, seen) || changed;
+      }
+      return changed;
+    }
+
+    let changed = false;
+
+    if (Array.isArray(data.collection)) {
+      changed = cleanPayload(data.collection, localTrackIds, seen) || changed;
+    }
+    if (Array.isArray(data.tracks)) {
+      changed = cleanPayload(data.tracks, localTrackIds, seen) || changed;
+    }
+
+    if (data.track) {
+      changed = cleanPayload(data.track, localTrackIds, seen) || changed;
+    } else if (
+      !Array.isArray(data.collection) &&
+      !Array.isArray(data.tracks) &&
+      data.id
+    ) {
+      changed = cleanTrack(data, localTrackIds) || changed;
+    }
+
+    return changed;
+  }
+
+  function mediaTrackId(url) {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch (e) {
+      return null;
+    }
+    if (parsed.hostname !== "api-v2.soundcloud.com") return null;
+    const match = /^\/media\/(?:soundcloud:tracks:)?(\d+)/.exec(
+      parsed.pathname,
+    );
+    return match ? match[1] : null;
+  }
+
+  function isTrackApi(url) {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch (e) {
+      return false;
+    }
+    if (parsed.hostname !== "api-v2.soundcloud.com") return false;
+    if (parsed.pathname.startsWith("/media/")) return false;
+    return /track|search|stream|resolve|playlist|like|user/.test(
+      parsed.pathname,
+    );
+  }
+
+  function rebuildResponse(body, source) {
+    const headers = new Headers(source.headers);
+    headers.delete("content-length");
+    headers.delete("content-encoding");
+    headers.delete("transfer-encoding");
+    headers.set("content-type", "application/json; charset=utf-8");
+    return new Response(body, {
+      status: source.status,
+      statusText: source.statusText,
+      headers,
+    });
+  }
+
+  function forward(request) {
+    return ses.fetch(request, { bypassCustomProtocolHandlers: true });
+  }
+
+  ses.protocol.handle("https", async (request) => {
+    const url = request.url;
+
+    if (!config.isEnabled("features.local_audio_routing"))
+      return forward(request);
+
+    const trackId = mediaTrackId(url);
+
+    if (trackId) {
+      const localTrackIds = new Set(
+        localAudio.getAvailableLocalTrackIds().map(String),
+      );
+      if (!localTrackIds.has(trackId)) return forward(request);
+      const port = localAudio.startServer();
+      if (!port) return forward(request);
+      return new Response(
+        JSON.stringify({
+          url: `http://127.0.0.1:${port}/track/${trackId}`,
+        }),
+        {
+          status: 200,
+          headers: {
+            "content-type": "application/json; charset=utf-8",
+            "access-control-allow-origin": "*",
+          },
+        },
+      );
+    }
+
+    if (isTrackApi(url)) {
+      const localTrackIds = new Set(
+        localAudio.getAvailableLocalTrackIds().map(String),
+      );
+      if (localTrackIds.size === 0) return forward(request);
+      try {
+        const res = await forward(request);
+        try {
+          const json = await res.clone().json();
+          if (!cleanPayload(json, localTrackIds)) return res;
+          return rebuildResponse(JSON.stringify(json), res);
+        } catch (e) {
+          return res;
+        }
+      } catch (e) {
+        return new Response("Bad Gateway", { status: 502 });
+      }
+    }
+
+    return forward(request);
+  });
 
   const customBgEnabled = config.isEnabled("features.custom_bg_color");
   const splashBgColor = customBgEnabled
@@ -316,6 +497,7 @@ app.whenReady().then(async () => {
   require("./features/listenbrainz").register({ ipcMain, config });
   require("./features/stats").register({ ipcMain, dialog, config });
   require("./features/playlist-manager").register({ ipcMain, dialog });
+  localAudio.startServer();
 
   ipcMain.on("window_minimize", () => {
     if (win) win.minimize();

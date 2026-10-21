@@ -1,12 +1,20 @@
 const path = require("path");
 const fs = require("fs");
 const { app } = require("electron");
+
+app.name = "sclient";
+const userDataDir = path.join(app.getPath("appData"), "sclient");
+if (!fs.existsSync(userDataDir))
+  fs.mkdirSync(userDataDir, { recursive: true, mode: 0o700 });
+app.setPath("userData", userDataDir);
+
 const keytar = require("keytar");
 let hasKeyring = true;
 
 const DIR = path.join(app.getPath("userData"), "SClient");
 const FILE = path.join(DIR, "config.json");
 const SERVICE = "SClient";
+const localAudio = require("./features/local-audio");
 
 const SECURE_KEYS = [
   "integrations.listenbrainz.token",
@@ -190,6 +198,9 @@ function buildPayload() {
     mpris: isEnabled("features.mpris"),
     stats_api_sync: statsApiOn,
     stats_local_tracking: statsLocalOn,
+    local_audio_routing: isEnabled("features.local_audio_routing"),
+    local_audio_port: localAudio.startServer(),
+    local_audio_track_ids: localAudio.getAvailableLocalTrackIds(),
   };
 }
 
