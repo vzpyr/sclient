@@ -8,6 +8,19 @@ class DiscordRpcFeature extends Feature {
   get settingsLabel() {
     return "Discord Rich Presence";
   }
+  get settingsFields() {
+    return [
+      {
+        type: "select",
+        key: "features.discord_rpc_activity_type",
+        label: "Activity Type",
+        options: [
+          { value: "2", label: "Music" },
+          { value: "0", label: "Game" },
+        ],
+      },
+    ];
+  }
 
   constructor() {
     super();
@@ -17,6 +30,7 @@ class DiscordRpcFeature extends Feature {
       playing: false,
       artwork: "",
       timeStart: 0,
+      activityType: "",
     };
     this.unsubscribePlayback = null;
   }
@@ -50,15 +64,24 @@ class DiscordRpcFeature extends Feature {
         }
 
         const drift = Math.abs(timeStart - this.last.timeStart);
+        const activityType = SCLIENT_CONFIG.discordRpcActivityType;
         const changed =
           title !== this.last.title ||
           artist !== this.last.artist ||
           playing !== this.last.playing ||
           artwork !== this.last.artwork ||
+          activityType !== this.last.activityType ||
           (playing && drift > 2000);
 
         if (changed) {
-          this.last = { title, artist, playing, artwork, timeStart };
+          this.last = {
+            title,
+            artist,
+            playing,
+            artwork,
+            timeStart,
+            activityType,
+          };
           const td = evt.trackData;
           sendBridge("update_rpc", {
             title,
@@ -71,6 +94,7 @@ class DiscordRpcFeature extends Feature {
             trackId: td && td.id ? td.id : null,
             artistSlug: td && td.user ? td.user.permalink : null,
             trackSlug: td ? td.permalink : null,
+            activityType,
           }).catch(() => {});
         }
       } catch (e) {

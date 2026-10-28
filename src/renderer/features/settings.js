@@ -2,6 +2,7 @@ const CONFIG_PAYLOAD_KEYS = {
   "features.accent_color": "accent_color",
   "features.wide_layout_width": "wide_layout_width",
   "features.true_shuffle_mode": "true_shuffle_mode",
+  "features.discord_rpc_activity_type": "discord_rpc_activity_type",
   "features.proxy_url": "proxy_url",
   "features.bg_color": "bg_color",
   "features.custom_font_family": "custom_font_family",
@@ -13,6 +14,9 @@ const CONFIG_PAYLOAD_KEYS = {
 };
 
 function readConfigValue(key, fallback) {
+  if (key === "features.discord_rpc_activity_type" && fallback === "") {
+    fallback = "2";
+  }
   return SCLIENT_CONFIG.get(
     CONFIG_PAYLOAD_KEYS[key] || key.replace(/^features\./, ""),
     fallback,

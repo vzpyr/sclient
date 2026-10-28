@@ -492,7 +492,7 @@ app.whenReady().then(async () => {
 
   require("./ipc").register({ ipcMain, session, app, config });
   require("./features/downloader").register({ ipcMain, app });
-  require("./features/discord-rpc").register({ ipcMain });
+  require("./features/discord-rpc").register({ ipcMain, config });
   require("./features/lastfm").register({ ipcMain, config });
   require("./features/listenbrainz").register({ ipcMain, config });
   require("./features/stats").register({ ipcMain, dialog, config });

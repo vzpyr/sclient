@@ -5,6 +5,7 @@ const CLIENT_ID = "1520494903954637072";
 
 let rpc = null;
 let login = null;
+let config = null;
 
 function buildRedirectUrl(trackId, artistSlug, trackSlug) {
   const p = new URLSearchParams();
@@ -25,6 +26,7 @@ async function updateRpc({
   trackId,
   artistSlug,
   trackSlug,
+  activityType,
 }) {
   if (!rpc) {
     rpc = new Client({ clientId: CLIENT_ID, transport: { type: "ipc" } });
@@ -48,8 +50,17 @@ async function updateRpc({
     return;
   }
 
+  const rawType =
+    activityType !== undefined
+      ? activityType
+      : config
+        ? config.get("features.discord_rpc_activity_type", 2)
+        : 2;
+  const parsedType = parseInt(rawType, 10);
+  const type = Number.isNaN(parsedType) ? 2 : parsedType;
+
   const activity = {
-    type: 2,
+    type,
     statusDisplayType: StatusDisplayType.DETAILS,
     details: title,
     state: artist,
@@ -82,7 +93,8 @@ async function updateRpc({
   }
 }
 
-function register({ ipcMain }) {
+function register({ ipcMain, config: cfg }) {
+  if (cfg) config = cfg;
   ipcMain.handle("update_rpc", async (_e, args) => {
     await updateRpc(args);
   });

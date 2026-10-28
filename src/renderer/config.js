@@ -51,6 +51,9 @@ const SCLIENT_CONFIG = {
   get discordRpc() {
     return this.get("discord_rpc", false);
   },
+  get discordRpcActivityType() {
+    return String(this.get("discord_rpc_activity_type", "2"));
+  },
   get trayIcon() {
     return this.get("tray_icon", false);
   },

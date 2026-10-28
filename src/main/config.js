@@ -173,6 +173,9 @@ function buildPayload() {
     bg_color: get("features.bg_color", "#000000"),
     adblock: isEnabled("features.adblock"),
     discord_rpc: isEnabled("features.discord_rpc"),
+    discord_rpc_activity_type: String(
+      get("features.discord_rpc_activity_type", "2"),
+    ),
     tray_icon: isEnabled("features.tray_icon"),
     hide_upsell: isEnabled("features.hide_upsell"),
     hide_artists: isEnabled("features.hide_artists"),
