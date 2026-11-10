@@ -2,6 +2,7 @@ const {
   app,
   components,
   BrowserWindow,
+  WebContentsView,
   session,
   Menu,
   Tray,
@@ -21,16 +22,17 @@ app.commandLine.appendSwitch("disable-blink-features", "AutomationControlled");
 
 let tray = null;
 let win = null;
+let scView = null;
 let isQuitting = false;
 
 app.on("before-quit", () => {
   isQuitting = true;
   if (
-    win &&
-    !win.isDestroyed() &&
+    scView &&
+    !scView.webContents.isDestroyed() &&
     config.isEnabled("features.load_last_page")
   ) {
-    const url = win.webContents.getURL();
+    const url = scView.webContents.getURL();
     if (url && url.startsWith("http")) config.set("last_page_url", url);
   }
 });
@@ -53,7 +55,10 @@ function handleSclientUrl(raw) {
   if (win && !win.isDestroyed()) {
     win.show();
     win.focus();
-    win.loadURL(clean);
+    if (scView && !scView.webContents.isDestroyed()) {
+      scView.webContents.focus();
+      scView.webContents.loadURL(clean);
+    }
   } else {
     pendingSclientUrl = clean;
   }
@@ -122,7 +127,7 @@ const JS_FILES = [
   "core.js",
 ];
 
-const CSS_FILES = ["base.css", "titlebar.css", "layout.css", "features.css"];
+const CSS_FILES = ["base.css", "layout.css", "features.css"];
 
 function luminance(hex) {
   const rgb = hex.replace("#", "");
@@ -409,22 +414,92 @@ function createWindow() {
     backgroundColor: splashBgColor,
     show: false,
     webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  });
+
+  scView = new WebContentsView({
+    webPreferences: {
       partition,
       preload: path.join(__dirname, "..", "preload.js"),
       contextIsolation: true,
     },
   });
+  scView.setBackgroundColor(splashBgColor);
+  win.contentView.addChildView(scView);
+
+  function updateViewBounds() {
+    if (!win || win.isDestroyed() || !scView) return;
+    const [w, h] = win.getContentSize();
+    const titlebarH =
+      titlebarStyle === "custom" && !win.isFullScreen() ? 32 : 0;
+    scView.setBounds({
+      x: 0,
+      y: titlebarH,
+      width: w,
+      height: Math.max(0, h - titlebarH),
+    });
+  }
+
+  win.on("resize", updateViewBounds);
+  win.on("maximize", () => {
+    updateViewBounds();
+    if (!win.isDestroyed()) {
+      win.webContents.send("window_state", { isMaximized: true });
+    }
+  });
+  win.on("unmaximize", () => {
+    updateViewBounds();
+    if (!win.isDestroyed()) {
+      win.webContents.send("window_state", { isMaximized: false });
+    }
+  });
+  win.on("enter-full-screen", updateViewBounds);
+  win.on("leave-full-screen", updateViewBounds);
+
+  updateViewBounds();
+
+  if (titlebarStyle === "custom") {
+    win.loadFile(path.join(__dirname, "..", "titlebar", "index.html"));
+  }
 
   win.once("ready-to-show", () => {
+    updateViewBounds();
     win.show();
+    if (scView && !scView.webContents.isDestroyed()) {
+      scView.webContents.focus();
+    }
+    if (win.isMaximized()) {
+      win.webContents.send("window_state", { isMaximized: true });
+    }
   });
 
   win.setMenu(null);
   win.on("page-title-updated", (e) => e.preventDefault());
 
+  const sendNavState = () => {
+    if (
+      win &&
+      !win.isDestroyed() &&
+      scView &&
+      !scView.webContents.isDestroyed()
+    ) {
+      const nh = scView.webContents.navigationHistory;
+      const canGoBack = nh ? nh.canGoBack() : scView.webContents.canGoBack();
+      const canGoForward = nh
+        ? nh.canGoForward()
+        : scView.webContents.canGoForward();
+      win.webContents.send("window_nav_state", { canGoBack, canGoForward });
+    }
+  };
+
+  scView.webContents.on("did-navigate", sendNavState);
+  scView.webContents.on("did-navigate-in-page", sendNavState);
+
   let splashCssKey = null;
   let isFirstLoad = true;
-  win.webContents.on("did-start-loading", async () => {
+  scView.webContents.on("did-start-loading", async () => {
     if (!isFirstLoad) return;
     isFirstLoad = false;
 
@@ -433,7 +508,7 @@ function createWindow() {
       const iconBase64 = fs.readFileSync(iconPath).toString("base64");
       const appVersion = app.getVersion();
 
-      splashCssKey = await win.webContents.insertCSS(`
+      splashCssKey = await scView.webContents.insertCSS(`
         html:not(.sclient-ready) { background: ${splashBgColor} !important; overflow: hidden !important; }
         html:not(.sclient-loaded) body { opacity: 0 !important; overflow: hidden !important; }
         html:not(.sclient-ready) ::-webkit-scrollbar { display: none !important; }
@@ -461,22 +536,26 @@ function createWindow() {
     }
   });
 
-  win.webContents.on("before-input-event", (event, input) => {
+  const toggleDevTools = (event, input) => {
     if (input.key === "F12" && input.type === "keyDown") {
-      win.webContents.toggleDevTools();
+      if (scView && !scView.webContents.isDestroyed()) {
+        scView.webContents.toggleDevTools();
+      }
       event.preventDefault();
     }
-  });
+  };
+  scView.webContents.on("before-input-event", toggleDevTools);
+  win.webContents.on("before-input-event", toggleDevTools);
 
   const lastPageEnabled = config.isEnabled("features.load_last_page");
   const lastPageUrl = config.get("last_page_url", "https://soundcloud.com");
   if (lastPageEnabled && lastPageUrl && lastPageUrl.startsWith("http")) {
-    win.loadURL(lastPageUrl);
+    scView.webContents.loadURL(lastPageUrl);
   } else {
-    win.loadURL("https://soundcloud.com");
+    scView.webContents.loadURL("https://soundcloud.com");
   }
 
-  win.webContents.on("dom-ready", () => {
+  scView.webContents.on("dom-ready", () => {
     const rendererDir = path.join(__dirname, "..", "renderer");
     const injectedJs = JS_FILES.map((f) =>
       fs.readFileSync(path.join(rendererDir, f), "utf8"),
@@ -496,20 +575,15 @@ function createWindow() {
     const payload = config.buildConfigPayload();
 
     const stylesDir = path.join(rendererDir, "styles");
-    const cssFiles = CSS_FILES.filter(
-      (f) =>
-        f !== "titlebar.css" ||
-        config.get("features.titlebar_style", "custom") === "custom",
-    );
     Promise.all(
-      cssFiles.map((f) =>
-        win.webContents.insertCSS(
+      CSS_FILES.map((f) =>
+        scView.webContents.insertCSS(
           fs.readFileSync(path.join(stylesDir, f), "utf8"),
         ),
       ),
     ).catch((err) => console.error("[SClient] Couldn't inject styles:", err));
 
-    win.webContents
+    scView.webContents
       .executeJavaScript(
         `
 try {
@@ -528,7 +602,10 @@ try {
 
   win.on("close", (e) => {
     if (config.isEnabled("features.load_last_page")) {
-      const url = win.webContents.getURL();
+      const url =
+        scView && !scView.webContents.isDestroyed()
+          ? scView.webContents.getURL()
+          : null;
       if (url && url.startsWith("http")) config.set("last_page_url", url);
     }
     if (!isQuitting && config.isEnabled("features.tray_icon") && tray) {
@@ -565,6 +642,24 @@ app.whenReady().then(async () => {
   ipcMain.on("window_close", () => {
     if (win) win.close();
   });
+  ipcMain.on("window_back", () => {
+    if (scView && !scView.webContents.isDestroyed()) {
+      const nh = scView.webContents.navigationHistory;
+      if (nh ? nh.canGoBack() : scView.webContents.canGoBack()) {
+        if (nh) nh.goBack();
+        else scView.webContents.goBack();
+      }
+    }
+  });
+  ipcMain.on("window_forward", () => {
+    if (scView && !scView.webContents.isDestroyed()) {
+      const nh = scView.webContents.navigationHistory;
+      if (nh ? nh.canGoForward() : scView.webContents.canGoForward()) {
+        if (nh) nh.goForward();
+        else scView.webContents.goForward();
+      }
+    }
+  });
 
   createWindow();
 
@@ -572,15 +667,16 @@ app.whenReady().then(async () => {
     ipcMain,
     BrowserWindow,
     win,
+    scView,
     app,
   });
 
   if (process.platform === "linux" && config.isEnabled("features.mpris")) {
-    require("./features/mpris").init({ ipcMain, win });
+    require("./features/mpris").init({ ipcMain, win, scView });
   }
 
-  if (pendingSclientUrl && win && !win.isDestroyed()) {
-    win.loadURL(pendingSclientUrl);
+  if (pendingSclientUrl && scView && !scView.webContents.isDestroyed()) {
+    scView.webContents.loadURL(pendingSclientUrl);
     pendingSclientUrl = null;
   }
 
@@ -595,28 +691,58 @@ app.whenReady().then(async () => {
             click: () => {
               win.show();
               win.focus();
+              if (scView && !scView.webContents.isDestroyed()) {
+                scView.webContents.focus();
+              }
             },
           },
           {
             label: "Previous",
-            click: () =>
-              win.webContents.executeJavaScript(
-                "document.querySelector('.skipControl__previous').click()",
-              ),
+            click: () => {
+              const target =
+                scView && !scView.webContents.isDestroyed()
+                  ? scView.webContents
+                  : win && !win.isDestroyed()
+                    ? win.webContents
+                    : null;
+              if (target) {
+                target.executeJavaScript(
+                  "document.querySelector('.skipControl__previous').click()",
+                );
+              }
+            },
           },
           {
             label: "Pause/Resume",
-            click: () =>
-              win.webContents.executeJavaScript(
-                "document.querySelector('.playControl').click()",
-              ),
+            click: () => {
+              const target =
+                scView && !scView.webContents.isDestroyed()
+                  ? scView.webContents
+                  : win && !win.isDestroyed()
+                    ? win.webContents
+                    : null;
+              if (target) {
+                target.executeJavaScript(
+                  "document.querySelector('.playControl').click()",
+                );
+              }
+            },
           },
           {
             label: "Next",
-            click: () =>
-              win.webContents.executeJavaScript(
-                "document.querySelector('.skipControl__next').click()",
-              ),
+            click: () => {
+              const target =
+                scView && !scView.webContents.isDestroyed()
+                  ? scView.webContents
+                  : win && !win.isDestroyed()
+                    ? win.webContents
+                    : null;
+              if (target) {
+                target.executeJavaScript(
+                  "document.querySelector('.skipControl__next').click()",
+                );
+              }
+            },
           },
           { label: "Exit", click: () => app.quit() },
         ]),
@@ -624,6 +750,9 @@ app.whenReady().then(async () => {
       tray.on("click", () => {
         win.show();
         win.focus();
+        if (scView && !scView.webContents.isDestroyed()) {
+          scView.webContents.focus();
+        }
       });
     } catch (e) {
       console.error("[SClient] Couldn't create tray:", e);

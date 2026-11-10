@@ -1,0 +1,101 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=block");
+
+:root {
+  --sclient-titlebar-h: 32px;
+  --sclient-bg-surface: #121212;
+  --sclient-text-main: #ffffff;
+  --sclient-text-muted: rgba(255, 255, 255, 0.65);
+  --sclient-border: rgba(255, 255, 255, 0.05);
+  --sclient-space-2: 8px;
+  --sclient-space-3: 12px;
+  --sclient-dur-fast: 0.15s;
+  --sclient-dur: 0.2s;
+  --sclient-font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --sclient-text-sm: 12px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: var(--sclient-titlebar-h);
+  overflow: hidden;
+  background: var(--sclient-bg-surface);
+  font-family: var(--sclient-font-sans);
+}
+
+#sclient-titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--sclient-titlebar-h);
+  background: var(--sclient-bg-surface);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  -webkit-app-region: drag;
+  border-bottom: 1px solid var(--sclient-border);
+  box-sizing: border-box;
+  padding: 0 var(--sclient-space-3);
+}
+
+#sclient-titlebar .nav-area {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+#sclient-titlebar .title-area {
+  display: flex;
+  align-items: center;
+  gap: var(--sclient-space-2);
+  font-size: var(--sclient-text-sm);
+  font-weight: 600;
+  color: var(--sclient-text-main);
+  opacity: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+#sclient-titlebar .controls-area {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  -webkit-app-region: no-drag;
+}
+
+#sclient-titlebar button {
+  background: transparent;
+  border: none;
+  color: var(--sclient-text-muted);
+  width: var(--sclient-titlebar-h);
+  height: var(--sclient-titlebar-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color var(--sclient-dur-fast) ease,
+    opacity var(--sclient-dur-fast) ease;
+  padding: 0;
+  margin: 0;
+}
+
+#sclient-titlebar button:hover:not(:disabled) {
+  color: var(--sclient-text-main);
+}
+
+#sclient-titlebar button:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+#sclient-titlebar button.close-btn:hover {
+  color: #ff5555;
+}

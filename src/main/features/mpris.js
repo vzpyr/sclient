@@ -3,7 +3,7 @@ const Player = require("mpris-service");
 let player = null;
 let getPositionOverride = null;
 
-function init({ ipcMain, win }) {
+function init({ ipcMain, win, scView }) {
   player = Player({
     name: "sclient",
     identity: "SClient",
@@ -25,8 +25,14 @@ function init({ ipcMain, win }) {
   };
 
   function sendToRenderer(action) {
-    if (win && !win.isDestroyed()) {
-      win.webContents.send("mpris_command", action);
+    const target =
+      scView && !scView.webContents.isDestroyed()
+        ? scView.webContents
+        : win && !win.isDestroyed()
+          ? win.webContents
+          : null;
+    if (target) {
+      target.send("mpris_command", action);
     }
   }
 

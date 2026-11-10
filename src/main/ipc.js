@@ -49,23 +49,19 @@ function register({ ipcMain, session, app }) {
   });
 
   ipcMain.handle("webcontents_paste", (e) => {
-    const w = BrowserWindow.fromWebContents(e.sender);
-    if (w && !w.isDestroyed()) w.webContents.paste();
+    if (e.sender && !e.sender.isDestroyed()) e.sender.paste();
   });
 
   ipcMain.handle("webcontents_copy", (e) => {
-    const w = BrowserWindow.fromWebContents(e.sender);
-    if (w && !w.isDestroyed()) w.webContents.copy();
+    if (e.sender && !e.sender.isDestroyed()) e.sender.copy();
   });
 
   ipcMain.handle("webcontents_cut", (e) => {
-    const w = BrowserWindow.fromWebContents(e.sender);
-    if (w && !w.isDestroyed()) w.webContents.cut();
+    if (e.sender && !e.sender.isDestroyed()) e.sender.cut();
   });
 
   ipcMain.handle("webcontents_selectAll", (e) => {
-    const w = BrowserWindow.fromWebContents(e.sender);
-    if (w && !w.isDestroyed()) w.webContents.selectAll();
+    if (e.sender && !e.sender.isDestroyed()) e.sender.selectAll();
   });
 
   ipcMain.handle("get_custom_files", () => config.buildConfigPayload());

@@ -2,7 +2,7 @@ const path = require("path");
 
 let miniWin = null;
 
-function register({ ipcMain, BrowserWindow, win, app }) {
+function register({ ipcMain, BrowserWindow, win, scView, app }) {
   ipcMain.on("toggle_miniplayer", () => {
     if (miniWin) {
       miniWin.close();
@@ -60,7 +60,13 @@ function register({ ipcMain, BrowserWindow, win, app }) {
     }
   });
   ipcMain.on("mini_action", (_e, action) => {
-    if (win && !win.isDestroyed()) win.webContents.send("mini_action", action);
+    const target =
+      scView && !scView.webContents.isDestroyed()
+        ? scView.webContents
+        : win && !win.isDestroyed()
+          ? win.webContents
+          : null;
+    if (target) target.send("mini_action", action);
   });
   ipcMain.on("mini_update", (_e, data) => {
     if (miniWin && !miniWin.isDestroyed())
