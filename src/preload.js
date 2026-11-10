@@ -41,41 +41,44 @@ if (proxyCfg.enabled && proxyCfg.url && proxyCfg.url.startsWith("http")) {
 })()`);
 }
 
-const ua = navigator.userAgent;
-const chromeVersion =
-  (ua.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/) || [])[1] || "120.0.0.0";
-const majorVersion = chromeVersion.split(".")[0];
-
-const PLATFORMS = { win32: "Windows", darwin: "macOS", linux: "Linux" };
-const platform = PLATFORMS[process.platform] || "Linux";
-
 webFrame.executeJavaScript(`
 (function() {
-  var brands = [
-    { brand: 'Google Chrome', version: '${majorVersion}' },
-    { brand: 'Chromium', version: '${majorVersion}' },
-    { brand: 'Not_A Brand', version: '8' }
-  ]
-
-  Object.defineProperty(navigator, 'userAgentData', {
-    get: function() {
-      return {
-        brands: brands, mobile: false, platform: '${platform}',
-        getHighEntropyValues: function() {
-          return Promise.resolve({
-            brands: brands, mobile: false, platform: '${platform}',
-            platformVersion: '10.0.0', architecture: 'x86', model: '', bitness: '64'
-          })
-        }
+  if (typeof NavigatorUAData !== 'undefined' && NavigatorUAData.prototype) {
+    function sanitizeBrands(brands) {
+      if (!Array.isArray(brands)) return brands;
+      var filtered = brands.filter(function(b) {
+        return b && b.brand !== 'Electron' && b.brand !== 'sclient' && b.brand !== 'SClient';
+      });
+      if (!filtered.some(function(b) { return b && b.brand === 'Google Chrome'; })) {
+        var chromiumBrand = filtered.find(function(b) { return b && b.brand === 'Chromium'; });
+        var version = chromiumBrand ? chromiumBrand.version : '134';
+        filtered.push({ brand: 'Google Chrome', version: version });
       }
-    },
-    configurable: true
-  })
+      return filtered;
+    }
 
-  Object.defineProperty(navigator, 'webdriver', {
-    get: function() { return false },
-    configurable: true
-  })
+    var origDesc = Object.getOwnPropertyDescriptor(NavigatorUAData.prototype, 'brands');
+    if (origDesc && typeof origDesc.get === 'function') {
+      Object.defineProperty(NavigatorUAData.prototype, 'brands', {
+        get: function() {
+          return sanitizeBrands(origDesc.get.call(this));
+        },
+        configurable: true,
+        enumerable: true
+      });
+    }
+
+    var origHighEntropy = NavigatorUAData.prototype.getHighEntropyValues;
+    if (typeof origHighEntropy === 'function') {
+      NavigatorUAData.prototype.getHighEntropyValues = async function(...args) {
+        var res = await origHighEntropy.apply(this, args);
+        if (res && Array.isArray(res.brands)) {
+          res.brands = sanitizeBrands(res.brands);
+        }
+        return res;
+      };
+    }
+  }
 })()`);
 
 window.addEventListener("message", (event) => {

@@ -17,6 +17,7 @@ const localAudio = require("./features/local-audio");
 if (process.platform === "linux" && config.isEnabled("features.mpris")) {
   app.commandLine.appendSwitch("disable-features", "MediaSessionService");
 }
+app.commandLine.appendSwitch("disable-blink-features", "AutomationControlled");
 
 let tray = null;
 let win = null;
@@ -150,11 +151,65 @@ function createWindow() {
 
   const cleanUA = ses
     .getUserAgent()
-    .replace(/Electron\/\S+\s?/, "")
-    .replace(/sclient\/\S+\s?/, "")
-    .replace(/SClient\/\S+\s?/, "");
+    .replace(/Electron\/\S+\s?/g, "")
+    .replace(/sclient\/\S+\s?/gi, "")
+    .replace(/\s+/g, " ")
+    .trim();
   ses.setUserAgent(cleanUA);
   app.userAgentFallback = cleanUA;
+
+  const chromeMajor = process.versions.chrome
+    ? process.versions.chrome.split(".")[0]
+    : "134";
+  const chromeFull = process.versions.chrome || "134.0.0.0";
+
+  ses.webRequest.onBeforeSendHeaders((details, callback) => {
+    const headers = { ...details.requestHeaders };
+
+    if (headers["User-Agent"]) {
+      headers["User-Agent"] = headers["User-Agent"]
+        .replace(/Electron\/\S+\s?/g, "")
+        .replace(/sclient\/\S+\s?/gi, "")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    const cleanHints = (str, version) => {
+      let cleaned = str
+        .replace(/"Electron";v="[^"]*"/g, `"Google Chrome";v="${version}"`)
+        .replace(/,?\s*"Electron";v="[^"]*"/g, "")
+        .replace(/,\s*,/g, ",");
+      if (!cleaned.includes("Google Chrome")) {
+        cleaned = `${cleaned}, "Google Chrome";v="${version}"`;
+      }
+      return cleaned;
+    };
+
+    for (const key of ["sec-ch-ua", "Sec-CH-UA"]) {
+      if (headers[key]) headers[key] = cleanHints(headers[key], chromeMajor);
+    }
+    for (const key of [
+      "sec-ch-ua-full-version-list",
+      "Sec-CH-UA-Full-Version-List",
+    ]) {
+      if (headers[key]) headers[key] = cleanHints(headers[key], chromeFull);
+    }
+
+    callback({ requestHeaders: headers });
+  });
+
+  ses.webRequest.onBeforeRequest(
+    {
+      urls: ["*://*.adswizz.com/*", "*://*.doubleclick.net/*"],
+    },
+    (details, callback) => {
+      if (config.adblockEnabled) {
+        callback({ cancel: true });
+      } else {
+        callback({ cancel: false });
+      }
+    },
+  );
 
   function cleanTrack(track, localTrackIds) {
     if (!track || typeof track !== "object") return false;
@@ -285,56 +340,55 @@ function createWindow() {
     return ses.fetch(request, { bypassCustomProtocolHandlers: true });
   }
 
-  ses.protocol.handle("https", async (request) => {
-    const url = request.url;
+  if (config.isEnabled("features.local_audio_routing")) {
+    ses.protocol.handle("https", async (request) => {
+      const url = request.url;
 
-    if (!config.isEnabled("features.local_audio_routing"))
-      return forward(request);
+      const trackId = mediaTrackId(url);
 
-    const trackId = mediaTrackId(url);
-
-    if (trackId) {
-      const localTrackIds = new Set(
-        localAudio.getAvailableLocalTrackIds().map(String),
-      );
-      if (!localTrackIds.has(trackId)) return forward(request);
-      const port = localAudio.startServer();
-      if (!port) return forward(request);
-      return new Response(
-        JSON.stringify({
-          url: `http://127.0.0.1:${port}/track/${trackId}`,
-        }),
-        {
-          status: 200,
-          headers: {
-            "content-type": "application/json; charset=utf-8",
-            "access-control-allow-origin": "*",
+      if (trackId) {
+        const localTrackIds = new Set(
+          localAudio.getAvailableLocalTrackIds().map(String),
+        );
+        if (!localTrackIds.has(trackId)) return forward(request);
+        const port = localAudio.startServer();
+        if (!port) return forward(request);
+        return new Response(
+          JSON.stringify({
+            url: `http://127.0.0.1:${port}/track/${trackId}`,
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json; charset=utf-8",
+              "access-control-allow-origin": "*",
+            },
           },
-        },
-      );
-    }
-
-    if (isTrackApi(url)) {
-      const localTrackIds = new Set(
-        localAudio.getAvailableLocalTrackIds().map(String),
-      );
-      if (localTrackIds.size === 0) return forward(request);
-      try {
-        const res = await forward(request);
-        try {
-          const json = await res.clone().json();
-          if (!cleanPayload(json, localTrackIds)) return res;
-          return rebuildResponse(JSON.stringify(json), res);
-        } catch (e) {
-          return res;
-        }
-      } catch (e) {
-        return new Response("Bad Gateway", { status: 502 });
+        );
       }
-    }
 
-    return forward(request);
-  });
+      if (isTrackApi(url)) {
+        const localTrackIds = new Set(
+          localAudio.getAvailableLocalTrackIds().map(String),
+        );
+        if (localTrackIds.size === 0) return forward(request);
+        try {
+          const res = await forward(request);
+          try {
+            const json = await res.clone().json();
+            if (!cleanPayload(json, localTrackIds)) return res;
+            return rebuildResponse(JSON.stringify(json), res);
+          } catch (e) {
+            return res;
+          }
+        } catch (e) {
+          return new Response("Bad Gateway", { status: 502 });
+        }
+      }
+
+      return forward(request);
+    });
+  }
 
   const customBgEnabled = config.isEnabled("features.custom_bg_color");
   const splashBgColor = customBgEnabled
