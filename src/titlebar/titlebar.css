@@ -14,6 +14,14 @@
   --sclient-text-sm: 12px;
 }
 
+body.theme-light,
+html.theme-light {
+  --sclient-bg-surface: #ffffff;
+  --sclient-text-main: #111111;
+  --sclient-text-muted: rgba(0, 0, 0, 0.6);
+  --sclient-border: rgba(0, 0, 0, 0.12);
+}
+
 html,
 body {
   margin: 0;
@@ -40,6 +48,9 @@ body {
   border-bottom: 1px solid var(--sclient-border);
   box-sizing: border-box;
   padding: 0 var(--sclient-space-3);
+  transition:
+    background-color var(--sclient-dur) ease,
+    border-color var(--sclient-dur) ease;
 }
 
 #sclient-titlebar .nav-area {
@@ -61,6 +72,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
+  transition: color var(--sclient-dur) ease;
 }
 
 #sclient-titlebar .controls-area {

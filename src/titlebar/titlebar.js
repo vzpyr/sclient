@@ -28,15 +28,51 @@ ipcRenderer.on("window_state", (_event, { isMaximized }) => {
   }
 });
 
-try {
-  const uiConfig = ipcRenderer.sendSync("get-ui-config");
-  if (uiConfig) {
-    if (uiConfig.customBackgroundColor && uiConfig.backgroundColor) {
-      document.documentElement.style.setProperty(
-        "--sclient-bg-surface",
-        uiConfig.backgroundColor,
-      );
+function luminance(hex) {
+  const rgb = hex.replace("#", "");
+  const [r, g, b] = [0, 2, 4].map(
+    (i) => parseInt(rgb.slice(i, i + 2), 16) / 255,
+  );
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+let uiConfig = null;
+let currentIsLight = false;
+
+function applyTheme() {
+  const hasCustomBg = Boolean(
+    uiConfig && uiConfig.customBackgroundColor && uiConfig.backgroundColor,
+  );
+
+  if (hasCustomBg) {
+    document.documentElement.style.setProperty(
+      "--sclient-bg-surface",
+      uiConfig.backgroundColor,
+    );
+    const isCustomLight = luminance(uiConfig.backgroundColor) > 0.45;
+    if (isCustomLight) {
+      document.body.classList.add("theme-light");
+      document.documentElement.classList.add("theme-light");
+    } else {
+      document.body.classList.remove("theme-light");
+      document.documentElement.classList.remove("theme-light");
     }
+    return;
+  }
+
+  document.documentElement.style.removeProperty("--sclient-bg-surface");
+  if (currentIsLight) {
+    document.body.classList.add("theme-light");
+    document.documentElement.classList.add("theme-light");
+  } else {
+    document.body.classList.remove("theme-light");
+    document.documentElement.classList.remove("theme-light");
+  }
+}
+
+try {
+  uiConfig = ipcRenderer.sendSync("get-ui-config");
+  if (uiConfig) {
     if (uiConfig.customFont && uiConfig.customFontFamily) {
       const familyUrl = uiConfig.customFontFamily.trim().replace(/\s+/g, "+");
       const style = document.createElement("style");
@@ -46,7 +82,17 @@ try {
       `;
       document.head.appendChild(style);
     }
+    if (typeof uiConfig.isSoundcloudLight === "boolean") {
+      currentIsLight = uiConfig.isSoundcloudLight;
+    }
   }
 } catch (e) {
   console.error("[SClient] Failed to apply UI config to titlebar:", e);
 }
+
+applyTheme();
+
+ipcRenderer.on("soundcloud_theme", (_event, { isLight }) => {
+  currentIsLight = Boolean(isLight);
+  applyTheme();
+});

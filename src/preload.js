@@ -149,3 +149,47 @@ window.addEventListener("load", () => {
     }, 1000);
   }, 500);
 });
+
+let lastThemeIsLight = null;
+const sendThemeUpdate = () => {
+  const isLight = Boolean(
+    (document.body && document.body.classList.contains("theme-light")) ||
+    (document.documentElement &&
+      document.documentElement.classList.contains("theme-light")),
+  );
+  if (isLight !== lastThemeIsLight) {
+    lastThemeIsLight = isLight;
+    ipcRenderer.send("soundcloud_theme_change", { isLight });
+  }
+};
+
+let bodyObserved = false;
+const attachBodyObserver = () => {
+  if (document.body && !bodyObserved) {
+    bodyObserved = true;
+    themeObserver.observe(document.body, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    sendThemeUpdate();
+  }
+};
+
+const themeObserver = new MutationObserver(() => {
+  attachBodyObserver();
+  sendThemeUpdate();
+});
+
+if (document.documentElement) {
+  themeObserver.observe(document.documentElement, {
+    childList: true,
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+}
+
+if (document.readyState === "loading") {
+  window.addEventListener("DOMContentLoaded", attachBodyObserver);
+} else {
+  attachBodyObserver();
+}

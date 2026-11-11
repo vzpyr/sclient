@@ -37,6 +37,7 @@ function register({ ipcMain, session, app }) {
       backgroundColor: config.get("features.bg_color", "#000000"),
       customFont: config.isEnabled("features.custom_font"),
       customFontFamily: config.get("features.custom_font_family", ""),
+      isSoundcloudLight: Boolean(global._isSoundcloudLight),
     };
   });
 

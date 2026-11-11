@@ -25,6 +25,22 @@ let win = null;
 let scView = null;
 let isQuitting = false;
 
+const lastTheme = config.get("last_theme", "dark");
+let isSoundcloudLight = lastTheme === "light";
+global._isSoundcloudLight = isSoundcloudLight;
+
+function updateSoundcloudTheme(isLight) {
+  isSoundcloudLight = Boolean(isLight);
+  global._isSoundcloudLight = isSoundcloudLight;
+  config.set("last_theme", isSoundcloudLight ? "light" : "dark");
+  if (win && !win.isDestroyed()) {
+    win.webContents.send("soundcloud_theme", { isLight: isSoundcloudLight });
+    if (!config.isEnabled("features.custom_bg_color")) {
+      win.setBackgroundColor(isSoundcloudLight ? "#ffffff" : "#121212");
+    }
+  }
+}
+
 app.on("before-quit", () => {
   isQuitting = true;
   if (
@@ -398,9 +414,12 @@ function createWindow() {
   const customBgEnabled = config.isEnabled("features.custom_bg_color");
   const splashBgColor = customBgEnabled
     ? config.get("features.bg_color", "#000000")
-    : "#121212";
+    : isSoundcloudLight
+      ? "#ffffff"
+      : "#121212";
   const splashTextColor =
-    customBgEnabled && luminance(splashBgColor) > 0.45
+    (customBgEnabled && luminance(splashBgColor) > 0.45) ||
+    (!customBgEnabled && isSoundcloudLight)
       ? "rgba(0, 0, 0, 0.4)"
       : "rgba(255, 255, 255, 0.35)";
 
@@ -494,8 +513,37 @@ function createWindow() {
     }
   };
 
-  scView.webContents.on("did-navigate", sendNavState);
-  scView.webContents.on("did-navigate-in-page", sendNavState);
+  const checkThemeState = async () => {
+    if (
+      win &&
+      !win.isDestroyed() &&
+      scView &&
+      !scView.webContents.isDestroyed()
+    ) {
+      try {
+        const isLight = await scView.webContents.executeJavaScript(
+          'Boolean((document.body && document.body.classList.contains("theme-light")) || (document.documentElement && document.documentElement.classList.contains("theme-light")))',
+        );
+        updateSoundcloudTheme(isLight);
+      } catch (e) {}
+    }
+  };
+
+  scView.webContents.on("did-navigate", () => {
+    sendNavState();
+    checkThemeState();
+  });
+  scView.webContents.on("did-navigate-in-page", () => {
+    sendNavState();
+    checkThemeState();
+  });
+  scView.webContents.on("dom-ready", checkThemeState);
+
+  win.webContents.on("did-finish-load", () => {
+    if (win && !win.isDestroyed()) {
+      win.webContents.send("soundcloud_theme", { isLight: isSoundcloudLight });
+    }
+  });
 
   let splashCssKey = null;
   let isFirstLoad = true;
@@ -659,6 +707,10 @@ app.whenReady().then(async () => {
         else scView.webContents.goForward();
       }
     }
+  });
+
+  ipcMain.on("soundcloud_theme_change", (_event, { isLight }) => {
+    updateSoundcloudTheme(isLight);
   });
 
   createWindow();
