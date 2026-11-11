@@ -479,11 +479,8 @@ function createWindow() {
 
   updateViewBounds();
 
-  if (titlebarStyle === "custom") {
-    win.loadFile(path.join(__dirname, "..", "titlebar", "index.html"));
-  }
-
-  win.once("ready-to-show", () => {
+  const showWindow = () => {
+    if (!win || win.isDestroyed()) return;
     updateViewBounds();
     win.show();
     if (scView && !scView.webContents.isDestroyed()) {
@@ -492,7 +489,14 @@ function createWindow() {
     if (win.isMaximized()) {
       win.webContents.send("window_state", { isMaximized: true });
     }
-  });
+  };
+
+  if (titlebarStyle === "custom") {
+    win.loadFile(path.join(__dirname, "..", "titlebar", "index.html"));
+    win.once("ready-to-show", showWindow);
+  } else {
+    scView.webContents.once("did-finish-load", showWindow);
+  }
 
   win.setMenu(null);
   win.on("page-title-updated", (e) => e.preventDefault());
